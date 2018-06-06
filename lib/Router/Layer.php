@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 
 namespace Press\Router;
+
 use Press\Tool\UrlHelper;
 
 
@@ -11,6 +12,7 @@ use Press\Tool\UrlHelper;
  * Class Layer
  * @property bool fast_slash
  * @property bool fast_star
+ * @property null method
  * @package Press\Router
  */
 class Layer
@@ -27,7 +29,7 @@ class Layer
      * @param array $options
      * @param callable $fn
      */
-    public function __constructor($path, array $options = [], callable & $fn)
+    public function __construct($path, array $options = [], callable & $fn)
     {
         $this->handle = $fn;
 //        $this->name = null;   function name
@@ -45,7 +47,7 @@ class Layer
      * @param $res
      * @param $next
      */
-    public function handle_error($error, $req, $res, callable $next)
+    public function handle_error($error, & $req, & $res, callable & $next)
     {
         try {
             $this->handle($error, $req, $res, $next);
@@ -60,7 +62,7 @@ class Layer
      * @param $res
      * @param $next
      */
-    public function handle_request($req, $res, $next)
+    public function handle_request(& $req, & $res, callable & $next)
     {
         try {
             $this->handle($req, $res, $next);
