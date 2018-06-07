@@ -778,7 +778,8 @@ class UrlHelperTest extends TestCase
 
     private static function main($path, $expected_params, $route, $expected_output, $options = [])
     {
-        $regexp = UrlHelper::pathToRegExp($path, $params = [], $options);
+        $params = [];
+        $regexp = UrlHelper::pathToRegExp($path, $params, $options);
 
         static::assertEquals($expected_params, $params);
         $matches = UrlHelper::match($regexp, $route);
