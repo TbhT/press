@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 namespace Press\Router;
 
+use function foo\func;
 use Press\Tool\HttpHelper;
 use Press\Tool\ArrayHelper;
 use Press\Router\Route;
@@ -106,14 +107,7 @@ class Router
             });
         }
 
-        $trim_prefix = function ($layer, $layerError, $layerPath, $path) {
-            if (count($layerPath) !== 0) {
-//                validate path breaks on a path separator
-
-            }
-        };
-
-        $next = function ($error) use (& $slashAdded) {
+        $next = function ($error) use (& $slashAdded, & $trim_prefix) {
             $layerError = $error === 'route' ? null : $error;
 
 //             remove added slash
@@ -152,6 +146,7 @@ class Router
 
             $layer = null;
             $match = false;
+            $route = null;
 
             while ($match !== true && $index < $_stack_length) {
                 $layer = $this->stack[$index++];
@@ -177,7 +172,7 @@ class Router
                 }
 
                 $method = $req->method;
-                $has_method = $route->_hanldes_method($method);
+                $has_method = $route->handles_method($method);
 
 //                build up automatic options response
                 if (!$has_method && $method === 'options') {
@@ -201,11 +196,11 @@ class Router
                 $req->route = $route;
             }
 
-            $req->params = $this->mergeParams ? self::mergeParams() : $layer->params;
+            $req->params = empty($this->mergeParams) ? self::mergeParams($layer->params, $parentParams) : $layer->params;
             $layerPath = $layer->path;
 
 //            this should be done for the layer
-            self::process_params($layer, $paramCalled, $req, $res, function ($error) {
+            self::process_params($layer, $paramCalled, $req, $res, function ($error) use (& $trim_prefix) {
                 if ($error) {
                     return $next($layerError || $error);
                 }
@@ -217,6 +212,20 @@ class Router
                 $trim_prefix($layer, $layerError, $layerPath, $path);
             });
         };
+
+        $trim_prefix = function ($layer, $layerError, $layerPath, string $path) use ($next) {
+            if (count($layerPath) !== 0) {
+                $c = substr($path, strlen($layerPath));
+                if ($c && $c !== '/' && $c !== '.') return $next();
+            }
+        };
+
+    }
+
+
+    private function mergeParams()
+    {
+
     }
 
 
