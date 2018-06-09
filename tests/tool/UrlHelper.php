@@ -57,12 +57,12 @@ class UrlHelperTest extends TestCase
     public function nonEndingMode()
     {
         return [
-            ['/test', [], '/test', ['/test'], ['end' => true]],
-            ['/test', [], '/test/', ['/test/'], ['end' => true]],
-            ['/test', [], '/test/route', ['/test'], ['end' => true]],
-            ['/test/', [], '/test/route', ['/test'], ['end' => true]],
-            ['/test/', [], '/test//', ['/test'], ['end' => true]],
-            ['/test/', [], '/test//route', ['/test'], ['end' => true]],
+            ['/test', [], '/test', ['/test'], ['end' => false]],
+            ['/test', [], '/test/', ['/test/'], ['end' => false]],
+            ['/test', [], '/test/route', ['/test'], ['end' => false]],
+            ['/test/', [], '/test/route', ['/test'], ['end' => false]],
+            ['/test/', [], '/test//', ['/test'], ['end' => false]],
+            ['/test/', [], '/test//route', ['/test'], ['end' => false]],
             [
                 '/:test',
                 [['name' => 'test', 'delimiter' => '/', 'optional' => false, 'repeat' => false]],
@@ -136,7 +136,7 @@ class UrlHelperTest extends TestCase
     public function nonEndingSimplePath()
     {
         return [
-            '/test', [], '/test/route', ['/test'], ['end' => false]
+            ['/test', [], '/test/route', ['/test'], ['end' => false]]
         ];
     }
 
@@ -407,25 +407,25 @@ class UrlHelperTest extends TestCase
             ],
             [
                 '/:route([a-z]+)',
-                [['name' => 'router', 'delimiter' => '/', 'optional' => false, 'repeat' => false]],
+                [['name' => 'route', 'delimiter' => '/', 'optional' => false, 'repeat' => false]],
                 '/abcde',
                 ['/abcde', 'abcde']
             ],
             [
                 '/:route([a-z]+)',
-                [['name' => 'router', 'delimiter' => '/', 'optional' => false, 'repeat' => false]],
+                [['name' => 'route', 'delimiter' => '/', 'optional' => false, 'repeat' => false]],
                 '/12345',
                 null
             ],
             [
                 '/:route(this|that)',
-                [['name' => 'router', 'delimiter' => '/', 'optional' => false, 'repeat' => false]],
+                [['name' => 'route', 'delimiter' => '/', 'optional' => false, 'repeat' => false]],
                 '/this',
                 ['/this', 'this']
             ],
             [
                 '/:route(this|that)',
-                [['name' => 'router', 'delimiter' => '/', 'optional' => false, 'repeat' => false]],
+                [['name' => 'route', 'delimiter' => '/', 'optional' => false, 'repeat' => false]],
                 '/that',
                 ['/that', 'that']
             ],
@@ -481,7 +481,7 @@ class UrlHelperTest extends TestCase
     {
         return [
             [
-                '/test.json', [], '/test.json', '/test.json'
+                '/test.json', [], '/test.json', ['/test.json']
             ],
             [
                 '/test.json', [], '/route.json', null
@@ -490,12 +490,12 @@ class UrlHelperTest extends TestCase
                 '/:test.json',
                 [['name' => 'test', 'delimiter' => '/', 'optional' => false, 'repeat' => false]],
                 '/route.json',
-                ['route.json', 'route']
+                ['/route.json', 'route']
             ],
             [
                 '/:test.json',
                 [['name' => 'test', 'delimiter' => '/', 'optional' => false, 'repeat' => false]],
-                'route.json.json',
+                '/route.json.json',
                 ['/route.json.json', 'route.json']
             ],
             [
@@ -754,8 +754,8 @@ class UrlHelperTest extends TestCase
     public function respectEscapedCharacters()
     {
         return [
-            // array('/\\(testing\\)', array(), '/testing', null),
-            // array('/\\(testing\\)', array(), '/(testing)', array('/(testing)')),
+//            ['/\\(testing\\)', [], '/testing', null],
+//            ['/\\(testing\\)', [], '/(testing)', ['/(testing)']],
             ['/.+*?=^!:${}[]|', [], '/.+*?=^!:${}[]|', ['/.+*?=^!:${}[]|']]
         ];
     }
@@ -776,18 +776,13 @@ class UrlHelperTest extends TestCase
     }
 
 
-    private static function main($path, $expected_params, $route, $expected_output, $options = [])
+    private static function main($path, $expected_params, $route, $expected_output, $options = [], $func_name)
     {
         $params = [];
         $regexp = UrlHelper::pathToRegExp($path, $params, $options);
 
         static::assertEquals($expected_params, $params);
         $matches = UrlHelper::match($regexp, $route);
-
-        echo "------------------\n";
-        print_r($expected_output);
-        print_r($matches);
-        echo "------------------\n";
 
         self::assertEquals($expected_output, $matches);
     }
@@ -798,7 +793,7 @@ class UrlHelperTest extends TestCase
      */
     public function testSimplePaths($path, $expected_params, $route, $expected_output, $options = [])
     {
-        static::main($path, $expected_params, $route, $expected_output, $options);
+        static::main($path, $expected_params, $route, $expected_output, $options, __FUNCTION__);
     }
 
 
@@ -807,7 +802,7 @@ class UrlHelperTest extends TestCase
      */
     public function testCaseSensitivePaths($path, $expected_params, $route, $expected_output, $options = [])
     {
-        static::main($path, $expected_params, $route, $expected_output, $options);
+        static::main($path, $expected_params, $route, $expected_output, $options, __FUNCTION__);
     }
 
 
@@ -816,7 +811,7 @@ class UrlHelperTest extends TestCase
      */
     public function testStrictMode($path, $expected_params, $route, $expected_output, $options = [])
     {
-        static::main($path, $expected_params, $route, $expected_output, $options);
+        static::main($path, $expected_params, $route, $expected_output, $options, __FUNCTION__);
     }
 
 
@@ -825,7 +820,7 @@ class UrlHelperTest extends TestCase
      */
     public function testNonEndingMode($path, $expected_params, $route, $expected_output, $options = [])
     {
-        static::main($path, $expected_params, $route, $expected_output, $options);
+        static::main($path, $expected_params, $route, $expected_output, $options, __FUNCTION__);
     }
 
     /**
@@ -833,7 +828,7 @@ class UrlHelperTest extends TestCase
      */
     public function testCombineMode($path, $expected_params, $route, $expected_output, $options = [])
     {
-        static::main($path, $expected_params, $route, $expected_output, $options);
+        static::main($path, $expected_params, $route, $expected_output, $options, __FUNCTION__);
     }
 
     /**
@@ -841,7 +836,7 @@ class UrlHelperTest extends TestCase
      */
     public function testArrayOfSimplePath($path, $expected_params, $route, $expected_output, $options = [])
     {
-        static::main($path, $expected_params, $route, $expected_output, $options);
+        static::main($path, $expected_params, $route, $expected_output, $options, __FUNCTION__);
     }
 
     /**
@@ -849,7 +844,7 @@ class UrlHelperTest extends TestCase
      */
     public function testNonEndingSimplePath($path, $expected_params, $route, $expected_output, $options = [])
     {
-        static::main($path, $expected_params, $route, $expected_output, $options);
+        static::main($path, $expected_params, $route, $expected_output, $options, __FUNCTION__);
     }
 
     /**
@@ -857,7 +852,7 @@ class UrlHelperTest extends TestCase
      */
     public function testSingleNamedParameter($path, $expected_params, $route, $expected_output, $options = [])
     {
-        static::main($path, $expected_params, $route, $expected_output, $options);
+        static::main($path, $expected_params, $route, $expected_output, $options, __FUNCTION__);
     }
 
     /**
@@ -865,7 +860,7 @@ class UrlHelperTest extends TestCase
      */
     public function testOptionalNamedParameter($path, $expected_params, $route, $expected_output, $options = [])
     {
-        static::main($path, $expected_params, $route, $expected_output, $options);
+        static::main($path, $expected_params, $route, $expected_output, $options, __FUNCTION__);
     }
 
     /**
@@ -873,7 +868,7 @@ class UrlHelperTest extends TestCase
      */
     public function testRepeatedOnceOrMoreTimesParameters($path, $expected_params, $route, $expected_output, $options = [])
     {
-        static::main($path, $expected_params, $route, $expected_output, $options);
+        static::main($path, $expected_params, $route, $expected_output, $options, __FUNCTION__);
     }
 
     /**
@@ -881,7 +876,7 @@ class UrlHelperTest extends TestCase
      */
     public function testRepeatedZeroOrMoreTimesParameters($path, $expected_params, $route, $expected_output, $options = [])
     {
-        static::main($path, $expected_params, $route, $expected_output, $options);
+        static::main($path, $expected_params, $route, $expected_output, $options, __FUNCTION__);
     }
 
     /**
@@ -889,7 +884,7 @@ class UrlHelperTest extends TestCase
      */
     public function testCustomNamedParameters($path, $expected_params, $route, $expected_output, $options = [])
     {
-        static::main($path, $expected_params, $route, $expected_output, $options);
+        static::main($path, $expected_params, $route, $expected_output, $options, __FUNCTION__);
     }
 
     /**
@@ -897,7 +892,7 @@ class UrlHelperTest extends TestCase
      */
     public function testPrefixedSlashes($path, $expected_params, $route, $expected_output, $options = [])
     {
-        static::main($path, $expected_params, $route, $expected_output, $options);
+        static::main($path, $expected_params, $route, $expected_output, $options, __FUNCTION__);
     }
 
     /**
@@ -905,7 +900,7 @@ class UrlHelperTest extends TestCase
      */
     public function testFormats($path, $expected_params, $route, $expected_output, $options = [])
     {
-        static::main($path, $expected_params, $route, $expected_output, $options);
+        static::main($path, $expected_params, $route, $expected_output, $options, __FUNCTION__);
     }
 
     /**
@@ -913,7 +908,7 @@ class UrlHelperTest extends TestCase
      */
     public function testFormatParams($path, $expected_params, $route, $expected_output, $options = [])
     {
-        static::main($path, $expected_params, $route, $expected_output, $options);
+        static::main($path, $expected_params, $route, $expected_output, $options, __FUNCTION__);
     }
 
     /**
@@ -921,7 +916,7 @@ class UrlHelperTest extends TestCase
      */
     public function testFormatAndPathParams($path, $expected_params, $route, $expected_output, $options = [])
     {
-        static::main($path, $expected_params, $route, $expected_output, $options);
+        static::main($path, $expected_params, $route, $expected_output, $options, __FUNCTION__);
     }
 
     /**
@@ -929,7 +924,7 @@ class UrlHelperTest extends TestCase
      */
     public function testUnnamedParams($path, $expected_params, $route, $expected_output, $options = [])
     {
-        static::main($path, $expected_params, $route, $expected_output, $options);
+        static::main($path, $expected_params, $route, $expected_output, $options, __FUNCTION__);
     }
 
     /**
@@ -937,7 +932,7 @@ class UrlHelperTest extends TestCase
      */
     public function testCorrectNamesAndIndexes($path, $expected_params, $route, $expected_output, $options = [])
     {
-        static::main($path, $expected_params, $route, $expected_output, $options);
+        static::main($path, $expected_params, $route, $expected_output, $options, __FUNCTION__);
     }
 
     /**
@@ -945,7 +940,7 @@ class UrlHelperTest extends TestCase
      */
     public function testRespectEscapedCharacters($path, $expected_params, $route, $expected_output, $options = [])
     {
-        static::main($path, $expected_params, $route, $expected_output, $options);
+        static::main($path, $expected_params, $route, $expected_output, $options, __FUNCTION__);
     }
 
     /**
@@ -953,7 +948,7 @@ class UrlHelperTest extends TestCase
      */
     public function testRegressions($path, $expected_params, $route, $expected_output, $options = [])
     {
-        static::main($path, $expected_params, $route, $expected_output, $options);
+        static::main($path, $expected_params, $route, $expected_output, $options, __FUNCTION__);
     }
 
 }

@@ -23,13 +23,13 @@ class UrlHelper
     {
         $array_flag = is_array($options);
         $strict = $array_flag && array_key_exists('strict', $options) ? $options['strict'] : false;
-        $end = $array_flag && array_key_exists('end', $options) ? $options['end'] : false;
+        $end = $array_flag && array_key_exists('end', $options) ? $options['end'] : true;
         $flags = $array_flag && !empty($options['sensitive']) ? '' : 'i';
         $index = 0;
 
 
         if (is_array($path)) {
-            $path_array = array_map(function ($item) use ($keys, $options) {
+            $path_array = array_map(function ($item) use (& $keys, & $options) {
                 return self::getRegExpSource(static::pathToRegExp($item, $keys, $options));
             }, $path);
 
@@ -38,7 +38,7 @@ class UrlHelper
 
         $path_regexps = [
             '(\\\\.)',
-//        match express style parameters adn un-named parameters with a prefix and optional suffixes
+//        match express style parameters and un-named parameters with a prefix and optional suffixes
 //        such as:
 //        '/:test(\\d+)?' => ['/', 'test', '\d+', undefined, '?']
 //        "/route(\\d+)" => [undefined, undefined, undefined, "\d+", undefined]
@@ -46,13 +46,13 @@ class UrlHelper
             '([.+*?=^!:${}()[\\]|\\/])'
         ];
 
-        $path_regexps = '`' . join('|', $path_regexps) . '`';
+        $path_regexps = '/' . join('|', $path_regexps) . '/';
 
         $path = preg_replace_callback($path_regexps, function ($all_matches) use (& $keys, & $index) {
             $length = count($all_matches);
 
             if ($length > 1) {
-//                $path_regexps 中的第一个数组， 匹配是否有转义字符  /(\\.)/
+//                $path_regexps 中的第一个数组， 匹配是否有被 转义的字符  /(\\.)/
                 $escaped = $all_matches[1];
             }
 
@@ -93,15 +93,16 @@ class UrlHelper
                 return $escaped;
             }
 
+//            转义特殊字符
             if (!empty($escape)) {
-                return $escape;
+                return '\\' . $escape;
             }
 
             $repeat = $suffix === '+' || $suffix === '*';
             $optional = $suffix === '?' || $suffix === '*';
 
             array_push($keys, [
-                'name' => (string)(!empty($key) ? $key : ++$index),
+                'name' => (string) (!empty($key) ? $key : $index++),
                 'delimiter' => !empty($prefix) ? $prefix : '/',
                 'optional' => $optional,
                 'repeat' => $repeat
@@ -110,7 +111,9 @@ class UrlHelper
             $prefix = !empty($prefix) ? '\\' . $prefix : '';
 
             $subject = (!empty($capture) ? $capture : (!empty($group) ? $group : '[^' . (!empty($prefix) ? $prefix : '\\/') . ']+?'));
+
             $capture = preg_replace('/([=!:$\/()])/', '\1', $subject);
+
 
             if (!empty($repeat)) {
                 $capture = $capture . '(?:' . $prefix . $capture . ')*';
@@ -123,6 +126,7 @@ class UrlHelper
             return $prefix . '(' . $capture . ')';
         }, $path);
 
+
         $ends_with_slash = substr($path, -1, 1) === '/';
 
         if (!$strict) {
@@ -130,10 +134,11 @@ class UrlHelper
         }
 
         if (!$end) {
-            $path .= $strict && $ends_with_slash ? '' : '(?=\\/|$)';
+            $path .= ($strict && $ends_with_slash ? '' : '(?=\\/|$)');
         }
 
-        return '`^' . $path . ($end ? '$' : '') . '`' . $flags;
+
+        return '/^' . $path . ($end ? '$' : '') . '/' . $flags;
     }
 
 
