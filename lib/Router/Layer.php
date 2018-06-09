@@ -33,11 +33,22 @@ class Layer
     {
         $this->handle = $fn;
 //        $this->name = null;   function name
+        if (empty($options['end'])) {
+            $options['end'] = false;
+        }
         $this->regexp = UrlHelper::pathToRegExp($path, $this->keys, $options);
 
 //        set fast path flags
         $this->fast_star = $path === '*';
         $this->fast_slash = $path === '/' && $options['end'] === false;
+    }
+
+
+    public function __call($name, $arguments)
+    {
+        if (isset($this->$name)) {
+            return call_user_func_array($this->$name, $arguments);
+        }
     }
 
 
