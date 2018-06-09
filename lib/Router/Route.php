@@ -22,6 +22,7 @@ class Route
     public function __construct($path)
     {
         $this->path = $path;
+        $this->VERDSInit();
     }
 
 
@@ -49,7 +50,7 @@ class Route
     }
 
 
-    private function dispatch(& $req, & $res, callable & $done)
+    public function dispatch(& $req, & $res, callable & $done)
     {
         $index = 0;
 
@@ -74,9 +75,9 @@ class Route
                 return $done($error);
             }
 
-            $layer = $this->stack[$index++];
+            $layer = $this->stack[$index];
 
-            if (empty($layer)) {
+            if (empty($layer) || $index >= count($this->stack)) {
                 return $done($error);
             }
 
@@ -98,6 +99,7 @@ class Route
     public function all(): Route
     {
         $handles = func_get_args();
+
         array_map(function ($handle) {
             if (is_callable($handle) === false) {
                 $type = gettype($handle);
@@ -117,28 +119,41 @@ class Route
     }
 
 
-    public function __get(string $name): Route
+    function __call($name, $arguments)
     {
-        $name = strtolower($name);
-
-        if ($name === 'all') {
-            return $this->all;
+        if (isset($this->$name)) {
+            return call_user_func_array($this->$name, $arguments);
         }
+    }
 
+
+    private function VERDSInit()
+    {
         $methods = HttpHelper::methods();
-        $flag = array_key_exists($name, $methods);
 
-        if ($flag === false) {
-            throw new \TypeError(" Http method: {$name} is not supported");
-        }
+        array_map(function ($method) {
+            $this->$method = function () use ($method) {
+                $handles = func_get_args();
 
-        $layer = new Layer('/', [], $handle);
-        $layer->method = $name;
+                array_map(function ($handle) use ($method) {
+                    if (is_callable($handle) === false) {
+                        $type = gettype($handle);
+                        throw new \TypeError("Route.{$method} requires a callback function but get a {$type}");
+                    }
 
-        $this->methods[$name] = true;
-        array_push($this->stack, $layer);
+                    $layer = new Layer('/', [], $handle);
 
-        return $this;
+//                  Layer 动态添加属性
+                    $layer->method = $method;
+
+                    $this->methods[$method] = true;
+                    array_push($this->stack, $layer);
+                }, $handles);
+
+//                链式调用方法
+                return $this;
+            };
+        }, $methods);
     }
 
 }
