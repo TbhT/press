@@ -75,11 +75,12 @@ class Route
                 return $done($error);
             }
 
-            $layer = $this->stack[$index];
-
-            if (empty($layer) || $index >= count($this->stack)) {
+            $layer = $this->stack[$index++];
+            if (empty($layer)) {
                 return $done($error);
             }
+
+            var_export($this->stack);
 
             if ($layer->method && $layer->method !== $req['method']) {
                 return $next($error);
@@ -123,6 +124,8 @@ class Route
     {
         if (isset($this->$name)) {
             return call_user_func_array($this->$name, $arguments);
+        } else {
+            throw new \TypeError("{$name} is not supported");
         }
     }
 

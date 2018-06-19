@@ -29,7 +29,7 @@ class RouteTest extends TestCase
         $req = ['method' => 'GET', 'url' => '/'];
         $res = [];
         $route = new Route('/foo');
-        $done = function ($error) use ($req) {
+        $done = function ($error) use (& $req) {
             if ($error) {
                 $this->assertFalse(false);
                 return;
@@ -39,7 +39,7 @@ class RouteTest extends TestCase
         };
 
 
-        $route->all(function ($req, $res, $next) {
+        $route->all(function (& $req, & $res, & $next) {
             $req->called = true;
             $next();
         });
