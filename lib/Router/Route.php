@@ -65,7 +65,7 @@ class Route
         $req['route'] = $this;
 
         $next = function ($error = null) use (& $done, & $index, & $req, & $res, & $next) {
-//            signal to exit route
+//          signal to exit route
             if (empty($error) === false && $error === 'route') {
                 return $done();
             }
@@ -75,18 +75,19 @@ class Route
                 return $done($error);
             }
 
-            $layer = $this->stack[$index++];
-            if (empty($layer)) {
+//          if the offset has overflow
+            if ($index >= count($this->stack)) {
                 return $done($error);
             }
 
-            var_export($this->stack);
+            $layer = $this->stack[$index++];
+
 
             if ($layer->method && $layer->method !== $req['method']) {
                 return $next($error);
             }
 
-            if ($error) {
+            if (empty($error) === false) {
                 $layer->hanlde_error($error, $req, $res, $next);
             } else {
                 $layer->handle_request($req, $res, $next);
@@ -113,6 +114,7 @@ class Route
             $layer->method = null;
 
             $this->methods['all'] = true;
+
             array_push($this->stack, $layer);
         }, $handles);
 

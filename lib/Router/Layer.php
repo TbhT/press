@@ -76,7 +76,8 @@ class Layer
     public function handle_request(& $req, & $res, callable & $next)
     {
         try {
-            $this->handle($req, $res, $next);
+//            $this->handle($req, $res, $next);
+            $this->handle();
         } catch (\Exception $error) {
             $next($error);
         }
