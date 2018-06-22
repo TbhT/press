@@ -48,7 +48,7 @@ class Layer
     {
 //        todo 这一行在运行时有问题， 需要进行改正和修复
         if (isset($this->$name)) {
-            return call_user_func_array($this->$name, $arguments);
+            call_user_func_array($this->$name, $arguments);
         }
     }
 
@@ -61,6 +61,7 @@ class Layer
      */
     public function handle_error($error, & $req, & $res, callable & $next)
     {
+//        todo  需要尝试将 引用传递改为值传递，感觉影响也不会很大
         try {
             $this->handle($error, $req, $res, $next);
         } catch (\Exception $error) {
@@ -77,8 +78,8 @@ class Layer
     public function handle_request(& $req, & $res, callable & $next)
     {
         try {
-//            $this->handle($req, $res, $next);
-            $this->handle();
+            $this->handle($req, $res, $next);
+//            $this->handle();
         } catch (\Exception $error) {
             $next($error);
         }
