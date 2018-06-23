@@ -196,47 +196,47 @@ class Router
                 $req->route = $route;
             }
 
-            $req->params = empty($this->mergeParams) ? self::mergeParams($layer->params, $parentParams) : $layer->params;
-            $layerPath = $layer->path;
-
-//            this should be done for the layer
-            self::process_params($layer, $paramCalled, $req, $res, function ($error) {
-                if ($error) {
-                    return $next($layerError || $error);
-                }
-
-                if ($route) {
-                    return $layer->hanlde_request($req, $res, $next);
-                }
-
-//                trim prefix
-
-                if (strlen($layerPath) !== 0) {
-                    $c = substr($path, strlen($layerPath));
-                    if ($c && $c !== '/' && $c !== '.') return $next($layerError);
-
-//                    trim off the part opf the url that matches the route
-//                    middleware (.use stuff) needs to have the path stripped
-                    $removed = $layerPath;
-                    $req->url = $protohost . substr($req->url, strlen($protohost) + strlen($removed));
-
-//                    ensure leading slash
-                    if (empty($protohost) && substr($req->url, 0, 1) !== '/') {
-                        $req->url = "/{$req->url}";
-                        $slashAdded = true;
-                    }
-
-//                    setup base URL (no trailing slash)
-                    $_url = substr($removed, strlen($removed - 1)) === '/' ? substr($removed, 0, strlen($removed) - 1);
-                    $req->baseUrl = $parentUrl . $_url;
-                }
-
-                if ($layerError) {
-                    $layer->handle_error($layerError, $req, $res, $next);
-                } else {
-                    $layer->handle_request($req, $res, $next);
-                }
-            });
+//            $req->params = empty($this->mergeParams) ? self::mergeParams($layer->params, $parentParams) : $layer->params;
+//            $layerPath = $layer->path;
+//
+////            this should be done for the layer
+//            self::process_params($layer, $paramCalled, $req, $res, function ($error) {
+//                if ($error) {
+//                    return $next($layerError || $error);
+//                }
+//
+//                if ($route) {
+//                    return $layer->hanlde_request($req, $res, $next);
+//                }
+//
+////                trim prefix
+//
+//                if (strlen($layerPath) !== 0) {
+//                    $c = substr($path, strlen($layerPath));
+//                    if ($c && $c !== '/' && $c !== '.') return $next($layerError);
+//
+////                    trim off the part opf the url that matches the route
+////                    middleware (.use stuff) needs to have the path stripped
+//                    $removed = $layerPath;
+//                    $req->url = $protohost . substr($req->url, strlen($protohost) + strlen($removed));
+//
+////                    ensure leading slash
+//                    if (empty($protohost) && substr($req->url, 0, 1) !== '/') {
+//                        $req->url = "/{$req->url}";
+//                        $slashAdded = true;
+//                    }
+//
+////                    setup base URL (no trailing slash)
+//                    $_url = substr($removed, strlen($removed - 1)) === '/' ? substr($removed, 0, strlen($removed) - 1);
+//                    $req->baseUrl = $parentUrl . $_url;
+//                }
+//
+//                if ($layerError) {
+//                    $layer->handle_error($layerError, $req, $res, $next);
+//                } else {
+//                    $layer->handle_request($req, $res, $next);
+//                }
+//            });
 
             $next();
         };

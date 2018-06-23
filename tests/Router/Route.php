@@ -24,7 +24,7 @@ class RouteTest extends TestCase
         $route->dispatch($req, $res, $done);
     }
 
-    public function testRouteAllMethod()
+    public function testRouteAllAddHandler()
     {
         $req = ['method' => 'GET', 'url' => '/'];
         $res = [];
@@ -40,12 +40,61 @@ class RouteTest extends TestCase
 
 
         $route->all(function ($req, $res, $next) {
-            echo 'all 终于被调用了';
             $req['called'] = 1;
             $next();
         });
 
 
         $route->dispatch($req, $res, $done);
+    }
+
+    public function testRouteAllHandleVERBS()
+    {
+        $count = 0;
+        $route = new Route('/foo');
+        $methods = HttpHelper::methods();
+        $methodsLength = count($methods);
+
+        $cb = function ($error) use (& $count, $methods) {
+            if ($error) {
+                return $this->expectException(Exception::class);
+            }
+        };
+
+        $route->all(function ($req, $res, $next) use (& $count) {
+            $count++;
+            $next();
+        });
+
+        array_map(function ($m) use ($route, $cb, & $count, $methodsLength) {
+            $req = ['method' => $m, 'url' => '/'];
+            $route->dispatch($req, [], $cb);
+        }, $methods);
+
+        $this->assertEquals($methodsLength, $count);
+    }
+
+    public function testRouteAllStack()
+    {
+        $req = ['count' => 0, 'method' => 'GET', 'url' => '/'];
+        $route = new Route('/foo');
+
+        $route->all(function ($req, $res, $next) {
+            $req['count']++;
+            $next();
+        });
+
+        $route->all(function ($req, $res, $next) {
+            $req['count']++;
+            $next();
+        });
+
+        $route->dispatch($req, [], function ($error) use ($req) {
+            if ($error) {
+                return $this->expectException(Exception::class);
+            }
+
+            $this->assertEquals(2, $req['count']);
+        });
     }
 }
