@@ -6,7 +6,6 @@ declare(strict_types=1);
 namespace Press\Router;
 
 use function foo\func;
-use phpDocumentor\Reflection\Types\Boolean;
 use Press\Tool\ArrayHelper;
 use Press\Tool\HttpHelper;
 use Press\Router\Layer;
@@ -50,7 +49,7 @@ class Route
     }
 
 
-    public function dispatch(& $req, & $res, callable & $done)
+    public function dispatch($req, $res, callable $done)
     {
         $index = 0;
 
@@ -64,7 +63,7 @@ class Route
 
         $req['route'] = $this;
 
-        $next = function ($error = null) use (& $done, & $index, & $req, & $res, & $next) {
+        $next = function ($error = null) use ($done, & $index, $req, $res, & $next) {
 //          signal to exit route
             if (empty($error) === false && $error === 'route') {
                 return $done();

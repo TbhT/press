@@ -29,7 +29,7 @@ class Layer
      * @param array $options
      * @param callable $fn
      */
-    public function __construct($path, array $options = [], callable & $fn)
+    public function __construct($path, array $options = [], callable $fn)
     {
         $this->handle = $fn;
 //        $this->name = null;   function name
@@ -46,7 +46,6 @@ class Layer
 
     public function __call($name, $arguments)
     {
-//        todo 这一行在运行时有问题， 需要进行改正和修复
         if (isset($this->$name)) {
             call_user_func_array($this->$name, $arguments);
         }
@@ -59,9 +58,8 @@ class Layer
      * @param $res
      * @param $next
      */
-    public function handle_error($error, & $req, & $res, callable & $next)
+    public function handle_error($error, $req, $res, callable $next)
     {
-//        todo  需要尝试将 引用传递改为值传递，感觉影响也不会很大
         try {
             $this->handle($error, $req, $res, $next);
         } catch (\Exception $error) {
@@ -75,11 +73,10 @@ class Layer
      * @param $res
      * @param $next
      */
-    public function handle_request(& $req, & $res, callable & $next)
+    public function handle_request($req, $res, callable $next)
     {
         try {
             $this->handle($req, $res, $next);
-//            $this->handle();
         } catch (\Exception $error) {
             $next($error);
         }

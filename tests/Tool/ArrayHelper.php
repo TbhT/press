@@ -11,7 +11,7 @@ use Press\Tool\ArrayHelper;
  */
 class ArrayHelperTest extends TestCase
 {
-    public function testCascadeArray()
+    public function cascadeArray()
     {
         return [
             'one' => [
@@ -39,7 +39,7 @@ class ArrayHelperTest extends TestCase
 
 
     /**
-     * @dataProvider testCascadeArray
+     * @dataProvider cascadeArray
      * @param array $t
      * @param array $expected
      */

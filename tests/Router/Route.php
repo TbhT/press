@@ -30,16 +30,16 @@ class RouteTest extends TestCase
         $res = [];
         $route = new Route('/foo');
         $done = function ($error) use (& $req) {
-//            if ($error) {
-//                $this->assertFalse(false);
-//                return;
-//            }
+            if ($error) {
+                $this->assertFalse(false);
+                return;
+            }
 
             $this->assertTrue($req['called']);
         };
 
 
-        $route->all(function (& $req, & $res, & $next) {
+        $route->all(function ($req, $res, $next) {
             echo 'all 终于被调用了';
             $req['called'] = 1;
             $next();
