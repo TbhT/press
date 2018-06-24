@@ -9,8 +9,6 @@ declare(strict_types=1);
 
 namespace Press\Utils\Negotiator;
 
-use Press\Utils\Negotiator\Charset;
-
 
 class Negotiator
 {
@@ -38,13 +36,14 @@ class Negotiator
 
     public function encoding($available)
     {
-
+        $set = Encoding::prefferedEncodings($this->request->headers['accept-encoding'], $available);
+        return $set && $set[0];
     }
 
 
     public function encodings($available)
     {
-
+        return Encoding::prefferedEncodings($this->request->headers['accept-encoding'], $available);
     }
 
 

@@ -36,7 +36,7 @@ function compare_specf()
 
 class Charset
 {
-    static public function preferredCharsets(string $accept, $provided = null)
+    static public function preferredCharsets(string $accept = '', $provided = null)
     {
 //         RFC 2616 sec 14.2: no header = *
 
@@ -45,7 +45,7 @@ class Charset
 
         if (empty($provided)) {
             $f = array_filter($provided, function ($spec) {
-                return $spec->q > 0;
+                return $spec['q'] > 0;
             });
 
 //         compare specs
@@ -58,7 +58,13 @@ class Charset
             $priorities[$key] = self::getCharsetPriority($val, $accepts, $key);
         }
 
-        array_filter($priorities, is_quality());
+        $priorities = array_filter($priorities, is_quality());
+        // sorted list of accepted charsets
+        usort($priorities, compare_specf());
+        return array_map(function ($p) use ($provided, $priorities) {
+            $index = array_search($p, $priorities);
+            return $provided[$index];
+        }, $priorities);
     }
 
 
