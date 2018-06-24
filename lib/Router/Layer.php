@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace Press\Router;
 
-use Press\Tool\UrlHelper;
+use Press\Helper\UrlHelper;
 
 
 /**

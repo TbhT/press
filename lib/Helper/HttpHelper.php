@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 
-namespace Press\Tool;
+namespace Press\Helper;
+use Press\Request;
+
 
 
 class HttpHelper
@@ -37,4 +39,8 @@ class HttpHelper
     }
 
 
+    static public function accepts(Request $req): string
+    {
+
+    }
 }

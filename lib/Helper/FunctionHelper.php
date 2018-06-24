@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Press\Tool;
+namespace Press\Helper;
 
 
 class FunctionHelper

@@ -6,8 +6,8 @@ declare(strict_types=1);
 namespace Press\Router;
 
 use function foo\func;
-use Press\Tool\ArrayHelper;
-use Press\Tool\HttpHelper;
+use Press\Helper\ArrayHelper;
+use Press\Helper\HttpHelper;
 use Press\Router\Layer;
 
 
