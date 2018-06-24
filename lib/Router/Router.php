@@ -5,7 +5,6 @@ declare(strict_types=1);
 
 namespace Press\Router;
 
-use function foo\func;
 use Press\Helper\HttpHelper;
 use Press\Helper\ArrayHelper;
 use Press\Router\Route;

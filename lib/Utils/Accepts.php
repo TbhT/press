@@ -7,7 +7,7 @@ declare(strict_types=1);
  * Time: 上午9:25
  */
 
-namespace Press\Util;
+namespace Press\Utils;
 
 use Press\Request;
 
