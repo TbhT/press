@@ -7,7 +7,7 @@ error_reporting(E_ALL);
 
 use PHPUnit\Framework\TestCase;
 use Press\Router\Route;
-use Press\Tool\HttpHelper;
+use Press\Helper\HttpHelper;
 
 
 class RouteTest extends TestCase

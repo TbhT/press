@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 
 use PHPUnit\Framework\TestCase;
-use Press\Tool\UrlHelper;
+use Press\Helper\UrlHelper;
 
 
 class UrlHelperTest extends TestCase

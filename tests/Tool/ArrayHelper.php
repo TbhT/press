@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 
 use PHPUnit\Framework\TestCase;
-use Press\Tool\ArrayHelper;
+use Press\Helper\ArrayHelper;
 
 
 /**
