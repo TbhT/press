@@ -88,6 +88,7 @@ class Language
 
         foreach ($accepted as $key => $item) {
             $spec = self::specify($language, $accepted[$key], $index);
+        //  todo why this sort type
             $flag = ($priority['s'] - $spec['s'] || $priority['q'] - $spec['q'] || $priority['o'] - $spec['o']);
             if ($spec && $flag < 0) {
                 $priority = $spec;
