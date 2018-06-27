@@ -25,8 +25,9 @@ function quote_count(string $str): int
 }
 
 
-function split_key_val_pair() {
-    return function (string $str) : array {
+function split_key_val_pair()
+{
+    return function (string $str): array {
         $index = strpos($str, '=');
         $val = null;
 
@@ -95,6 +96,80 @@ class MediaType
         if ($matches[3]) {
             $kvps = self::splitParameters($matches[3]);
             array_map(split_key_val_pair(), $kvps);
+
+            foreach ($kvps as $item) {
+                $pair = $item;
+                $key = strtolower($pair[0]);
+                $val = $pair[1];
+
+
+                // get the values, unwrapping quotes
+                $str_length = strlen($val);
+                $value = $val && $val[0] === '"' && $val[$str_length - 1] === '"' ?
+                    substr($val, 1, $str_length - 2) : $val;
+
+                if ($key === 'q') {
+                    $q = floatval($key);
+                    break;
+                }
+
+                // store parameter
+                $params[$key] = $value;
+            }
+        }
+
+        return [
+            'type' => $type,
+            'subtype' => $sub_type,
+            'params' => $params,
+            'q' => $q,
+            'i' => $i
+        ];
+    }
+
+    // get the priority of a media type
+    private static function getMediaTypePriority($type, $accepted, $index)
+    {
+        $priority = [
+            'o' => -1,
+            'q' => 0,
+            's' => 0
+        ];
+
+        foreach ($accepted as $key => $item) {
+            $spec = self::specify($type, $accepted[$key], $index);
+            //  todo why this sort type
+            $flag = ($priority['s'] - $spec['s'] || $priority['q'] - $spec['q'] || $priority['o'] - $spec['o']);
+            if ($spec && $flag < 0) {
+                $priority = $spec;
+            }
+        }
+
+        return $priority;
+
+    }
+
+    private static function specify($type, $spec, $index)
+    {
+        $p = self::parseMediaType($type);
+        $s = 0;
+
+        if (empty($p)) return null;
+
+        if (strtolower($spec['type']) === strtolower($p['type'])) {
+            $s |= 4;
+        } else if ($spec['type'] !== '*') {
+            return null;
+        }
+
+        if (strtolower($spec['subtype']) === strtolower($p['subtype'])) {
+            $s |= 2;
+        } else if ($spec['subtype'] !== '*') {
+            return null;
+        }
+
+        $keys = array_keys($spec['params']);
+        if (count($keys) > 0) {
 
         }
     }
