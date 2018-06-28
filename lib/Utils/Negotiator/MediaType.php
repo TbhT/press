@@ -10,6 +10,14 @@ declare(strict_types=1);
 namespace Press\Utils\Negotiator;
 
 
+function get_full_type()
+{
+    return function (array $spec) {
+        return "{$spec['type']}/{$spec['subtype']}";
+    };
+}
+
+
 function quote_count(string $str): int
 {
     $count = 0;
@@ -170,8 +178,22 @@ class MediaType
 
         $keys = array_keys($spec['params']);
         if (count($keys) > 0) {
-
+            $keys = array_filter($keys, function ($k) use ($spec, $p) {
+                return $spec['params'][$k] === '*' || strtolower($spec['params'][$k] || '') === strtolower($p['params'][$k] || '');
+            });
+            if (count($keys) > 0) {
+                return null;
+            } else {
+                $s |= 1;
+            }
         }
+
+        return [
+            'i' => $index,
+            'o' => $spec['i'],
+            'q' => $spec['q'],
+            's' => $s
+        ];
     }
 
     private static function splitParameters(string $str)
@@ -192,5 +214,34 @@ class MediaType
         }
 
         return $parameters;
+    }
+
+    public static function preferredMediaTypes(string $accept = '', $provided = null)
+    {
+        // RFC 2616 sec 14.2: no header = */*
+        $accept = empty($accept) ? '*/*' : $accept;
+        $accepts = self::parseAccept($accept);
+
+        if (empty($provided)) {
+            $f = array_filter($provided, function ($spec) {
+                return $spec['q'] > 0;
+            });
+
+//         compare specs
+            usort($f, compare_specf());
+            return array_map(get_full_type(), $f);
+        }
+
+        $priorities = [];
+        foreach ($provided as $key => $val) {
+            $priorities[$key] = self::getMediaTypePriority($val, $accepts, $key);
+        }
+
+        $priorities = array_filter($priorities, is_quality());
+        // sorted list of accepted media types
+        return array_map(function ($p) use ($provided, $priorities) {
+            $index = array_search($p, $priorities);
+            return $provided[$index];
+        }, $priorities);
     }
 }
