@@ -29,14 +29,14 @@ class Negotiator
 
     public function charset($available)
     {
-        $set = Charset::preferredCharsets($this->request->headers['accept-charset'], $available);
+        $set = $this->charsets($available);
         return $set && $set[0];
     }
 
 
     public function encoding($available)
     {
-        $set = Encoding::prefferedEncodings($this->request->headers['accept-encoding'], $available);
+        $set = $this->charsets($available);
         return $set && $set[0];
     }
 
@@ -49,18 +49,26 @@ class Negotiator
 
     public function language($available)
     {
-
+        $set = Language::prefferedLanguage($this->request->headers['accept-language'], $available);
+        return $set && $set[0];
     }
 
 
     public function languages($available)
     {
+        return $this->language($available);
+    }
 
+
+    public function mediaType($available)
+    {
+        $set = $this->mediaTypes($available);
+        return $set && $set[0];
     }
 
 
     public function mediaTypes($available)
     {
-
+        return MediaType::preferredMediaTypes($this->request->headers['mediaType'], $available);
     }
 }
