@@ -25,10 +25,11 @@ function extname(string $str)
 
 class MimeTypes
 {
-    private $preference = ['nginx', 'apache', null, 'iana'];
+    private static $preference = ['nginx', 'apache', null, 'iana'];
 
     public static $extensions = [];
     public static $types = [];
+
 
     public static function populateMaps($extensions, $types)
     {
@@ -42,42 +43,70 @@ class MimeTypes
 
             $extensions[$type] = $exts;
 
+//            extension -> mime
             foreach ($exts as $extension) {
                 if ($types[$extension]) {
+                    $from = $to = null;
+                    foreach (self::$preference as $k => $v) {
+                        if ($v === MIMEDB[$types[$extensions]]['source']) {
+                            $from = $k;
+                        }
 
+                        if ($v === $mime['source']) {
+                            $to = $k;
+                        }
+                    }
+
+                    $flag = $types['extension'] !== 'application/octet-stream' && ($from > $to ||
+                            ($from === $to && substr($types[$extension], 0, 12) === 'application/'));
+
+                    if ($flag) {
+                        continue;
+                    }
                 }
+
+//                set the extensions -> mime
+                $types[$extensions] = $type;
             }
         }
     }
 
 
-    public static function charset($type)
+    public static function charsets()
     {
-        if (empty($type) || is_string($type) === false) {
-            return false;
-        }
+
+    }
+
+
+    public static function charset()
+    {
+        return function (string $type) {
+            if (empty($type) || is_string($type) === false) {
+                return false;
+            }
 
 //        extract type regexp
-        preg_match('/^\s*([^;\s]*)(?:;|\s|$)/', $type, $matches);
-        $mime = $matches && strtolower(MIMEDB[$matches[1]]);
+            preg_match('/^\s*([^;\s]*)(?:;|\s|$)/', $type, $matches);
+            $mime = $matches && strtolower(MIMEDB[$matches[1]]);
 
-        if ($mime && array_key_exists('charset', $mime)) {
-            return $mime['charset'];
-        }
+            if ($mime && array_key_exists('charset', $mime)) {
+                return $mime['charset'];
+            }
 
 //        default text/* to utf-8
-        if (count($matches) > 0) {
-            preg_match('/^text\//', $matches[1], $text_matches);
-            if (count($text_matches) > 0) {
-                return 'UTF-8';
+            if (count($matches) > 0) {
+                preg_match('/^text\//', $matches[1], $text_matches);
+                if (count($text_matches) > 0) {
+                    return 'UTF-8';
+                }
             }
-        }
 
-        return false;
+            return false;
+        };
     }
 
 
-    private static function contentType(string $str)
+    public static function contentType(string $str)
     {
         if (empty($str) || is_string($str) === false) {
             return false;
@@ -117,6 +146,24 @@ class MimeTypes
         return self::$types[$extension] || false;
     }
 
+
+    public function extension(string $type)
+    {
+        if (empty($type) || is_string($type)) {
+            return false;
+        }
+
+        preg_match('/^\s*([^;\s]*)(?:;|\s|$)/', $type, $matches);
+
+//        get extensions
+        $exts = count($matches) > 0 && self::$extensions[strtolower($matches[1])];
+
+        if (empty($exts) || count($exts) === 0) {
+            return false;
+        }
+
+        return $exts[0];
+    }
 }
 
 
