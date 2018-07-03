@@ -130,7 +130,7 @@ class MimeTypes
     }
 
 
-    public function lookup(string $path)
+    public static function lookup(string $path)
     {
         if (empty($path) || is_string($path) === false) {
             return false;
@@ -147,7 +147,7 @@ class MimeTypes
     }
 
 
-    public function extension(string $type)
+    public static function extension(string $type)
     {
         if (empty($type) || is_string($type)) {
             return false;
