@@ -78,31 +78,29 @@ class MimeTypes
     }
 
 
-    public static function charset()
+    public static function charset(string $type)
     {
-        return function (string $type) {
-            if (empty($type) || is_string($type) === false) {
-                return false;
-            }
+        if (empty($type) || is_string($type) === false) {
+            return false;
+        }
 
 //        extract type regexp
-            preg_match('/^\s*([^;\s]*)(?:;|\s|$)/', $type, $matches);
-            $mime = $matches && strtolower(MIMEDB[$matches[1]]);
+        preg_match('/^\s*([^;\s]*)(?:;|\s|$)/', $type, $matches);
+        $mime = $matches && strtolower(MIMEDB[$matches[1]]);
 
-            if ($mime && array_key_exists('charset', $mime)) {
-                return $mime['charset'];
-            }
+        if ($mime && array_key_exists('charset', $mime)) {
+            return $mime['charset'];
+        }
 
 //        default text/* to utf-8
-            if (count($matches) > 0) {
-                preg_match('/^text\//', $matches[1], $text_matches);
-                if (count($text_matches) > 0) {
-                    return 'UTF-8';
-                }
+        if (count($matches) > 0) {
+            preg_match('/^text\//', $matches[1], $text_matches);
+            if (count($text_matches) > 0) {
+                return 'UTF-8';
             }
+        }
 
-            return false;
-        };
+        return false;
     }
 
 
