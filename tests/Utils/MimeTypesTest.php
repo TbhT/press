@@ -76,7 +76,7 @@ class MimeTypesTest extends TestCase
                 '.html', 'text/html; charset=utf-8'
             ],
             [
-                'jade', 'text/html; charset=utf-8'
+                'jade', 'text/jade; charset=utf-8'
             ],
             [
                 'json', 'application/json; charset=utf-8'
@@ -245,7 +245,7 @@ class MimeTypesTest extends TestCase
             [
                 'path/to/.config.json', 'application/json'
             ],
-               [
+            [
                 '.config.json', 'application/json'
             ]
         ];
@@ -265,25 +265,34 @@ class MimeTypesTest extends TestCase
 
     /**
      * @dataProvider contentTypeData
+     * @param $str
+     * @param $expected
      */
-    public function contentType()
+    public function testContentType($str, $expected)
     {
-
+        $str = MimeTypes::contentType($str);
+        self::assertEquals($str, $expected);
     }
 
     /**
      * @dataProvider extensionData
+     * @param $str
+     * @param $expected
      */
-    public function extension()
+    public function testExtension($str, $expected)
     {
-
+        $str = MimeTypes::extension($str);
+        self::assertEquals($str, $expected);
     }
 
     /**
      * @dataProvider lookupData
+     * @param $str
+     * @param $expected
      */
-    public function lookup()
+    public function testLookup($str, $expected)
     {
-
+        $str = MimeTypes::lookup($str);
+        self::assertEquals($str, $expected);
     }
 }
