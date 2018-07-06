@@ -18,7 +18,7 @@ function extname(string $str)
     $str_array = explode('.', $str);
     $str_array_length = count($str_array);
 
-    if ($str_array_length > 0) {
+    if ($str_array_length >= 2) {
         return $str_array[$str_array_length - 1];
     }
 
