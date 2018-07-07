@@ -15,14 +15,22 @@ const PREFERENCE = ['nginx', 'apache', null, 'iana'];
 
 function extname(string $str)
 {
-    $str_array = explode('.', $str);
-    $str_array_length = count($str_array);
+    preg_match('/(^\.\w+$)|([\w\d.:\/\\\\]+)/', $str, $matches);
+    $matches_length = count($matches);
 
-    if ($str_array_length >= 2) {
-        return $str_array[$str_array_length - 1];
+    if ($matches_length === 2) {
+//    for extension
+        $extname = substr($str, 1);
+    } else if ($matches_length === 3) {
+//    for path
+        $file_info = pathinfo($matches[2]);
+        $extname = array_key_exists('extension', $file_info) ?
+            $file_info['filename'] === '' ? '' : $file_info['extension'] : '';
+    } else {
+        $extname = '';
     }
 
-    return '';
+    return $extname;
 }
 
 

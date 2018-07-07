@@ -173,81 +173,81 @@ class MimeTypesTest extends TestCase
     public function lookupData()
     {
         return [
-//            [
-//                '.html', 'text/html'
-//            ],
-//            [
-//                '.js', 'application/javascript'
-//            ],
-//            [
-//                '.json', 'application/json'
-//            ],
-//            [
-//                '.rtf', 'application/rtf'
-//            ],
-//            [
-//                '.txt', 'text/plain'
-//            ],
-//            [
-//                '.xml', 'application/xml'
-//            ],
+            [
+                '.html', 'text/html'
+            ],
+            [
+                '.js', 'application/javascript'
+            ],
+            [
+                '.json', 'application/json'
+            ],
+            [
+                '.rtf', 'application/rtf'
+            ],
+            [
+                '.txt', 'text/plain'
+            ],
+            [
+                '.xml', 'application/xml'
+            ],
             [
                 'HTML', 'text/html'
             ],
-//            [
-//                '.Xml', 'application/xml'
-//            ],
-//            [
-//                '.bogus', false
-//            ],
-//            [
-//                'bogus', false
-//            ],
-//            [
-//                null, false
-//            ],
-//            [
-//                12, false
-//            ],
-//            [
-//                [], false
-//            ],
-//            [
-//                'page.html', 'text/html'
-//            ],
-//            [
-//                'path/to/page.html', 'text/html'
-//            ],
-//            [
-//                'path\\to\\page.html', 'text/html'
-//            ],
-//            [
-//                '/absolute/path/to/page.html', 'text/html'
-//            ],
-//            [
-//                'C:\\path\\to\\page.html', 'text/html'
-//            ],
-//            [
-//                '/path/to/PAGE.HTML', 'text/html'
-//            ],
-//            [
-//                'C:\\path\\to\\PAGE.HTML', 'text/html'
-//            ],
-//            [
-//                '/path/to/file.bogus', false
-//            ],
-//            [
-//                '/path/to/json', false
-//            ],
-//            [
-//                '/path/to/.json', false
-//            ],
+            [
+                '.Xml', 'application/xml'
+            ],
+            [
+                '.bogus', false
+            ],
+            [
+                'bogus', false
+            ],
+            [
+                null, false
+            ],
+            [
+                12, false
+            ],
+            [
+                [], false
+            ],
+            [
+                'page.html', 'text/html'
+            ],
+            [
+                'path/to/page.html', 'text/html'
+            ],
+            [
+                'path\\to\\page.html', 'text/html'
+            ],
+            [
+                '/absolute/path/to/page.html', 'text/html'
+            ],
+            [
+                'C:\\path\\to\\page.html', 'text/html'
+            ],
+            [
+                '/path/to/PAGE.HTML', 'text/html'
+            ],
+            [
+                'C:\\path\\to\\PAGE.HTML', 'text/html'
+            ],
+            [
+                '/path/to/file.bogus', false
+            ],
+            [
+                '/path/to/json', false
+            ],
+            [
+                '/path/to/.json', false
+            ],
             [
                 'path/to/.config.json', 'application/json'
             ],
-//            [
-//                '.config.json', 'application/json'
-//            ]
+            [
+                '.config.json', 'application/json'
+            ]
         ];
     }
 
