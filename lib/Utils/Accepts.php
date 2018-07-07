@@ -50,7 +50,7 @@ class Accepts
         return $types[$index];
     }
 
-    public function type($types)
+    public function type($types = null)
     {
         $args = func_get_args();
         return $this->_type($types, $args);
@@ -77,7 +77,7 @@ class Accepts
     }
 
 
-    private function _encoding($encodings, $args)
+    private function _encoding($encodings = null, $args)
     {
 //      support flattened arguments
         if ($encodings && is_array($encodings) === false) {
@@ -108,38 +108,37 @@ class Accepts
         return $this->_encoding($encodings, $args);
     }
 
-
     private function _charset($charsets, $args)
     {
+        $args_ = [];
+
         //      support flattened arguments
         if ($charsets && is_array($charsets) === false) {
-            $args_ = [];
             foreach ($args as $key => $arg) {
                 $args_[$key] = $arg;
             }
         }
 
         // no charsets, return all requested charsets
-        if ($charsets || count($charsets) === 0) {
+        if (empty($args_) || count($args_) === 0) {
             return $this->negotiator->charsets();
         }
 
-        $_charsets = $this->negotiator->charsets($charsets);
+        $_charsets = $this->negotiator->charsets($args_);
         return $_charsets[0] || false;
     }
 
-    public function charsets($charsets)
+    public function charsets($charsets = null)
     {
         $args = func_get_args();
         return $this->_charset($charsets, $args);
     }
 
-    public function charset($charsets)
+    public function charset($charsets = null)
     {
         $args = func_get_args();
         return $this->_charset($charsets, $args);
     }
-
 
     private function _language($languages, $args)
     {
@@ -161,25 +160,25 @@ class Accepts
         return $_language[0] || false;
     }
 
-    public function language($languages)
+    public function language($languages = null)
     {
         $args = func_get_args();
         return $this->_language($languages, $args);
     }
 
-    public function lang($languages)
+    public function lang($languages = null)
     {
         $args = func_get_args();
         return $this->_language($languages, $args);
     }
 
-    public function langs($languages)
+    public function langs($languages = null)
     {
         $args = func_get_args();
         return $this->_language($languages, $args);
     }
 
-    public function languages($languages)
+    public function languages($languages = null)
     {
         $args = func_get_args();
         return $this->_language($languages, $args);

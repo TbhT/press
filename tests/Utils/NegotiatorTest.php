@@ -13,5 +13,8 @@ use Press\Utils\Negotiator;
 
 class NegotiatorTest extends TestCase
 {
+    public function charsetData()
+    {
 
+    }
 }
