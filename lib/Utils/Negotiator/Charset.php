@@ -29,8 +29,34 @@ function get_full_charset()
 function compare_specf()
 {
     return function ($a, $b) {
-        return ($b['q'] - $a['q']) || ($b['s'] - $a['s']) || ($a['o'] - $b['o']) || ($a['i'] - $b['i']) || 0;
+        $flag = 0;
+        $cmp_array = ['q', 's', 'o', 'i'];
+        foreach ($cmp_array as $key => $value) {
+            if ($value === 'q' || $value === 's') {
+                $cmp = array_key_compare($b, $a, $value);
+            } else {
+                $cmp = array_key_compare($a, $b, $value);
+            }
+
+            if ($cmp !== 0) {
+                $flag = $cmp > 0 ? 1 : -1;
+                break;
+            }
+        }
+
+        return $flag;
+//        $q = array_key_compare($a, $b, 'q');
+
+//        return array_key_compare($a, $b, 'q') || array_key_compare($a, $b, 's')
+//            || array_key_compare($b, $a, 'o') || array_key_compare($b, $a, 'i')
+//            || 0;
     };
+}
+
+
+function array_key_compare($a, $b, $key)
+{
+    return array_key_exists($key, $a) ? $a[$key] - $b[$key] : 0;
 }
 
 
@@ -43,11 +69,8 @@ class Charset
         $accept = empty($accept) ? '*' : $accept;
         $accepts = self::parseAcceptCharset($accept);
 
-        if (empty($provided)) {
-            $f = array_filter($provided, function ($spec) {
-                return $spec['q'] > 0;
-            });
-
+        if (!$provided) {
+            $f = array_filter($accepts, is_quality());
 //         compare specs
             usort($f, compare_specf());
             return array_map(get_full_charset(), $f);
@@ -91,13 +114,13 @@ class Charset
 //      parse a charset from the Accept-Charset header
     static private function parseCharset(string $str, $i)
     {
-        preg_match_all('/^\s*([^\s;]+)\s*(?:;(.*))?$/', $str, $matches);
+        preg_match('/^\s*([^\s;]+)\s*(?:;(.*))?$/', $str, $matches);
         $m_length = count($matches);
         if ($m_length === 0) return null;
 
         $charset = $matches[1];
         $q = 1;
-        if ($m_length >= 2) {
+        if ($m_length > 2) {
             $params = explode(';', $matches[2]);
 
             foreach ($params as $key => $val) {

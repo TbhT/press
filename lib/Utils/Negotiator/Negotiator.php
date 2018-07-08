@@ -17,6 +17,7 @@ class Negotiator
 
     public $request;
 
+
     public function __construct(Request $request)
     {
         $this->request = $request;
@@ -25,21 +26,24 @@ class Negotiator
 
     public function charsets($available = null)
     {
-        return Charset::preferredCharsets($this->request->headers['accept-charset'], $available);
+        $accept_charset = array_key_exists('accept-charset', $this->request->headers) ?
+            $this->request->headers['accept-charset'] : '';
+        $accept_charset = empty($accept_charset) ? '' : $accept_charset;
+        return Charset::preferredCharsets($accept_charset, $available);
     }
 
 
     public function charset($available = null)
     {
         $set = $this->charsets($available);
-        return $set && $set[0];
+        return empty($set) ? null : $set[0];
     }
 
 
     public function encoding($available = null)
     {
         $set = $this->charsets($available);
-        return $set && $set[0];
+        return empty($set) ? null : $set[0];
     }
 
 
@@ -52,7 +56,7 @@ class Negotiator
     public function language($available = null)
     {
         $set = Language::prefferedLanguage($this->request->headers['accept-language'], $available);
-        return $set && $set[0];
+        return empty($set) ? null : $set[0];
     }
 
 
@@ -65,7 +69,7 @@ class Negotiator
     public function mediaType($available = null)
     {
         $set = $this->mediaTypes($available);
-        return $set && $set[0];
+        return empty($set) ? null : $set[0];
     }
 
 
