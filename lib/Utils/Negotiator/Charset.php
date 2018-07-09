@@ -26,16 +26,16 @@ function get_full_charset()
 }
 
 
-function compare_specf()
+function compare_specs()
 {
     return function ($a, $b) {
         $flag = 0;
         $cmp_array = ['q', 's', 'o', 'i'];
         foreach ($cmp_array as $key => $value) {
             if ($value === 'q' || $value === 's') {
-                $cmp = array_key_compare($b, $a, $value);
-            } else {
                 $cmp = array_key_compare($a, $b, $value);
+            } else {
+                $cmp = array_key_compare($b, $a, $value);
             }
 
             if ($cmp !== 0) {
@@ -55,6 +55,12 @@ function array_key_compare($a, $b, $key)
 }
 
 
+function array_key_compare_val($a, $b, $key)
+{
+    return $a[$key] - $b[$key];
+}
+
+
 class Charset
 {
     static public function preferredCharsets(string $accept = '', $provided = null)
@@ -64,10 +70,10 @@ class Charset
         $accept = empty($accept) ? '*' : $accept;
         $accepts = self::parseAcceptCharset($accept);
 
-        if (!$provided) {
+        if (!$provided && is_array($provided) === false) {
             $f = array_filter($accepts, is_quality());
 //         compare specs
-            usort($f, compare_specf());
+            usort($f, compare_specs());
             return array_map(get_full_charset(), $f);
         }
 
@@ -76,33 +82,33 @@ class Charset
             $priorities[$key] = self::getCharsetPriority($val, $accepts, $key);
         }
 
-        $priorities = array_filter($priorities, is_quality());
+        $priorities_ = array_filter($priorities, is_quality());
         // sorted list of accepted charsets
-        usort($priorities, compare_specf());
+        usort($priorities_, compare_specs());
         return array_map(function ($p) use ($provided, $priorities) {
             $index = array_search($p, $priorities);
             return $provided[$index];
-        }, $priorities);
+        }, $priorities_);
     }
 
 
     static private function parseAcceptCharset(string $accept)
     {
         $accepts = explode(',', $accept);
-
+        $accepts_ = [];
         for ($i = 0, $j = 0; $i < count($accepts); $i++) {
             $val = trim($accepts[$i]);
             $charset = self::parseCharset($val, $i);
 
             if (empty($charset) === false) {
-                $accepts[$j++] = $charset;
+                $accepts_[$j++] = $charset;
             }
         }
 
 //      rim accepts
-        $accepts['length'] = $j;
+//        $accepts['length'] = $j;
 
-        return $accepts;
+        return $accepts_;
     }
 
 
@@ -139,13 +145,19 @@ class Charset
     static private function getCharsetPriority($charset, $accepted, $index): array
     {
         $priority = ['o' => -1, 'q' => 0, 's' => 0];
+        $cmp_array = ['s', 'q', 'o'];
 
         foreach ($accepted as $key => $val) {
             $spec = self::specify($charset, $val, $index);
-            $flag = ($priority['s'] - $spec['s'] || $priority['q'] - $spec['q'] || $priority['o'] - $spec['o']);
-            if ($spec && $flag < 0) {
-                $priority = $spec;
+            foreach ($cmp_array as $cmp_key) {
+                if ($priority[$cmp_key] - $spec[$cmp_key] < 0 && $spec) {
+                    $priority = $spec;
+                }
             }
+//            $flag = ($priority['s'] - $spec['s'] || $priority['q'] - $spec['q'] || $priority['o'] - $spec['o']);
+//            if ($spec && $flag < 0) {
+//                $priority = $spec;
+//            }
         }
 
         return $priority;
