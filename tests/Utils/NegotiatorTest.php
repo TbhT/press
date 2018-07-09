@@ -305,25 +305,45 @@ class NegotiatorTest extends TestCase
 
     /**
      * @dataProvider charsetArrayData
+     * @param $accept_charset
+     * @param $expected
+     * @param $charset_array
      */
-    public function testCharsetWithArray()
+    public function testCharsetWithArray($accept_charset, $expected, $charset_array)
     {
+        $request = self::createRequest(['Accept-Charset' => $accept_charset]);
+        $negotiator = new Negotiator\Negotiator($request);
 
+        $result = $negotiator->charset($charset_array);
+        self::assertEquals($expected, $result);
     }
 
     /**
      * @dataProvider charsetsData
+     * @param $accept_charsets
+     * @param $expected
      */
-    public function testCharsets()
+    public function testCharsets($accept_charsets, $expected)
     {
+        $request = self::createRequest(['Accept-Charset' => $accept_charsets]);
+        $negotiator = new Negotiator\Negotiator($request);
 
+        $result = $negotiator->charsets();
+        self::assertEquals($expected, $result);
     }
 
     /**
      * @dataProvider charsetsArrayData
+     * @param $accept_charset
+     * @param $expected
+     * @param $charsets_array
      */
-    public function testCharsetsWithArray()
+    public function testCharsetsWithArray($accept_charset, $expected, $charsets_array)
     {
+        $request = self::createRequest(['Accept-Charset' => $accept_charset]);
+        $negotiator = new Negotiator\Negotiator($request);
 
+        $result = $negotiator->charsets($charsets_array);
+        self::assertEquals($expected, $result);
     }
 }
