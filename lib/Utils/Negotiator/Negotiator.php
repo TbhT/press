@@ -49,13 +49,13 @@ class Negotiator
 
     public function encodings($available = null)
     {
-        return Encoding::prefferedEncodings($this->request->headers['accept-encoding'], $available);
+        return Encoding::preferredEncodings($this->request->headers['accept-encoding'], $available);
     }
 
 
     public function language($available = null)
     {
-        $set = Language::prefferedLanguage($this->request->headers['accept-language'], $available);
+        $set = Language::preferredLanguage($this->request->headers['accept-language'], $available);
         return empty($set) ? null : $set[0];
     }
 

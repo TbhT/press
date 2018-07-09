@@ -44,7 +44,7 @@ class Language
 //    Parse a language from the Accept-Language header.
     private static function parseLanguage(string $str, $i = null)
     {
-        preg_match_all('/^\s*([^\s\-;]+)(?:-([^\s;]+))?\s*(?:;(.*))?$/', $str, $matches);
+        preg_match('/^\s*([^\s\-;]+)(?:-([^\s;]+))?\s*(?:;(.*))?$/', $str, $matches);
         $m_length = count($matches);
         if ($m_length === 0) return null;
 
@@ -123,7 +123,7 @@ class Language
         ];
     }
 
-    public static function prefferedLanguage(string $accept = '', $provided = null)
+    public static function preferredLanguage(string $accept = '', $provided = null)
     {
         // RFC 2616 sec 14.4: no header = *
         $accept = empty($accept) ? '*' : $accept;

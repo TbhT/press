@@ -66,7 +66,7 @@ class Encoding
      */
     private static function parseEncoding(string $str, int $i)
     {
-        preg_match_all('/^\s*([^\s;]+)\s*(?:;(.*))?$/', $str, $matches);
+        preg_match('/^\s*([^\s;]+)\s*(?:;(.*))?$/', $str, $matches);
         $m_length = count($matches);
         if ($m_length === 0) return null;
 
@@ -78,7 +78,7 @@ class Encoding
             foreach ($params as $key => $val) {
                 $vs = explode('=', $val);
                 if ($vs[0] === 'q') {
-                    $q = $vs[1];
+                    $q = floatval($vs[1]);
                     break;
                 }
             }
@@ -115,14 +115,12 @@ class Encoding
      * @param $provided
      * @return array
      */
-    public static function prefferedEncodings(string $accept = '', $provided)
+    public static function preferredEncodings(string $accept = '', $provided)
     {
         $accepts = self::parseAcceptEncoding($accept);
 
-        if (empty($provided)) {
-            $f = array_filter($provided, function ($spec) {
-                return $spec['q'] > 0;
-            });
+        if (!$provided) {
+            $f = array_filter($provided, is_quality());
 
             usort($f, compare_specf());
             return array_map(get_full_encoding(), $f);

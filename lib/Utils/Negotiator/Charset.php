@@ -45,11 +45,6 @@ function compare_specf()
         }
 
         return $flag;
-//        $q = array_key_compare($a, $b, 'q');
-
-//        return array_key_compare($a, $b, 'q') || array_key_compare($a, $b, 's')
-//            || array_key_compare($b, $a, 'o') || array_key_compare($b, $a, 'i')
-//            || 0;
     };
 }
 
