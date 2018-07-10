@@ -31,11 +31,11 @@ function compare_specs()
     return function ($a, $b) {
         $flag = 0;
         $cmp_array = ['q', 's', 'o', 'i'];
-        foreach ($cmp_array as $key => $value) {
+        foreach ($cmp_array as $value) {
             if ($value === 'q' || $value === 's') {
-                $cmp = array_key_compare($a, $b, $value);
-            } else {
                 $cmp = array_key_compare($b, $a, $value);
+            } else {
+                $cmp = array_key_compare($a, $b, $value);
             }
 
             if ($cmp !== 0) {
@@ -79,7 +79,8 @@ class Charset
 
         $priorities = [];
         foreach ($provided as $key => $val) {
-            $priorities[$key] = self::getCharsetPriority($val, $accepts, $key);
+            $charset_priority = self::getCharsetPriority($val, $accepts, $key);
+            array_push($priorities, $charset_priority);
         }
 
         $priorities_ = array_filter($priorities, is_quality());
@@ -124,8 +125,9 @@ class Charset
         if ($m_length > 2) {
             $params = explode(';', $matches[2]);
 
-            foreach ($params as $key => $val) {
-                $vs = explode('=', $val);
+            for ($i = 0; $i < count($params); $i++) {
+                $s = trim($params[$i]);
+                $vs = explode('=', $s);
                 if ($vs[0] === 'q') {
                     $q = floatval($vs[1]);
                     break;
@@ -149,15 +151,15 @@ class Charset
 
         foreach ($accepted as $key => $val) {
             $spec = self::specify($charset, $val, $index);
-            foreach ($cmp_array as $cmp_key) {
-                if ($priority[$cmp_key] - $spec[$cmp_key] < 0 && $spec) {
-                    $priority = $spec;
+
+            if ($spec) {
+                foreach ($cmp_array as $cmp_key) {
+                    if ($priority[$cmp_key] - $spec[$cmp_key] < 0) {
+                        $priority = $spec;
+                        break;
+                    }
                 }
             }
-//            $flag = ($priority['s'] - $spec['s'] || $priority['q'] - $spec['q'] || $priority['o'] - $spec['o']);
-//            if ($spec && $flag < 0) {
-//                $priority = $spec;
-//            }
         }
 
         return $priority;
