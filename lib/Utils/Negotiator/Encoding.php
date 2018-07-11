@@ -52,7 +52,7 @@ class Encoding
             ];
         }
 
-        $accepts['length'] = $j;
+//        $accepts['length'] = $j;
 
         return $accepts;
     }
@@ -62,7 +62,7 @@ class Encoding
      * parse an encoding from the accept-encoding header
      * @param string $str
      * @param int $i
-     * @return null
+     * @return array|null
      */
     private static function parseEncoding(string $str, int $i)
     {
@@ -72,11 +72,11 @@ class Encoding
 
         $encoding = $matches[1];
         $q = 1;
-        if ($m_length >= 2) {
+        if ($m_length > 2) {
             $params = explode(';', $matches[2]);
-
-            foreach ($params as $key => $val) {
-                $vs = explode('=', $val);
+            for ($i = 0; $i < count($params); $i++) {
+                $s = trim($params[$i]);
+                $vs = explode('=', $s);
                 if ($vs[0] === 'q') {
                     $q = floatval($vs[1]);
                     break;
@@ -92,7 +92,7 @@ class Encoding
     }
 
 //  get the specificity of the encoding
-    private static function specify(string $encoding, array $spec, int $index)
+    private static function specify(string $encoding, array $spec, $index = -1)
     {
         $s = 0;
         if (strtolower($spec['encoding']) === strtolower($encoding)) {
@@ -122,7 +122,7 @@ class Encoding
         if (!$provided) {
             $f = array_filter($provided, is_quality());
 
-            usort($f, compare_specf());
+            usort($f, compare_specs());
             return array_map(get_full_encoding(), $f);
         }
 
@@ -131,13 +131,13 @@ class Encoding
             $priorities[$key] = self::getEncodingPriority($priority, $accepts, $key);
         }
 
-        $priorities = array_filter($priorities, is_quality());
+        $priorities_ = array_filter($priorities, is_quality());
         // sorted list of accepted encodings
-        usort($priorities, compare_specf());
+        usort($priorities_, compare_specs());
         return array_map(function ($p) use ($provided, $priorities) {
             $index = array_search($p, $priorities);
             return $provided[$index];
-        }, $priorities);
+        }, $priorities_);
     }
 
 
@@ -150,17 +150,19 @@ class Encoding
      */
     private static function getEncodingPriority($encoding, $accepted, $index)
     {
-        $priority = [
-            'o' => -1,
-            'q' => 0,
-            's' => 0
-        ];
+        $priority = ['o' => -1, 'q' => 0, 's' => 0];
+        $cmp_array = ['s', 'q', 'o'];
 
         foreach ($accepted as $item) {
             $spec = self::specify($encoding, $item, $index);
-            $flag = ($priority['s'] - $spec['s'] || $priority['q'] - $spec['q'] || $priority['o'] - $spec['o']);
-            if ($spec && $flag < 0) {
-                $priority = $spec;
+
+            if ($spec) {
+                foreach ($cmp_array as $cmp_key) {
+                    if ($priority[$cmp_key] - $spec[$cmp_key] < 0) {
+                        $priority = $spec;
+                        break;
+                    }
+                }
             }
         }
 

@@ -35,7 +35,7 @@ class Language
         }
 
 //        trim accepts
-        $accepts['length'] = $j;
+//        $accepts['length'] = $j;
 
         return $accepts;
     }
@@ -57,11 +57,11 @@ class Language
         $q = 1;
         if ($matches[3]) {
             $params = explode(';', $matches[3]);
-
-            foreach ($params as $key => $val) {
-                $vs = explode('=', $val);
+            for ($i = 0; $i < count($params); $i++) {
+                $s = trim($params[$i]);
+                $vs = explode('=', $s);
                 if ($vs[0] === 'q') {
-                    $q = $vs[1];
+                    $q = floatval($vs[1]);
                     break;
                 }
             }
@@ -80,18 +80,19 @@ class Language
 //    Get the priority of a language.
     private static function getLanguagePriority(string $language, array $accepted, int $index)
     {
-        $priority = [
-            'o' => -1,
-            'q' => 0,
-            's' => 0
-        ];
+        $priority = ['o' => -1, 'q' => 0, 's' => 0];
+        $cmp_array = ['s', 'q', 'o'];
 
         foreach ($accepted as $key => $item) {
             $spec = self::specify($language, $accepted[$key], $index);
-        //  todo why this sort type
-            $flag = ($priority['s'] - $spec['s'] || $priority['q'] - $spec['q'] || $priority['o'] - $spec['o']);
-            if ($spec && $flag < 0) {
-                $priority = $spec;
+            //  todo why this sort type
+            if ($spec) {
+                foreach ($cmp_array as $cmp_key) {
+                    if ($priority[$cmp_key] - $spec[$cmp_key] < 0) {
+                        $priority = $spec;
+                        break;
+                    }
+                }
             }
         }
 
@@ -129,13 +130,11 @@ class Language
         $accept = empty($accept) ? '*' : $accept;
         $accepts = self::parseAcceptLanguage($accept);
 
-        if (empty($provided)) {
-            $f = array_filter($provided, function ($spec) {
-                return $spec['q'] > 0;
-            });
+        if (!$provided) {
+            $f = array_filter($provided, is_quality());
 
 //         compare specs
-            usort($f, compare_specf());
+            usort($f, compare_specs());
             return array_map(get_full_languages(), $f);
         }
 
@@ -144,11 +143,12 @@ class Language
             $priorities[$key] = self::getLanguagePriority($val, $accepts, $key);
         }
 
-        $priorities = array_filter($priorities, is_quality());
+        $priorities_ = array_filter($priorities, is_quality());
         // sorted list of accepted languages
+        usort($priorities_, compare_specs());
         return array_map(function ($p) use ($provided, $priorities) {
             $index = array_search($p, $priorities);
             return $provided[$index];
-        }, $priorities);
+        }, $priorities_);
     }
 }
