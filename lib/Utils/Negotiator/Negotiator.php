@@ -42,14 +42,17 @@ class Negotiator
 
     public function encoding($available = null)
     {
-        $set = $this->charsets($available);
+        $set = $this->encodings($available);
         return empty($set) ? null : $set[0];
     }
 
 
     public function encodings($available = null)
     {
-        return Encoding::preferredEncodings($this->request->headers['accept-encoding'], $available);
+        $accept_encoding = array_key_exists('accept-encoding', $this->request->headers) ?
+            $this->request->headers['accept-encoding'] : '';
+        $accept_encoding = empty($accept_encoding) ? '' : $accept_encoding;
+        return Encoding::preferredEncodings($accept_encoding, $available);
     }
 
 

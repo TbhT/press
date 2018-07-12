@@ -8,7 +8,8 @@ declare(strict_types=1);
  * Time: 下午11:32
  */
 
-use Press\Utils\Negotiator\Encoding;
+use Press\Request;
+use Press\Utils\Negotiator;
 use PHPUnit\Framework\TestCase;
 
 
@@ -123,7 +124,7 @@ class EncodingTest extends TestCase
                 '*;q=0, identity;q=1', null, []
             ],
             [
-                '*;q=0, identity;q=1', null, ['identity']
+                '*;q=0, identity;q=1', 'identity', ['identity']
             ],
             [
                 '*;q=0, identity;q=1', null, ['gzip']
@@ -226,7 +227,7 @@ class EncodingTest extends TestCase
                 'gzip, compress;q=0', ['gzip', 'identity']
             ],
             [
-                'gzip, deflate', ['zip', 'deflate', 'identity']
+                'gzip, deflate', ['gzip', 'deflate', 'identity']
             ],
             [
                 'gzip;q=0.8, deflate', ['deflate', 'gzip', 'identity']
@@ -296,7 +297,7 @@ class EncodingTest extends TestCase
                 '*;q=0, identity;q=1', ['identity'], ['identity']
             ],
             [
-                '*;;q=0, identity;q=1', ['gzip'], []
+                '*;q=0, identity;q=1', ['gzip'], []
             ],
             [
                 'identity', [], []
@@ -371,5 +372,78 @@ class EncodingTest extends TestCase
                 'gzip;q=0.8, identity;q=0.5, *;q=0.3', ['identity', 'gzip', 'compress'], ['gzip', 'identity', 'compress']
             ]
         ];
+    }
+
+    private function createRequest($headers)
+    {
+        $request = new Request();
+        $request->headers = [];
+
+        if ($headers) {
+            foreach ($headers as $key => $header) {
+                $request->headers[strtolower($key)] = $header;
+            }
+        }
+
+        return $request;
+    }
+
+    /**
+     * @param $accept_encoding
+     * @param $expected
+     * @dataProvider encodingData
+     */
+    public function testEncoding($accept_encoding, $expected)
+    {
+        $request = self::createRequest(['Accept-Encoding' => $accept_encoding]);
+        $negotiator = new Negotiator\Negotiator($request);
+
+        $result = $negotiator->encoding();
+        static::assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider encodingArrayData
+     * @param $accept_encoding
+     * @param $expected
+     * @param $encoding
+     */
+    public function testEncodingArray($accept_encoding, $expected, $encoding)
+    {
+        $request = self::createRequest(['Accept-Encoding' => $accept_encoding]);
+        $negotiator = new Negotiator\Negotiator($request);
+
+        $result = $negotiator->encoding($encoding);
+        static::assertEquals($expected, $result);
+    }
+
+    /**
+     * @param $accept_encoding
+     * @param $expected
+     * @dataProvider encodingsData
+     */
+    public function testEncodings($accept_encoding, $expected)
+    {
+        $request = self::createRequest(['Accept-Encoding' => $accept_encoding]);
+        $negotiator = new Negotiator\Negotiator($request);
+
+        $result = $negotiator->encodings();
+        static::assertEquals($expected, $result);
+    }
+
+
+    /**
+     * @param $accept_encoding
+     * @param $encoding
+     * @param $expected
+     * @dataProvider encodingsArrayData
+     */
+    public function testEncodingsArray($accept_encoding, $encoding, $expected)
+    {
+        $request = self::createRequest(['Accept-Encoding' => $accept_encoding]);
+        $negotiator = new Negotiator\Negotiator($request);
+
+        $result = $negotiator->encodings($encoding);
+        static::assertEquals($expected, $result);
     }
 }

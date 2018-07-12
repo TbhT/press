@@ -10,6 +10,49 @@ declare(strict_types=1);
 namespace Press\Utils\Negotiator;
 
 
+function array_key_compare($a, $b, $key)
+{
+    return array_key_exists($key, $a) ? $a[$key] - $b[$key] : 0;
+}
+
+
+function array_key_compare_val($a, $b, $key)
+{
+    return $a[$key] - $b[$key];
+}
+
+
+function compare_specs()
+{
+    return function ($a, $b) {
+        $flag = 0;
+        $cmp_array = ['q', 's', 'o', 'i'];
+        foreach ($cmp_array as $value) {
+            if ($value === 'q' || $value === 's') {
+                $cmp = array_key_compare($b, $a, $value);
+            } else {
+                $cmp = array_key_compare($a, $b, $value);
+            }
+
+            if ($cmp !== 0) {
+                $flag = $cmp > 0 ? 1 : -1;
+                break;
+            }
+        }
+
+        return $flag;
+    };
+}
+
+
+function is_quality()
+{
+    return function ($spec) {
+        return $spec['q'] > 0;
+    };
+}
+
+
 function get_full_encoding()
 {
     return function ($spec) {
@@ -38,7 +81,8 @@ class Encoding
             if (empty($encoding) === false) {
                 $accepts[$j++] = $encoding;
                 $has_identity = $has_identity || self::specify('identity', $encoding);
-                $min_quality = min($min_quality, ($encoding['q'] || 1));
+                $encoding_ = empty($encoding['q']) ? 1 : $encoding['q'];
+                $min_quality = min($min_quality, $encoding_);
             }
         }
 
@@ -117,17 +161,18 @@ class Encoding
      */
     public static function preferredEncodings(string $accept = '', $provided)
     {
+        $accept = empty($accept) ? '' : $accept;
         $accepts = self::parseAcceptEncoding($accept);
 
-        if (!$provided) {
-            $f = array_filter($provided, is_quality());
+        if (!$provided && is_array($provided) === false) {
+            $f = array_filter($accepts, is_quality());
 
             usort($f, compare_specs());
             return array_map(get_full_encoding(), $f);
         }
 
         $priorities = [];
-        foreach ($priorities as $key => $priority) {
+        foreach ($provided as $key => $priority) {
             $priorities[$key] = self::getEncodingPriority($priority, $accepts, $key);
         }
 
