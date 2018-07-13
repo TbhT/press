@@ -78,6 +78,10 @@ class Negotiator
 
     public function mediaTypes($available = null)
     {
-        return MediaType::preferredMediaTypes($this->request->headers['mediaType'], $available);
+        $accept_media_type = array_key_exists('accept', $this->request->headers) ?
+            $this->request->headers['accept'] : '';
+        $accept_media_type = empty($accept_media_type) ? '' : $accept_media_type;
+
+        return MediaType::preferredMediaTypes($accept_media_type, $available);
     }
 }

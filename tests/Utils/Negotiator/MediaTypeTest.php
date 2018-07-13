@@ -9,6 +9,8 @@ declare(strict_types=1);
  */
 
 use PHPUnit\Framework\TestCase;
+use Press\Request;
+use Press\Utils\Negotiator;
 
 
 class MediaTypeTest extends TestCase
@@ -377,4 +379,33 @@ class MediaTypeTest extends TestCase
             ]
         ];
     }
+
+    private function createRequest($headers)
+    {
+        $request = new Request();
+        $request->headers = [];
+
+        if ($headers) {
+            foreach ($headers as $key => $header) {
+                $request->headers[strtolower($key)] = $header;
+            }
+        }
+
+        return $request;
+    }
+
+    /**
+     * @dataProvider mediaTypeData
+     * @param $accept_media_type
+     * @param $expected
+     */
+    public function testMediaType($accept_media_type, $expected)
+    {
+        $request = self::createRequest(['Accept' => $accept_media_type]);
+        $negotiator = new Negotiator\Negotiator($request);
+
+        $result = $negotiator->mediaType();
+        static::assertEquals($expected, $result);
+    }
+
 }
