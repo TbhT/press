@@ -23,10 +23,10 @@ function quote_count(string $str): int
     $count = 0;
     $offset = 0;
 
-    $offset = strpos($str, '"', $offset);
-    while (($offset !== false)) {
+    while ((strpos($str, '"', $offset) !== false)) {
         $count++;
-        $offset = strpos($str, '""', $offset);
+//        $offset = strpos($str, '""', $offset);
+        $offset++;
     }
 
     return $count;
@@ -39,7 +39,7 @@ function split_key_val_pair()
         $index = strpos($str, '=');
         $val = null;
 
-        if ($index === -1) {
+        if ($index === false) {
             $key = $str;
         } else {
             $key = substr($str, $index);
@@ -51,6 +51,49 @@ function split_key_val_pair()
 }
 
 
+function is_quality()
+{
+    return function ($spec) {
+        return $spec['q'] > 0;
+    };
+}
+
+
+function compare_specs()
+{
+    return function ($a, $b) {
+        $flag = 0;
+        $cmp_array = ['q', 's', 'o', 'i'];
+        foreach ($cmp_array as $value) {
+            if ($value === 'q' || $value === 's') {
+                $cmp = array_key_compare($b, $a, $value);
+            } else {
+                $cmp = array_key_compare($a, $b, $value);
+            }
+
+            if ($cmp !== 0) {
+                $flag = $cmp > 0 ? 1 : -1;
+                break;
+            }
+        }
+
+        return $flag;
+    };
+}
+
+
+function array_key_compare($a, $b, $key)
+{
+    return array_key_exists($key, $a) ? $a[$key] - $b[$key] : 0;
+}
+
+
+function array_key_compare_val($a, $b, $key)
+{
+    return $a[$key] - $b[$key];
+}
+
+
 class MediaType
 {
     private static function parseAccept(string $accept)
@@ -58,18 +101,19 @@ class MediaType
         $accepts = self::splitMediaTypes($accept);
         $m_length = count($accepts);
 
+        $accepts_ = [];
         for ($i = 0, $j = 0; $i < $m_length; $i++) {
             $val = trim($accepts[$i]);
             $media_type = self::parseMediaType($val, $i);
 
             if (empty($media_type) === false) {
-                $accepts[$j++] = $media_type;
+                $accepts_[$j++] = $media_type;
             }
         }
 
-        $accepts['length'] = $j;
+//        $accepts['length'] = $j;
 
-        return $accepts;
+        return $accepts_;
     }
 
 
@@ -77,15 +121,15 @@ class MediaType
     {
         $accepts = explode(',', $accept);
 
-        for ($i = 0, $j = 0; $i < count($accepts); $i++) {
+        for ($i = 1, $j = 0; $i < count($accepts); $i++) {
             if (quote_count($accepts[$j]) % 2 === 0) {
                 $accepts[++$j] = $accepts[$i];
             } else {
-                $accepts[$i] . ($accepts[$j] .= ',');
+                $accepts[$i] .= (',' . $accepts[$i]);
             }
         }
 
-        $accepts['length'] = $j + 1;
+//        $accepts['length'] = $j + 1;
 
         return $accepts;
     }
@@ -101,7 +145,7 @@ class MediaType
         $sub_type = $matches[2];
         $type = $matches[1];
 
-        if ($matches[3]) {
+        if ($m_length > 3) {
             $kvps = self::splitParameters($matches[3]);
             array_map(split_key_val_pair(), $kvps);
 
@@ -201,7 +245,7 @@ class MediaType
     private static function splitParameters(string $str)
     {
         $parameters = explode(';', $str);
-        for ($i = 0, $j = 0; $i < count($parameters); $i++) {
+        for ($i = 1, $j = 0; $i < count($parameters); $i++) {
             if (quote_count($parameters[$i]) % 2 === 0) {
                 $parameters[++$j] = $parameters[$i];
             } else {
@@ -224,11 +268,8 @@ class MediaType
         $accept = empty($accept) ? '*/*' : $accept;
         $accepts = self::parseAccept($accept);
 
-        if (empty($provided)) {
-            $f = array_filter($provided, function ($spec) {
-                return $spec['q'] > 0;
-            });
-
+        if (!$provided && is_array($provided) === false) {
+            $f = array_filter($accepts, is_quality());
 //         compare specs
             usort($f, compare_specs());
             return array_map(get_full_type(), $f);
