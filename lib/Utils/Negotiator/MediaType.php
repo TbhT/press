@@ -42,7 +42,7 @@ function split_key_val_pair()
         if ($index === false) {
             $key = $str;
         } else {
-            $key = substr($str, $index);
+            $key = substr($str, 0, $index);
             $val = substr($str, $index + 1);
         }
 
@@ -147,7 +147,7 @@ class MediaType
 
         if ($m_length > 3) {
             $kvps = self::splitParameters($matches[3]);
-            array_map(split_key_val_pair(), $kvps);
+            $kvps = array_map(split_key_val_pair(), $kvps);
 
             foreach ($kvps as $item) {
                 $pair = $item;
@@ -161,7 +161,7 @@ class MediaType
                     substr($val, 1, $str_length - 2) : $val;
 
                 if ($key === 'q') {
-                    $q = floatval($key);
+                    $q = floatval($value);
                     break;
                 }
 
@@ -200,7 +200,6 @@ class MediaType
         }
 
         return $priority;
-
     }
 
     private static function specify($type, $spec, $index)
@@ -223,11 +222,13 @@ class MediaType
         }
 
         $keys = array_keys($spec['params']);
-        if (count($keys) > 0) {
+        $origin_length = count($keys);
+        if ($origin_length > 0) {
             $keys = array_filter($keys, function ($k) use ($spec, $p) {
                 return $spec['params'][$k] === '*' || strtolower($spec['params'][$k] || '') === strtolower($p['params'][$k] || '');
             });
-            if (count($keys) > 0) {
+            $changed_length = count($keys);
+            if ($changed_length < $origin_length) {
                 return null;
             } else {
                 $s |= 1;
@@ -253,10 +254,10 @@ class MediaType
             }
         }
 
-        $parameters['length'] = $j + 1;
+//        $parameters['length'] = $j + 1;
 
-        for ($i = 0; $i < $parameters['length']; $i++) {
-            $parameters[$i] = trim($parameters[$i]);
+        foreach ($parameters as $key => $parameter) {
+            $parameters[$key] = trim($parameter);
         }
 
         return $parameters;
