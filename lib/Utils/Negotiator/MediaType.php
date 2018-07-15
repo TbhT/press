@@ -82,6 +82,13 @@ function compare_specs()
 }
 
 
+function priority_compare_result($a, $b, $key)
+{
+    $flag = $a[$key] - $b[$key];
+    return $flag === 0;
+}
+
+
 function array_key_compare($a, $b, $key)
 {
     return array_key_exists($key, $a) ? $a[$key] - $b[$key] : 0;
@@ -101,19 +108,19 @@ class MediaType
         $accepts = self::splitMediaTypes($accept);
         $m_length = count($accepts);
 
-        $accepts_ = [];
+//        $accepts_ = [];
         for ($i = 0, $j = 0; $i < $m_length; $i++) {
             $val = trim($accepts[$i]);
             $media_type = self::parseMediaType($val, $i);
 
             if (empty($media_type) === false) {
-                $accepts_[$j++] = $media_type;
+                $accepts[$j++] = $media_type;
             }
         }
 
 //        $accepts['length'] = $j;
 
-        return $accepts_;
+        return $accepts;
     }
 
 
@@ -125,7 +132,7 @@ class MediaType
             if (quote_count($accepts[$j]) % 2 === 0) {
                 $accepts[++$j] = $accepts[$i];
             } else {
-                $accepts[$i] .= (',' . $accepts[$i]);
+                $accepts[$j] .= (',' . $accepts[$i]);
             }
         }
 
@@ -191,8 +198,11 @@ class MediaType
 
             if ($spec) {
                 foreach ($cmp_array as $cmp_key) {
-                    if ($priority[$cmp_key] - $spec[$cmp_key] < 0) {
+                    $flag = $priority[$cmp_key] - $spec[$cmp_key];
+                    if ($flag !== 0 && $flag < 0) {
                         $priority = $spec;
+                        break;
+                    } else if ($flag !== 0) {
                         break;
                     }
                 }
@@ -250,7 +260,7 @@ class MediaType
             if (quote_count($parameters[$i]) % 2 === 0) {
                 $parameters[++$j] = $parameters[$i];
             } else {
-                $parameters[$j] .= ';' . $parameters[$i];
+                $parameters[$j] .= (';' . $parameters[$i]);
             }
         }
 
