@@ -164,9 +164,9 @@ class MediaType
 
 
                 // get the values, unwrapping quotes
-                $str_length = strlen($val);
-                $value = $val && $val[0] === '"' && $val[$str_length - 1] === '"' ?
-                    substr($val, 1, $str_length - 2) : $val;
+
+                $value = $val && $val[0] === '"' && $val[strlen($val) - 1] === '"' ?
+                    substr($val, 1, strlen($val) - 2) : $val;
 
                 if ($key === 'q') {
                     $q = floatval($value);
@@ -236,7 +236,9 @@ class MediaType
         $origin_length = count($keys);
         if ($origin_length > 0) {
             $keys = array_filter($keys, function ($k) use ($spec, $p) {
-                return $spec['params'][$k] === '*' || strtolower($spec['params'][$k] || '') === strtolower($p['params'][$k] || '');
+                $spec_params = empty($spec['params'][$k]) ? '' : $spec['params'][$k];
+                $p_params = empty($p['params'][$k]) ? '' : $p['params'][$k];
+                return $spec['params'][$k] === '*' || strtolower($spec_params) === strtolower($p_params);
             });
             $changed_length = count($keys);
             if ($changed_length < $origin_length) {

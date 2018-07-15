@@ -164,7 +164,7 @@ class MediaTypeTest extends TestCase
     }
 
     /**
-     * accept-mediaTypes,
+     * accept media types,
      * @return array
      */
     public function mediaTypesArrayData()
@@ -439,6 +439,21 @@ class MediaTypeTest extends TestCase
         $negotiator = new Negotiator\Negotiator($request);
 
         $result = $negotiator->mediaTypes();
+        static::assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider mediaTypesArrayData
+     * @param $accept_media_type
+     * @param $media_type
+     * @param $expected
+     */
+    public function testMediaTypesArray($accept_media_type, $media_type, $expected)
+    {
+        $request = self::createRequest(['Accept' => $accept_media_type]);
+        $negotiator = new Negotiator\Negotiator($request);
+
+        $result = $negotiator->mediaTypes($media_type);
         static::assertEquals($expected, $result);
     }
 }
