@@ -10,6 +10,49 @@ declare(strict_types=1);
 namespace Press\Utils\Negotiator;
 
 
+function array_key_compare($a, $b, $key)
+{
+    return array_key_exists($key, $a) ? $a[$key] - $b[$key] : 0;
+}
+
+
+function array_key_compare_val($a, $b, $key)
+{
+    return $a[$key] - $b[$key];
+}
+
+
+function compare_specs()
+{
+    return function ($a, $b) {
+        $flag = 0;
+        $cmp_array = ['q', 's', 'o', 'i'];
+        foreach ($cmp_array as $value) {
+            if ($value === 'q' || $value === 's') {
+                $cmp = array_key_compare($b, $a, $value);
+            } else {
+                $cmp = array_key_compare($a, $b, $value);
+            }
+
+            if ($cmp !== 0) {
+                $flag = $cmp > 0 ? 1 : -1;
+                break;
+            }
+        }
+
+        return $flag;
+    };
+}
+
+
+function is_quality()
+{
+    return function ($spec) {
+        return $spec['q'] > 0;
+    };
+}
+
+
 function get_full_languages()
 {
     return function ($spec) {
@@ -49,13 +92,16 @@ class Language
         if ($m_length === 0) return null;
 
         $prefix = $matches[1];
-        $suffix = $matches[2];
+        $suffix = '';
         $full = $prefix;
 
-        if (empty($suffix) === false) $full .= $suffix . '-';
+        if ($m_length > 2 && $matches[2]) {
+            $suffix = $matches[2];
+            $full .= '-' . $suffix;
+        }
 
         $q = 1;
-        if ($matches[3]) {
+        if ($m_length > 3) {
             $params = explode(';', $matches[3]);
             for ($i = 0; $i < count($params); $i++) {
                 $s = trim($params[$i]);
@@ -86,10 +132,14 @@ class Language
         foreach ($accepted as $key => $item) {
             $spec = self::specify($language, $accepted[$key], $index);
             //  todo why this sort type
+
             if ($spec) {
                 foreach ($cmp_array as $cmp_key) {
-                    if ($priority[$cmp_key] - $spec[$cmp_key] < 0) {
+                    $flag = $priority[$cmp_key] - $spec[$cmp_key];
+                    if ($flag !== 0 && $flag < 0) {
                         $priority = $spec;
+                        break;
+                    } else if ($flag !== 0) {
                         break;
                     }
                 }
@@ -130,8 +180,8 @@ class Language
         $accept = empty($accept) ? '*' : $accept;
         $accepts = self::parseAcceptLanguage($accept);
 
-        if (!$provided) {
-            $f = array_filter($provided, is_quality());
+        if (!$provided && is_array($provided) === false) {
+            $f = array_filter($accepts, is_quality());
 
 //         compare specs
             usort($f, compare_specs());

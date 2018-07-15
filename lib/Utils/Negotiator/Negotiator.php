@@ -58,14 +58,17 @@ class Negotiator
 
     public function language($available = null)
     {
-        $set = Language::preferredLanguage($this->request->headers['accept-language'], $available);
+        $set = $this->languages($available);
         return empty($set) ? null : $set[0];
     }
 
 
     public function languages($available = null)
     {
-        return $this->language($available);
+        $accept_language = array_key_exists('accept-language', $this->request->headers) ?
+            $this->request->headers['accept-language'] : '';
+        $accept_language = empty($accept_language) ? '' : $accept_language;
+        return Language::preferredLanguage($accept_language, $available);
     }
 
 
