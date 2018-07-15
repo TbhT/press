@@ -23,7 +23,7 @@ function quote_count(string $str): int
     $count = 0;
     $offset = 0;
 
-    while ((strpos($str, '"', $offset) !== false)) {
+    while (($offset = strpos($str, '"', $offset)) !== false) {
         $count++;
 //        $offset = strpos($str, '""', $offset);
         $offset++;
@@ -137,6 +137,7 @@ class MediaType
         }
 
 //        $accepts['length'] = $j + 1;
+        $accepts = array_slice($accepts, 0, $j + 1);
 
         return $accepts;
     }

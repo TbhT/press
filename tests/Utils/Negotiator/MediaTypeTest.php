@@ -428,4 +428,17 @@ class MediaTypeTest extends TestCase
         static::assertEquals($expected, $result);
     }
 
+    /**
+     * @dataProvider mediaTypesData
+     * @param $accept_media_type
+     * @param $expected
+     */
+    public function testMediaTypes($accept_media_type, $expected)
+    {
+        $request = self::createRequest(['Accept' => $accept_media_type]);
+        $negotiator = new Negotiator\Negotiator($request);
+
+        $result = $negotiator->mediaTypes();
+        static::assertEquals($expected, $result);
+    }
 }
