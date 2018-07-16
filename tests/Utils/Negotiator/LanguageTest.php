@@ -200,45 +200,45 @@ class LanguageTest extends TestCase
     public function languagesData()
     {
         return [
-//            [
-//                null, ['*']
-//            ],
-//            [
-//                '*', ['*']
-//            ],
-//            [
-//                '*, en', ['*', 'en']
-//            ],
-//            [
-//                '*, en;q=0', ['*']
-//            ],
-//            [
-//                '*;q=0.8, en, es', ['en', 'es', '*']
-//            ],
-//            [
-//                'en', ['en']
-//            ],
-//            [
-//                'en;q=0', []
-//            ],
-//            [
-//                'en;q=0.8, es', ['es', 'en']
-//            ],
+            [
+                null, ['*']
+            ],
+            [
+                '*', ['*']
+            ],
+            [
+                '*, en', ['*', 'en']
+            ],
+            [
+                '*, en;q=0', ['*']
+            ],
+            [
+                '*;q=0.8, en, es', ['en', 'es', '*']
+            ],
+            [
+                'en', ['en']
+            ],
+            [
+                'en;q=0', []
+            ],
+            [
+                'en;q=0.8, es', ['es', 'en']
+            ],
             [
                 'en;q=0.9, es;q=0.8, en;q=0.7', ['en', 'es']
             ],
-//            [
-//                'en-US, en;q=0.8', ['en-US', 'en']
-//            ],
-//            [
-//                'en-US, en-GB', ['en-US', 'en-GB']
-//            ],
-//            [
-//                'en-US;q=0.8, es', ['es', 'en-US']
-//            ],
-//            [
-//                'nl;q=0.5, fr, de, en, it, es, pt, no, se, fi, ro', ['fr', 'de', 'en', 'it', 'es', 'pt', 'no', 'se', 'fi', 'ro', 'nl']
-//            ]
+            [
+                'en-US, en;q=0.8', ['en-US', 'en']
+            ],
+            [
+                'en-US, en-GB', ['en-US', 'en-GB']
+            ],
+            [
+                'en-US;q=0.8, es', ['es', 'en-US']
+            ],
+            [
+                'nl;q=0.5, fr, de, en, it, es, pt, no, se, fi, ro', ['fr', 'de', 'en', 'it', 'es', 'pt', 'no', 'se', 'fi', 'ro', 'nl']
+            ]
         ];
     }
 
@@ -274,7 +274,77 @@ class LanguageTest extends TestCase
                 '*, en;q=0', ['es', 'en'], ['es']
             ],
             [
-                '*;q=0.8, en, es', []
+                '*;q=0.8, en, es',
+                ['fr', 'de', 'en', 'it', 'es', 'pt', 'no', 'se', 'fi', 'ro', 'nl'],
+                ['en', 'es', 'fr', 'de', 'it', 'pt', 'no', 'se', 'fi', 'ro', 'nl']
+            ],
+            [
+                'en', ['en'], ['en']
+            ],
+            [
+                'en', ['en', 'es'], ['en']
+            ],
+            [
+                'en', ['es', 'en'], ['en']
+            ],
+            [
+                'en', ['en-US'], ['en-US']
+            ],
+            [
+                'en', ['en-US', 'en'], ['en', 'en-US']
+            ],
+            [
+                'en', ['en', 'en-US'], ['en', 'en-US']
+            ],
+            [
+                'en;q=0', ['en'], []
+            ],
+            [
+                'en;q=0', ['en', 'es'], []
+            ],
+            [
+                'en;q=0.8, es', ['en'], ['en']
+            ],
+            [
+                'en;q=0.8, es', ['en', 'es'], ['es', 'en']
+            ],
+            [
+                'en;q=0.8, es', ['es', 'en'], ['es', 'en']
+            ],
+            [
+                'en;q=0.9, es;q=0.8, en;q=0.7', ['en'], ['en']
+            ],
+            [
+                'en;q=0.9, es;q=0.8, en;q=0.7', ['en', 'es'], ['es', 'en']
+            ],
+            [
+                'en;q=0.9, es;q=0.8, en;q=0.7', ['es', 'en'], ['es', 'en']
+            ],
+            [
+                'en-US, en;q=0.8', ['en-us', 'EN'], ['en-us', 'EN']
+            ],
+            [
+                'en-US, en;q=0.8', ['en-US', 'en'], ['en-US', 'en']
+            ],
+            [
+                'en-US, en;q=0.8', ['en-GB', 'en-US', 'en'], ['en-US', 'en', 'en-GB']
+            ],
+            [
+                'en-US, en-GB', ['en-US', 'en-GB'], ['en-US', 'en-GB']
+            ],
+            [
+                'en-US, en-GB', ['en-GB', 'en-US'], ['en-GB', 'en-US']
+            ],
+            [
+                'en-US;q=0.8, es', ['en', 'es'], ['en', 'es']
+            ],
+            [
+                'en-US;q=0.8, es', ['en', 'es', 'en-US'], ['en', 'es', 'en-US']
+            ],
+            [
+                'nl;q=0.5, fr, de, en, it, es, pt, no, se, fi, ro',
+                ['fr', 'de', 'en', 'it', 'es', 'pt', 'no', 'se', 'fi', 'ro', 'nl'],
+                ['fr', 'de', 'en', 'it', 'es', 'pt', 'no', 'se', 'fi', 'ro', 'nl']
             ]
         ];
     }
@@ -336,8 +406,18 @@ class LanguageTest extends TestCase
         static::assertEquals($expected, $result);
     }
 
-    public function testLanguagesArray()
+    /**
+     * @dataProvider languagesArrayData
+     * @param $accept_language
+     * @param $language
+     * @param $expected
+     */
+    public function testLanguagesArray($accept_language, $language, $expected)
     {
+        $request = self::createRequest(['Accept-Language' => $accept_language]);
+        $negotiator = new Negotiator($request);
 
+        $result = $negotiator->languages($language);
+        static::assertEquals($expected, $result);
     }
 }

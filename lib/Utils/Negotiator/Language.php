@@ -53,7 +53,7 @@ function is_quality()
 }
 
 
-function get_full_languages()
+function  get_full_languages()
 {
     return function ($spec) {
         return $spec['full'];
@@ -185,7 +185,8 @@ class Language
 
 //         compare specs
             usort($f, compare_specs());
-            return array_map(get_full_languages(), $f);
+            $f = array_map(get_full_languages(), $f);
+            return array_unique($f);
         }
 
         $priorities = [];
