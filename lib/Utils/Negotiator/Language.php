@@ -108,7 +108,7 @@ class Language
                 $vs = explode('=', $s);
                 if ($vs[0] === 'q') {
                     $q = floatval($vs[1]);
-                    break;
+//                    break;
                 }
             }
         }
