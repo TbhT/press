@@ -1,68 +1,180 @@
 <?php
+declare(strict_types=1);
 
 
 namespace Press\Utils;
 
 
+/**
+ * RegExp to match *( ";" parameter ) in RFC 2616 sec 3.7
+ *
+ * parameter     = token "=" ( token | quoted-string )
+ * token         = 1*<any CHAR except CTLs or separators>
+ * separators    = "(" | ")" | "<" | ">" | "@"
+ *               | "," | ";" | ":" | "\" | <">
+ *               | "/" | "[" | "]" | "?" | "="
+ *               | "{" | "}" | SP | HT
+ * quoted-string = ( <"> *(qdtext | quoted-pair ) <"> )
+ * qdtext        = <any TEXT except <">>
+ * quoted-pair   = "\" CHAR
+ * CHAR          = <any US-ASCII character (octets 0 - 127)>
+ * TEXT          = <any OCTET except CTLs, but including LWS>
+ * LWS           = [CRLF] 1*( SP | HT )
+ * CRLF          = CR LF
+ * CR            = <US-ASCII CR, carriage return (13)>
+ * LF            = <US-ASCII LF, linefeed (10)>
+ * SP            = <US-ASCII SP, space (32)>
+ * SHT           = <US-ASCII HT, horizontal-tab (9)>
+ * CTL           = <any US-ASCII control character (octets 0 - 31) and DEL (127)>
+ * OCTET         = <any 8-bit sequence of data>
+ */
+const PARAM_REG_EXP = '/; *([!#$%\'\*\+\-\.0-9A-Z\^_`a-z\|~]+) *= *("(?:[ !\u0023-\u005b\u005d-\u007e\u0080-\u00ff]|\\[\u0020-\u007e])*"|[!#$%\'\*\+\-\.0-9A-Z\^_`a-z\|~]) */g';
+const TEXT_REG_EXP = '/^[\u0020-\u007e\u0080-\u00ff]+$/';
+const TOKEN_REG_EXP = '/^[!#$%\'\*\+\-\.0-9A-Z\^_`a-z\|~]+$/';
+
+/**
+ * RegExp to match quoted-pair in RFC 2616
+ *
+ * quoted-pair = "\" CHAR
+ * CHAR        = <any US-ASCII character (octets 0 - 127)>
+ */
+const QESC_REG_EXP = '/\\([\u0000-\u007f])/g';
+
+/**
+ * RegExp to match chars that must be quoted-pair in RFC 2616
+ */
+const QUOTE_REG_EXP = '/([\\"])/g';
+
+/**
+ * RegExp to match type in RFC 6838
+ *
+ * type-name = restricted-name
+ * subtype-name = restricted-name
+ * restricted-name = restricted-name-first *126restricted-name-chars
+ * restricted-name-first  = ALPHA / DIGIT
+ * restricted-name-chars  = ALPHA / DIGIT / "!" / "#" /
+ *                          "$" / "&" / "-" / "^" / "_"
+ * restricted-name-chars =/ "." ; Characters before first dot always
+ *                              ; specify a facet name
+ * restricted-name-chars =/ "+" ; Characters after last plus always
+ *                              ; specify a structured syntax suffix
+ * ALPHA =  %x41-5A / %x61-7A   ; A-Z / a-z
+ * DIGIT =  %x30-39             ; 0-9
+ */
+const SUBTYPE_NAME_REG_EXP = '/^[A-Za-z0-9][A-Za-z0-9!#$&^_.-]{0,126}$/';
+const TYPE_NAME_REG_EXP = '/^[A-Za-z0-9][A-Za-z0-9!#$&^_-]{0,126}$/';
+const TYPE_REG_EXP = '/^ *([A-Za-z0-9][A-Za-z0-9!#$&^_-]{0,126})\/([A-Za-z0-9][A-Za-z0-9!#$&^_.+-]{0,126}) *$/';
+
+
 class MediaTyper
 {
-    /**
-     * RegExp to match *( ";" parameter ) in RFC 2616 sec 3.7
-     *
-     * parameter     = token "=" ( token | quoted-string )
-     * token         = 1*<any CHAR except CTLs or separators>
-     * separators    = "(" | ")" | "<" | ">" | "@"
-     *               | "," | ";" | ":" | "\" | <">
-     *               | "/" | "[" | "]" | "?" | "="
-     *               | "{" | "}" | SP | HT
-     * quoted-string = ( <"> *(qdtext | quoted-pair ) <"> )
-     * qdtext        = <any TEXT except <">>
-     * quoted-pair   = "\" CHAR
-     * CHAR          = <any US-ASCII character (octets 0 - 127)>
-     * TEXT          = <any OCTET except CTLs, but including LWS>
-     * LWS           = [CRLF] 1*( SP | HT )
-     * CRLF          = CR LF
-     * CR            = <US-ASCII CR, carriage return (13)>
-     * LF            = <US-ASCII LF, linefeed (10)>
-     * SP            = <US-ASCII SP, space (32)>
-     * SHT           = <US-ASCII HT, horizontal-tab (9)>
-     * CTL           = <any US-ASCII control character (octets 0 - 31) and DEL (127)>
-     * OCTET         = <any 8-bit sequence of data>
-     */
-    private $paramRegExp = '/; *([!#$%\'\*\+\-\.0-9A-Z\^_`a-z\|~]+) *= *("(?:[ !\u0023-\u005b\u005d-\u007e\u0080-\u00ff]|\\[\u0020-\u007e])*"|[!#$%\'\*\+\-\.0-9A-Z\^_`a-z\|~]) */g';
-    private $textRegExp = '/^[\u0020-\u007e\u0080-\u00ff]+$/';
-    private $tokenRegExp = '/^[!#$%\'\*\+\-\.0-9A-Z\^_`a-z\|~]+$/';
+
+    public static function format(array $ar)
+    {
+        $subtype_flag = array_key_exists('subtype', $ar);
+        $type_flag = array_key_exists('type', $ar);
+        $suffix_flag = array_key_exists('suffix', $ar);
+        $parameters_flag = array_key_exists('parameters', $ar);
+
+        if (!$subtype_flag || !$type_flag) {
+            $str_type = $subtype_flag === false ? 'invalid subtype' : 'invalid type';
+            throw new \TypeError($str_type);
+        }
+
+        preg_match(TYPE_NAME_REG_EXP, $ar['subtype'],$subtype_matches);
+        preg_match(SUBTYPE_NAME_REG_EXP, $ar['type'], $type_matches);
+        preg_match(TYPE_NAME_REG_EXP, $ar['suffix'], $suffix_matches);
+
+        $s_m_flag = !count($subtype_matches);
+        $t_flag = !count($type_matches);
+        $sfx_flag = !count($suffix_matches);
+
+        if ($s_m_flag || $t_flag) {
+            $str_m_type = $s_m_flag === true ? 'invalid subtype' : 'invalid type';
+            throw new \TypeError($str_m_type);
+        }
+
+        $string = "{$ar['type']}/{$ar['subtype']}";
+
+        if ($suffix_flag && $sfx_flag) {
+            throw new \TypeError('invalid suffix');
+        } else if ($suffix_flag) {
+            $string .= "+{$ar['suffix']}";
+        }
+
+        if ($parameters_flag && is_array($ar['parameters'])) {
+            sort($ar['parameters']);
+            $parameters = $ar['parameters'];
+
+            foreach ($parameters as $parameter) {
+                preg_match(TOKEN_REG_EXP, $parameter, $p_matches);
+                if (count($p_matches) === 0) {
+                    throw new \TypeError('invalid parameter name');
+                }
+
+                $quote_string = static::qstring($parameters[$parameter]);
+                $string .= "; {$parameter}={$quote_string}";
+            }
+        }
+
+        return $string;
+    }
 
     /**
-     * RegExp to match quoted-pair in RFC 2616
-     *
-     * quoted-pair = "\" CHAR
-     * CHAR        = <any US-ASCII character (octets 0 - 127)>
+     * quote a string is necessary
+     * @param string $val
+     * @return string
      */
-    private $qescRegExp = '/\\([\u0000-\u007f])/g';
+    private static function qstring(string $val)
+    {
+        preg_match(TOKEN_REG_EXP, $val, $matches);
+        if (count($matches) > 0) {
+            return $val;
+        }
+
+        preg_match(TEXT_REG_EXP, $val, $t_matches);
+        if (strlen($val) > 0 && count($t_matches) === 0) {
+            throw new \TypeError('invalid parameter value');
+        }
+
+        $replace_str = preg_replace(QUOTE_REG_EXP, '\\$1', $val);
+        return "\"{$replace_str}\"";
+    }
 
     /**
-     * RegExp to match chars that must be quoted-pair in RFC 2616
+     * Simply "type/subtype+suffix" into parts
+     * @param string $string
+     * @return array
      */
-    private $quoteRegExp = '/([\\"])/g';
+    private static function splitType(string $string)
+    {
+        preg_match(TYPE_REG_EXP, strtolower($string), $matches);
 
-    /**
-     * RegExp to match type in RFC 6838
-     *
-     * type-name = restricted-name
-     * subtype-name = restricted-name
-     * restricted-name = restricted-name-first *126restricted-name-chars
-     * restricted-name-first  = ALPHA / DIGIT
-     * restricted-name-chars  = ALPHA / DIGIT / "!" / "#" /
-     *                          "$" / "&" / "-" / "^" / "_"
-     * restricted-name-chars =/ "." ; Characters before first dot always
-     *                              ; specify a facet name
-     * restricted-name-chars =/ "+" ; Characters after last plus always
-     *                              ; specify a structured syntax suffix
-     * ALPHA =  %x41-5A / %x61-7A   ; A-Z / a-z
-     * DIGIT =  %x30-39             ; 0-9
-     */
-    private $subtypeNameRegExp = '/^[A-Za-z0-9][A-Za-z0-9!#$&^_.-]{0,126}$/';
-    private $typeNameRegExp = '/^[A-Za-z0-9][A-Za-z0-9!#$&^_-]{0,126}$/';
-    private $typeRegExp = '/^ *([A-Za-z0-9][A-Za-z0-9!#$&^_-]{0,126})\/([A-Za-z0-9][A-Za-z0-9!#$&^_.+-]{0,126}) *$/';
+        if (count($matches) === 0) {
+            throw new \TypeError('invalid media type');
+        }
+
+        $type = $matches[1];
+        $subtype = $matches[2];
+
+        $index = strrpos($subtype, '+');
+        $suffix = '';
+        if ($index === false) {
+            $suffix = substr($subtype, $index + 1);
+            $subtype = substr($subtype, 0, $index);
+        }
+
+        return [
+            'type' => $type,
+            'subtype' => $subtype,
+            'suffix' => $suffix
+        ];
+    }
+
+    public static function parse($string)
+    {
+        if (is_array($string)) {
+            $string = self::getContentType();
+        }
+    }
 }
