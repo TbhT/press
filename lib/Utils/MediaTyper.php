@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Press\Utils;
 
+use Press\Request;
+use Press\Response;
+
 
 /**
  * RegExp to match *( ";" parameter ) in RFC 2616 sec 3.7
@@ -81,7 +84,7 @@ class MediaTyper
             throw new \TypeError($str_type);
         }
 
-        preg_match(TYPE_NAME_REG_EXP, $ar['subtype'],$subtype_matches);
+        preg_match(TYPE_NAME_REG_EXP, $ar['subtype'], $subtype_matches);
         preg_match(SUBTYPE_NAME_REG_EXP, $ar['type'], $type_matches);
         preg_match(TYPE_NAME_REG_EXP, $ar['suffix'], $suffix_matches);
 
@@ -173,8 +176,60 @@ class MediaTyper
 
     public static function parse($string)
     {
-        if (is_array($string)) {
-            $string = self::getContentType();
+        if (is_object($string)) {
+            $string = self::getContentType($string);
+        }
+
+        if (is_string($string) === false) {
+            throw new \TypeError('argument string is required to be a string');
+        }
+
+        $index = strpos($string, ';');
+        $type = $index === false ? substr($string, 0, $index) : $string;
+        $params = [];
+
+        $obj = self::splitType($type);
+        preg_match(PARAM_REG_EXP, $string, $matches, PREG_OFFSET_CAPTURE, $index);
+        while (count($matches) !== 0) {
+            if ($matches[0][1] !== $index) {
+                throw new \TypeError('invalid parameter format');
+            }
+
+            $index .= strlen($matches[0][0]);
+            $key = $matches[1][0];
+            $value = $matches[2][0];
+
+            if ($value[0] === '"') {
+//                remove quotes and escapes
+                $value = substr($value, 1, strlen($value) - 2);
+                str_replace(QESC_REG_EXP, '$1', $value);
+            }
+
+            $params[$key] = $value;
+        }
+
+        if ($index !== -1 && $index !== strlen($string)) {
+            throw new \TypeError('invalid parameter format');
+        }
+
+        $obj['parameters'] = $params;
+
+        return $obj;
+    }
+
+    /**
+     * Get content-type from req/res object
+     * @param $obj
+     * @return string
+     */
+    private static function getContentType($obj)
+    {
+        if ($obj instanceof Response) {
+            return array_key_exists('content-type', $obj->header) ? $obj->header['content-type'] : '';
+        }
+
+        if ($obj instanceof Request) {
+            return array_key_exists('content-type', $obj->headers) ? $obj->headers['content-type'] : '';
         }
     }
 }
