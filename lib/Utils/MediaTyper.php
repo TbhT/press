@@ -185,7 +185,7 @@ class MediaTyper
         }
 
         $index = strpos($string, ';');
-        $type = $index === false ? substr($string, 0, $index) : $string;
+        $type = $index !== false ? substr($string, 0, $index) : $string;
         $params = [];
 
         $obj = self::splitType($type);
