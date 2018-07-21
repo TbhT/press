@@ -23,7 +23,7 @@ class TypeIs
      * @param $types_
      * @return bool|mixed|null
      */
-    public static function typeIs($value, $types_)
+    private static function typeIs($value, $types_ = null)
     {
         // remove parameters and normalize
         $val = self::tryNormalizeType($value);
@@ -58,6 +58,11 @@ class TypeIs
         return false;
     }
 
+    public static function is($value, $type_)
+    {
+        return self::typeIs($value, $type_);
+    }
+
     /**
      * Check if the incoming request contains the "Content-Type"
      * header field, and it contains any of the give mime `type`s.
@@ -68,7 +73,7 @@ class TypeIs
      * @param $types_
      * @return null
      */
-    public static function typeOfRequest(Request $req, $types_)
+    public static function typeOfRequest(Request $req, $types_ = null)
     {
         if (!self::hasBody($req)) {
             return null;
@@ -107,7 +112,7 @@ class TypeIs
     {
         try {
             self::normalizeType($value);
-        } catch (\Exception $exception) {
+        } catch (\Error $exception) {
             return null;
         }
     }
@@ -117,8 +122,12 @@ class TypeIs
      * @param $value
      * @return string
      */
-    public static function normalizeType(string $value)
+    public static function normalizeType($value)
     {
+        if (is_string($value) === false) {
+            return false;
+        }
+
         // parse the type
         $type = MediaTyper::parse($value);
 
@@ -129,6 +138,11 @@ class TypeIs
         return MediaTyper::format($type);
     }
 
+    private static function match($expected, $actual)
+    {
+        return self::mimeMatch($expected, $actual);
+    }
+
     /**
      * Check if `expected` mime type
      * matches `actual` mime type with
@@ -137,7 +151,7 @@ class TypeIs
      * @param string $actual
      * @return bool
      */
-    public static function mimeMatch($expected, $actual)
+    private static function mimeMatch($expected, $actual)
     {
         // invalid type
         if ($expected === false) {
