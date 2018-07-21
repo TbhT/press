@@ -31,8 +31,8 @@ use Press\Response;
  * CTL           = <any US-ASCII control character (octets 0 - 31) and DEL (127)>
  * OCTET         = <any 8-bit sequence of data>
  */
-const PARAM_REG_EXP = '/; *([!#$%\'\*\+\-\.0-9A-Z\^_`a-z\|~]+) *= *("(?:[ !\u0023-\u005b\u005d-\u007e\u0080-\u00ff]|\\[\u0020-\u007e])*"|[!#$%\'\*\+\-\.0-9A-Z\^_`a-z\|~]) */g';
-const TEXT_REG_EXP = '/^[\u0020-\u007e\u0080-\u00ff]+$/';
+const PARAM_REG_EXP = '/; *([!#$%\'\*\+\-\.0-9A-Z\^_`a-z\|~]+) *= *("(?:[ !\x{0023}-\x{005b}\x{005d}-\x{007e}\x{0080}-\x{00ff}]|\\[\x{0020}-\x{007e}])*"|[!#$%\'\*\+\-\.0-9A-Z\^_`a-z\|~]) */u';
+const TEXT_REG_EXP = '/^[\x{0020}-\x{007e}\x{0080}-\x{00ff}]+$/u';
 const TOKEN_REG_EXP = '/^[!#$%\'\*\+\-\.0-9A-Z\^_`a-z\|~]+$/';
 
 /**
@@ -41,12 +41,12 @@ const TOKEN_REG_EXP = '/^[!#$%\'\*\+\-\.0-9A-Z\^_`a-z\|~]+$/';
  * quoted-pair = "\" CHAR
  * CHAR        = <any US-ASCII character (octets 0 - 127)>
  */
-const QESC_REG_EXP = '/\\([\u0000-\u007f])/g';
+const QESC_REG_EXP = '/\\([[:ascii:]])/';
 
 /**
  * RegExp to match chars that must be quoted-pair in RFC 2616
  */
-const QUOTE_REG_EXP = '/([\\"])/g';
+const QUOTE_REG_EXP = '/([\\"])/';
 
 /**
  * RegExp to match type in RFC 6838
@@ -86,11 +86,9 @@ class MediaTyper
 
         preg_match(TYPE_NAME_REG_EXP, $ar['subtype'], $subtype_matches);
         preg_match(SUBTYPE_NAME_REG_EXP, $ar['type'], $type_matches);
-        preg_match(TYPE_NAME_REG_EXP, $ar['suffix'], $suffix_matches);
 
         $s_m_flag = !count($subtype_matches);
         $t_flag = !count($type_matches);
-        $sfx_flag = !count($suffix_matches);
 
         if ($s_m_flag || $t_flag) {
             $str_m_type = $s_m_flag === true ? 'invalid subtype' : 'invalid type';
@@ -99,9 +97,17 @@ class MediaTyper
 
         $string = "{$ar['type']}/{$ar['subtype']}";
 
-        if ($suffix_flag && $sfx_flag) {
-            throw new \TypeError('invalid suffix');
-        } else if ($suffix_flag) {
+        if ($suffix_flag) {
+            preg_match(TYPE_NAME_REG_EXP, $ar['suffix'], $suffix_matches);
+            $sfx_flag = count($suffix_matches) !== 0;
+        } else {
+            $sfx_flag = false;
+        }
+
+        if ($suffix_flag) {
+            if (!$sfx_flag) {
+                throw new \TypeError('invalid suffix');
+            }
             $string .= "+{$ar['suffix']}";
         }
 
@@ -162,7 +168,7 @@ class MediaTyper
 
         $index = strrpos($subtype, '+');
         $suffix = '';
-        if ($index === false) {
+        if ($index !== false) {
             $suffix = substr($subtype, $index + 1);
             $subtype = substr($subtype, 0, $index);
         }
@@ -189,7 +195,10 @@ class MediaTyper
         $params = [];
 
         $obj = self::splitType($type);
-        preg_match(PARAM_REG_EXP, $string, $matches, PREG_OFFSET_CAPTURE, $index);
+
+        $index_ = $index === false ? 0 : $index;
+        preg_match(PARAM_REG_EXP, $string, $matches, PREG_OFFSET_CAPTURE, $index_);
+
         while (count($matches) !== 0) {
             if ($matches[0][1] !== $index) {
                 throw new \TypeError('invalid parameter format');
@@ -206,9 +215,10 @@ class MediaTyper
             }
 
             $params[$key] = $value;
+            preg_match(PARAM_REG_EXP, $string, $matches, PREG_OFFSET_CAPTURE, $index);
         }
 
-        if ($index !== -1 && $index !== strlen($string)) {
+        if ($index !== false && $index !== strlen($string)) {
             throw new \TypeError('invalid parameter format');
         }
 
