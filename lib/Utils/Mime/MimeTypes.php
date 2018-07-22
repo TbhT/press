@@ -53,7 +53,8 @@ function populateMaps($extensions, $types)
                 $from = $to = null;
                 $mime_db_key = $types[$extension];
                 foreach (PREFERENCE as $k => $v) {
-                    if (array_key_exists('source', $mime_db[$mime_db_key]) && $v === $mime_db[$mime_db_key]['source']) {
+                    if (array_key_exists('source', $mime_db[$mime_db_key])
+                        && $v === $mime_db[$mime_db_key]['source']) {
                         $from = $k;
                     }
 
@@ -84,17 +85,6 @@ function populateMaps($extensions, $types)
 
 class MimeTypes
 {
-    private static $preference = ['nginx', 'apache', null, 'iana'];
-
-    public static $extensions = [];
-    public static $types = [];
-
-
-    public static function charsets()
-    {
-
-    }
-
 
     public static function charset($type)
     {
@@ -105,7 +95,8 @@ class MimeTypes
 //        extract type regexp
         preg_match('/^\s*([^;\s]*)(?:;|\s|$)/', $type, $matches);
         $mime_db = MimeDb::get();
-        $mime = count($matches) > 0 && array_key_exists(strtolower($matches[1]), $mime_db) ? $mime_db[strtolower($matches[1])] : null;
+        $mime = count($matches) > 0 && array_key_exists(strtolower($matches[1]), $mime_db) ?
+            $mime_db[strtolower($matches[1])] : null;
 
         if ($mime && array_key_exists('charset', $mime)) {
             return $mime['charset'];
@@ -174,7 +165,6 @@ class MimeTypes
 
 //        self::populateMaps(self::$extensions, self::$types);
         $maps = populateMaps([], []);
-
 
         preg_match('/^\s*([^;\s]*)(?:;|\s|$)/', $type, $matches);
 
