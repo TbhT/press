@@ -34,16 +34,17 @@ class TypeIs
         }
 
         // support flattened arguments
-        $args = func_get_args();
-        if (count($args) > 2) {
+        if ($types_ && !is_array($types_)) {
+            $args = func_get_args();
+            $flatten_length = count($args) - 1;
             $types_ = [];
-            for ($i = 0; $i < count($args); $i++) {
+            for ($i = 0; $i < $flatten_length; ++$i) {
                 $types_[$i] = $args[$i + 1];
             }
         }
 
         // no types, return the content type
-        if (!$types_ || !count($types_)) {
+        if (!$types_ || (is_array($types_) && !count($types_))) {
             return $val;
         }
 
@@ -83,7 +84,7 @@ class TypeIs
         $args = func_get_args();
         if (count($args) > 2) {
             $types_ = [];
-            for ($i = 0; $i < count($args); $i++) {
+            for ($i = 0; $i < count($args) - 1; $i++) {
                 $types_[$i] = $args[$i + 1];
             }
         }
