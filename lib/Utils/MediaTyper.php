@@ -31,7 +31,7 @@ use Press\Response;
  * CTL           = <any US-ASCII control character (octets 0 - 31) and DEL (127)>
  * OCTET         = <any 8-bit sequence of data>
  */
-const PARAM_REG_EXP = '/; *([!#$%\'\*\+\-\.0-9A-Z\^_`a-z\|~]+) *= *("(?:[ !\x{0023}-\x{005b}\x{005d}-\x{007e}\x{0080}-\x{00ff}]|\\[\x{0020}-\x{007e}])*"|[!#$%\'\*\+\-\.0-9A-Z\^_`a-z\|~]) */u';
+const PARAM_REG_EXP = '/; *([!#$%&\'*+.^_`|~0-9A-Za-z-]+) *= *("(?:[\x{000b}\x{0020}\x{0021}\x{0023}-\x{005b}\x{005d}-\x{007e}\x{0080}-\x{00ff}]|\\[\x{000b}\x{0020}-\x{00ff}])*"|[!#$%&\'*+.^_`|~0-9A-Za-z-]+) */u';
 const TEXT_REG_EXP = '/^[\x{0020}-\x{007e}\x{0080}-\x{00ff}]+$/u';
 const TOKEN_REG_EXP = '/^[!#$%\'\*\+\-\.0-9A-Z\^_`a-z\|~]+$/';
 
@@ -74,10 +74,10 @@ class MediaTyper
 
     public static function format(array $ar)
     {
-        $subtype_flag = array_key_exists('subtype', $ar);
-        $type_flag = array_key_exists('type', $ar);
-        $suffix_flag = array_key_exists('suffix', $ar);
-        $parameters_flag = array_key_exists('parameters', $ar);
+        $subtype_flag = array_key_exists('subtype', $ar) && $ar['subtype'];
+        $type_flag = array_key_exists('type', $ar) && $ar['type'];
+        $suffix_flag = array_key_exists('suffix', $ar) && $ar['suffix'];
+        $parameters_flag = array_key_exists('parameters', $ar) && $ar['parameters'];
 
         if (!$subtype_flag || !$type_flag) {
             $str_type = $subtype_flag === false ? 'invalid subtype' : 'invalid type';
@@ -197,16 +197,16 @@ class MediaTyper
         $obj = self::splitType($type);
 
         $index_ = $index === false ? 0 : $index;
-        preg_match(PARAM_REG_EXP, $string, $matches, PREG_OFFSET_CAPTURE, $index_);
+        preg_match_all(PARAM_REG_EXP, $string, $matches, PREG_OFFSET_CAPTURE, $index_);
 
-        while (count($matches) !== 0) {
-            if ($matches[0][1] !== $index) {
+        if (count($matches[0]) > 0) {
+            if ($matches[0][0][1] !== $index) {
                 throw new \TypeError('invalid parameter format');
             }
 
-            $index .= strlen($matches[0][0]);
-            $key = $matches[1][0];
-            $value = $matches[2][0];
+            $index += strlen($matches[0][0][0]);
+            $key = strtolower($matches[1][0][0]);
+            $value = $matches[2][0][0];
 
             if ($value[0] === '"') {
 //                remove quotes and escapes
@@ -215,7 +215,6 @@ class MediaTyper
             }
 
             $params[$key] = $value;
-            preg_match(PARAM_REG_EXP, $string, $matches, PREG_OFFSET_CAPTURE, $index);
         }
 
         if ($index !== false && $index !== strlen($string)) {

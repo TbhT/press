@@ -43,13 +43,14 @@ class TypeIs
         }
 
         // no types, return the content type
-        if (!$types_ || !strlen($types_)) {
+        if (!$types_ || !count($types_)) {
             return $val;
         }
 
         for ($i = 0; $i < count($types_); $i++) {
             $type = $types_[$i];
-            if (self::mimeMatch($type, $val)) {
+            $normalize_val = self::normalize($type);
+            if (self::mimeMatch($normalize_val, $val)) {
                 return $type[0] === '+' || strpos($type, '*') !== false ? $val : $type;
             }
         }
@@ -111,7 +112,7 @@ class TypeIs
     private static function tryNormalizeType($value)
     {
         try {
-            self::normalizeType($value);
+            return self::normalizeType($value);
         } catch (\Error $exception) {
             return null;
         }
@@ -163,7 +164,7 @@ class TypeIs
         $expectedParts = explode('/', $expected);
 
         // invalid format
-        if (count($actualParts) !== 2 || count_chars($expectedParts) !== 2) {
+        if (count($actualParts) !== 2 || count($expectedParts) !== 2) {
             return false;
         }
 

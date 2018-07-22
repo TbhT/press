@@ -40,15 +40,15 @@ class TypeIsTest extends TestCase
             [
                 'text/HTML', ['text/*'], 'text/html'
             ],
-//            [
-//                'text/html**', ['text/*'], false
-//            ],
-//            [
-//                'text/html', ['text/html/'], false
-//            ],
-//            [
-//                'text/html', [null, true, function () {}], false
-//            ]
+            [
+                'text/html**', ['text/*'], false
+            ],
+            [
+                'text/html', ['text/html/'], false
+            ],
+            [
+                'text/html', [null, true, function () {}], false
+            ]
         ];
     }
 
