@@ -92,7 +92,7 @@ class AcceptsTest extends TestCase
         $req1 = self::createRequestCharset('utf-8, iso-8859-1;q=0.2, utf-7;q=0.5');
         $accept1 = new Accepts($req1);
         $charsets1 = $accept1->charsets('utf-7', 'utf-8');
-        self::assertEquals(['utf-8'], $charsets1);
+        self::assertEquals('utf-8', $charsets1);
 
 
         $req2 = self::createRequestCharset('utf-8, iso-8859-1;q=0.2, utf-7;q=0.5');
