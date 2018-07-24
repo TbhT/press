@@ -28,7 +28,7 @@ class Negotiator
     {
         $accept_charset = array_key_exists('accept-charset', $this->request->headers) ?
             $this->request->headers['accept-charset'] : '';
-        $accept_charset = empty($accept_charset) ? '' : $accept_charset;
+        $accept_charset = $accept_charset === '' ? '' : $accept_charset;
         return Charset::preferredCharsets($accept_charset, $available);
     }
 

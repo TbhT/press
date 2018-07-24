@@ -151,6 +151,9 @@ class CharsetTest extends TestCase
     {
         return [
             [
+                '', []
+            ],
+            [
                 null, ['*']
             ],
             [

@@ -9,9 +9,34 @@ declare(strict_types=1);
 
 namespace Press\Utils;
 
+use function foo\func;
 use Press\Request;
 use Press\Utils\Negotiator;
 use Press\Utils\Mime;
+
+
+/**
+ * convert extnames to mime
+ * @return \Closure
+ */
+function ext_to_mime()
+{
+    return function ($type) {
+        return strpos($type, '/') === false ?
+            Mime\MimeTypes::lookup($type) : $type;
+    };
+}
+
+
+/**
+ * @return \Closure
+ */
+function valid_mime()
+{
+    return function ($type) {
+        return is_string($type);
+    };
+}
 
 
 class Accepts
@@ -25,162 +50,152 @@ class Accepts
         $this->negotiator = new Negotiator\Negotiator($req);
     }
 
-    private function _type($types, array $args)
+    private function type_($args, $types)
     {
-//      support flattened arguments
-        if ($types && is_array($types) === false) {
-            $args_ = [];
-            foreach ($args as $key => $arg) {
-                $args_[$key] = $arg;
-            }
+        // support flattened arguments
+        if ($types && !is_array($types)) {
+            $types = $args;
         }
 
-//      no types, return all requested types
+        // no types, return all requested types
         if (!$types || count($types) === 0) {
             return $this->negotiator->mediaTypes();
         }
 
-        if (array_key_exists('accept', $this->headers) === false) return $types[0];
-        $mimes = array_map(self::extToMime(), $types);
-        $mimes = array_filter($mimes, self::validMime());
-        $accepts = $this->negotiator->mediaTypes($mimes);
-        if (empty($accepts)) return false;
+        if (array_key_exists('accept', $this->headers) === false) {
+            return $types[0];
+        }
 
-        $index = array_search($accepts[0], $mimes);
+        $mime = array_map(ext_to_mime(), $types);
+        $mime = array_filter($mime, valid_mime());
+        $accepts = $this->negotiator->mediaTypes($mime);
+
+        if (count($accepts) === 0 || !$accepts[0]) {
+            return false;
+        }
+
+        $index = array_search($mime, $accepts[0]);
         return $types[$index];
     }
 
-    public function type($types = null)
+    public function type($types_ = null)
     {
         $args = func_get_args();
-        return $this->_type($types, $args);
+        return self::type_($args, $types_);
     }
 
-    public function types($types)
+    public function types($types_ = null)
     {
         $args = func_get_args();
-        return $this->_type($types, $args);
+        return self::type_($args, $types_);
     }
 
-    private static function extToMime()
+    private function encoding_($args, $encodings_)
     {
-        return function (string $type) {
-            return strpos($type, '/') === false ? Mime\MimeTypes::lookup($type) : $type;
-        };
-    }
-
-    private static function validMime()
-    {
-        return function (string $type) {
-            return is_string($type);
-        };
-    }
-
-
-    private function _encoding($encodings = null, $args)
-    {
-//      support flattened arguments
-        if ($encodings && is_array($encodings) === false) {
-            $args_ = [];
-            foreach ($args as $key => $arg) {
-                $args_[$key] = $arg;
-            }
+        // support flattened arguments
+        if ($encodings_ && !is_array($encodings_)) {
+            $encodings_ = $args;
         }
 
         // no encodings, return all requested encodings
-        if (!$encodings || count($encodings) === 0) {
+        if (!$encodings_ || count($encodings_) === 0) {
             return $this->negotiator->encodings();
         }
 
-        $_encodings = $this->negotiator->encodings($encodings);
-        return $_encodings[0] || false;
+        $encoding = $this->negotiator->encodings($encodings_);
+        $result = empty($encoding) ? false : $encoding[0];
+        return $result;
     }
 
-    public function encoding($encodings)
+
+    public function encoding($encodings_ = null)
     {
         $args = func_get_args();
-        return $this->_encoding($encodings, $args);
+        return $this->encoding_($args, $encodings_);
     }
 
-    public function encodings($encodings)
+
+    public function encodings($encodings_ = null)
     {
         $args = func_get_args();
-        return $this->_encoding($encodings, $args);
+        return $this->encoding_($args, $encodings_);
     }
 
-    private function _charset($charsets, $args)
-    {
-        $args_ = [];
 
-        //      support flattened arguments
-        if ($charsets && is_array($charsets) === false) {
-            foreach ($args as $key => $arg) {
-                $args_[$key] = $arg;
-            }
+    private function charset_($args, $charsets_)
+    {
+        // support flattend arguments
+        if ($charsets_ && !is_array($charsets_)) {
+            $charsets_ = $args;
         }
 
-        // no charsets, return all requested charsets
-        if (empty($args_) || count($args_) === 0) {
+        // no charsets, returned all requested charsets
+        if (!$charsets_ || count($charsets_) === 0) {
             return $this->negotiator->charsets();
         }
 
-        $_charsets = $this->negotiator->charsets($args_);
-        return $_charsets[0] || false;
+        $charset = $this->negotiator->charsets($charsets_);
+        $result = empty($charset) ? false : $charset[0];
+        return $result;
     }
 
-    public function charsets($charsets = null)
+
+    public function charset($charsets_ = null)
     {
         $args = func_get_args();
-        return $this->_charset($charsets, $args);
+        return $this->charset_($args, $charsets_);
     }
 
-    public function charset($charsets = null)
+
+    public function charsets($charsets_ = null)
     {
         $args = func_get_args();
-        return $this->_charset($charsets, $args);
+        return $this->charset_($args, $charsets_);
     }
 
-    private function _language($languages, $args)
+
+    private function language_($args, $languages_)
     {
-        //      support flattened arguments
-        if ($languages && is_array($languages) === false) {
-            $args_ = [];
-            foreach ($args as $key => $arg) {
-                $args_[$key] = $arg;
-            }
+        // support flattened arguments
+        if ($args && !is_array($args)) {
+            $languages_ = $args;
         }
 
         // no languages, return all requested languages
-        if (!$languages || count($languages) === 0) {
+        if (!$languages_ || count($languages_) === 0) {
             return $this->negotiator->languages();
         }
 
-        $_language = $this->negotiator->languages();
-
-        return $_language[0] || false;
+        $language = $this->negotiator->languages($languages_);
+        $result = empty($languages_) ? false : $language[0];
+        return $result;
     }
 
-    public function language($languages = null)
+
+    public function lang($languages_ = null)
     {
         $args = func_get_args();
-        return $this->_language($languages, $args);
+        return $this->language_($args, $languages_);
     }
 
-    public function lang($languages = null)
+
+    public function langs($languages_ = null)
     {
         $args = func_get_args();
-        return $this->_language($languages, $args);
+        return $this->language_($args, $languages_);
     }
 
-    public function langs($languages = null)
+
+    public function language($languages_ = null)
     {
         $args = func_get_args();
-        return $this->_language($languages, $args);
+        return $this->language_($args, $languages_);
     }
 
-    public function languages($languages = null)
+
+    public function languages($languages_ = null)
     {
         $args = func_get_args();
-        return $this->_language($languages, $args);
+        return $this->language_($args, $languages_);
     }
 }

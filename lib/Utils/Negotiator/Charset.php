@@ -63,11 +63,11 @@ function array_key_compare_val($a, $b, $key)
 
 class Charset
 {
-    static public function preferredCharsets(string $accept = '', $provided = null)
+    static public function preferredCharsets($accept = null, $provided = null)
     {
 //         RFC 2616 sec 14.2: no header = *
 
-        $accept = empty($accept) ? '*' : $accept;
+        $accept = $accept === null ? '*' : $accept;
         $accepts = self::parseAcceptCharset($accept);
 
         if (!$provided && is_array($provided) === false) {
