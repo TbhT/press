@@ -74,6 +74,7 @@ class AcceptsTest extends TestCase
         ];
     }
 
+
     /**
      * @dataProvider charsetWithNoArgumentsData
      * @param $accept_header
@@ -86,6 +87,7 @@ class AcceptsTest extends TestCase
         $charsets = $accept->charsets();
         self::assertEquals($expected, $charsets);
     }
+
 
     public function testCharsetWithMultipleArguments()
     {
@@ -106,11 +108,79 @@ class AcceptsTest extends TestCase
         self::assertEquals('utf-7', $charsets3);
     }
 
+
     public function testCharsetWithArray()
     {
         $req = self::createRequestCharset('utf-8, iso-8859-1;q=0.2, utf-7;q=0.5');
         $accept = new Accepts($req);
         $charsets = $accept->charsets(['utf-7', 'utf-8']);
         self::assertEquals('utf-8', $charsets);
+    }
+
+
+    public function testEncodingWithNoArguments()
+    {
+        $req = self::createRequestEncoding('gzip, compress;q=0.2');
+        $accept = new Accepts($req);
+
+        self::assertEquals(['gzip', 'compress', 'identity'], $accept->encodings());
+        self::assertEquals('gzip', $accept->encodings('gzip', 'compress'));
+    }
+
+
+    public function testEncodingWhenNotInRequest()
+    {
+        $req = self::createRequestEncoding();
+        $accept = new Accepts($req);
+
+        self::assertEquals(['identity'], $accept->encodings());
+        self::assertEquals('identity', $accept->encodings('gzip', 'deflate', 'identity'));
+    }
+
+
+    public function testEncodingWhenIdetityNotInclude()
+    {
+        $req = self::createRequestEncoding();
+        $accept = new Accepts($req);
+
+        self::assertEquals(false, $accept->encodings('gzip', 'deflate'));
+    }
+
+
+    public function testEncodingWhenEmpty()
+    {
+        $req = self::createRequestEncoding('');
+        $accept = new Accepts($req);
+
+        self::assertEquals(['identity'], $accept->encodings());
+        self::assertEquals('identity', $accept->encodings('gzip', 'deflate', 'identity'));
+    }
+
+
+    public function testEncodingWhenEmptyAndIdentityNotInclude()
+    {
+        $req = self::createRequestEncoding('');
+        $accept = new Accepts($req);
+
+        self::assertEquals(false, $accept->encodings('gzip', 'deflate'));
+    }
+
+
+    public function testEncodingWithMultiArguments()
+    {
+        $req = self::createRequestEncoding('gzip, compress;q=0.2');
+        $accept = new Accepts($req);
+
+        self::assertEquals('gzip', $accept->encodings('compress', 'gzip'));
+        self::assertEquals('gzip', $accept->encodings('gzip', 'compress'));
+    }
+
+
+    public function testEncodingWithMultiArgumentsInArray()
+    {
+        $req = self::createRequestEncoding('gzip, compress;q=0.2');
+        $accept = new Accepts($req);
+
+        self::assertEquals('gzip', $accept->encodings(['compress', 'gzip']));
     }
 }
