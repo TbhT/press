@@ -9,7 +9,10 @@ declare(strict_types=1);
 
 namespace Press;
 
+
 use Swoole\Http\Request as SRequest;
+use Press\Utils\Accepts;
+use Press\Utils\TypeIs;
 
 
 class Request extends SRequest
@@ -21,6 +24,10 @@ class Request extends SRequest
         $this->headers = $this->header;
     }
 
+    /**
+     * @param string $name
+     * @return bool
+     */
     private function get_head(string $name)
     {
         if (empty($name)) {
@@ -32,9 +39,12 @@ class Request extends SRequest
         switch ($lc) {
             case 'referer':
             case 'referrer':
-                return $this->headers['referer'] || $this->headers['referrer'];
+                $er = array_key_exists('referer', $this->headers);
+                $rer = array_key_exists('referrer', $this->headers);
+                $result = $er ? $this->headers['referer'] : $rer ? $this->headers['referer'] : null;
+                return $result;
             default:
-                return $this->headers[$lc];
+                return array_key_exists($lc, $this->headers) ? $this->headers[$lc] : null;
         }
     }
 
@@ -53,7 +63,8 @@ class Request extends SRequest
 
     public function accepts()
     {
-
+        $accepts = new Accepts($this);
+        return $accepts->types();
     }
 
 }
