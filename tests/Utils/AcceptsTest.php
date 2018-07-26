@@ -183,4 +183,140 @@ class AcceptsTest extends TestCase
 
         self::assertEquals('gzip', $accept->encodings(['compress', 'gzip']));
     }
+
+
+    public function testLanguageWithNoArguments()
+    {
+        $req1 = self::createRequestLanguage('en;q=0.8, es, pt');
+        $accept1 = new Accepts($req1);
+        self::assertEquals(['es', 'pt', 'en'], $accept1->languages());
+
+        $req2 = self::createRequestLanguage();
+        $accept2 = new Accepts($req2);
+        self::assertEquals(['*'], $accept2->languages());
+
+        $req3 = self::createRequestLanguage('');
+        $accept3 = new Accepts($req3);
+        self::assertEquals([], $accept3->languages());
+    }
+
+
+    public function testLanguageWithMultiArguments()
+    {
+        $req = self::createRequestLanguage('en;q=0.8, es, pt');
+        $accept = new Accepts($req);
+        self::assertEquals('es', $accept->languages('es', 'en'));
+
+        $req1 = self::createRequestLanguage('en;q=0.8, es, pt');
+        $accept1 = new Accepts($req1);
+        self::assertEquals(false, $accept1->languages('fr', 'au'));
+
+        $req2 = self::createRequestLanguage();
+        $accept2 = new Accepts($req2);
+        self::assertEquals('es', $accept2->languages('es', 'en'));
+    }
+
+
+    public function testLanguageWithArray()
+    {
+        $req = self::createRequestLanguage('en;q=0.8, es, pt');
+        $accept = new Accepts($req);
+        self::assertEquals('es', $accept->languages(['es', 'en']));
+    }
+
+
+    public function testTypesWithNoArguments()
+    {
+        $req = self::createRequestType('application/*;q=0.2, image/jpeg;q=0.8, text/html, text/plain');
+        $accept = new Accepts($req);
+        self::assertEquals(['text/html', 'text/plain', 'image/jpeg', 'application/*'], $accept->types());
+
+        $req1 = self::createRequestType();
+        $accept1 = new Accepts($req1);
+        self::assertEquals(['*/*'], $accept1->types());
+
+        $req2 = self::createRequestType('');
+        $accept2 = new Accepts($req2);
+        self::assertEquals([], $accept2->types());
+    }
+
+
+    public function testTypesNoValid()
+    {
+        $req = self::createRequestType('application/*;q=0.2, image/jpeg;q=0.8, text/html, text/plain');
+        $accept = new Accepts($req);
+        self::assertEquals(false, $accept->types('image/png', 'image/tiff'));
+
+        $req1 = self::createRequestType();
+        $accept1 = new Accepts($req1);
+        self::assertEquals('text/html', $accept1->types('text/html', 'text/plain', 'image/jpeg', 'application/*'));
+    }
+
+
+    public function testTypesWhenExtensionsGiven()
+    {
+        $req = self::createRequestType('text/plain, text/html');
+        $accept = new Accepts($req);
+
+        self::assertEquals('html', $accept->types('html'));
+        self::assertEquals('.html', $accept->types('.html'));
+        self::assertEquals('txt', $accept->types('txt'));
+        self::assertEquals('.txt', $accept->types('.txt'));
+        self::assertEquals(false, $accept->types('png'));
+        self::assertEquals(false, $accept->types('bogus'));
+    }
+
+
+    public function testTypesWithArray()
+    {
+        $req = self::createRequestType('text/plain, text/html');
+        $accept = new Accepts($req);
+
+        self::assertEquals('text', $accept->types(['png', 'text', 'html']));
+        self::assertEquals('html', $accept->types(['png', 'html']));
+        self::assertEquals('html', $accept->types(['bogus', 'html']));
+    }
+
+
+    public function testTypesWithMultiArguments()
+    {
+        $req = self::createRequestType('text/plain, text/html');
+        $accept = new Accepts($req);
+
+        self::assertEquals('text', $accept->types('png', 'text', 'html'));
+        self::assertEquals('html', $accept->types('png', 'html'));
+        self::assertEquals('html', $accept->types('bogus', 'html'));
+    }
+
+
+    public function testTypesWithExactMatch()
+    {
+        $req = self::createRequestType('text/plain, text/html');
+        $accept = new Accepts($req);
+
+        self::assertEquals('text/html', $accept->types('text/html'));
+        self::assertEquals('text/plain', $accept->types('text/plain'));
+    }
+
+
+    public function testTypesWithTypeMatch()
+    {
+        $req = self::createRequestType('application/json, */*');
+        $accept = new Accepts($req);
+
+        self::assertEquals('text/html', $accept->types('text/html'));
+        self::assertEquals('text/plain', $accept->types('text/plain'));
+        self::assertEquals('image/png', $accept->types('image/png'));
+    }
+
+
+    public function testTypesWithSubtypeMatch()
+    {
+        $req = self::createRequestType('application/json, text/*');
+        $accept = new Accepts($req);
+
+        self::assertEquals('text/html', $accept->types('text/html'));
+        self::assertEquals('text/plain', $accept->types('text/plain'));
+        self::assertEquals(false, $accept->types('image/png'));
+    }
 }
