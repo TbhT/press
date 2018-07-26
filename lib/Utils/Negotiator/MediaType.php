@@ -10,97 +10,6 @@ declare(strict_types=1);
 namespace Press\Utils\Negotiator;
 
 
-function get_full_type()
-{
-    return function (array $spec) {
-        return "{$spec['type']}/{$spec['subtype']}";
-    };
-}
-
-
-function quote_count(string $str): int
-{
-    $count = 0;
-    $offset = 0;
-
-    while (($offset = strpos($str, '"', $offset)) !== false) {
-        $count++;
-//        $offset = strpos($str, '""', $offset);
-        $offset++;
-    }
-
-    return $count;
-}
-
-
-function split_key_val_pair()
-{
-    return function (string $str): array {
-        $index = strpos($str, '=');
-        $val = null;
-
-        if ($index === false) {
-            $key = $str;
-        } else {
-            $key = substr($str, 0, $index);
-            $val = substr($str, $index + 1);
-        }
-
-        return [$key, $val];
-    };
-}
-
-
-function is_quality()
-{
-    return function ($spec) {
-        return $spec['q'] > 0;
-    };
-}
-
-
-function compare_specs()
-{
-    return function ($a, $b) {
-        $flag = 0;
-        $cmp_array = ['q', 's', 'o', 'i'];
-        foreach ($cmp_array as $value) {
-            if ($value === 'q' || $value === 's') {
-                $cmp = array_key_compare($b, $a, $value);
-            } else {
-                $cmp = array_key_compare($a, $b, $value);
-            }
-
-            if ($cmp !== 0) {
-                $flag = $cmp > 0 ? 1 : -1;
-                break;
-            }
-        }
-
-        return $flag;
-    };
-}
-
-
-function priority_compare_result($a, $b, $key)
-{
-    $flag = $a[$key] - $b[$key];
-    return $flag === 0;
-}
-
-
-function array_key_compare($a, $b, $key)
-{
-    return array_key_exists($key, $a) ? $a[$key] - $b[$key] : 0;
-}
-
-
-function array_key_compare_val($a, $b, $key)
-{
-    return $a[$key] - $b[$key];
-}
-
-
 class MediaType
 {
     private static function parseAccept(string $accept)
@@ -129,7 +38,7 @@ class MediaType
         $accepts = explode(',', $accept);
 
         for ($i = 1, $j = 0; $i < count($accepts); $i++) {
-            if (quote_count($accepts[$j]) % 2 === 0) {
+            if (Tool::quote_count($accepts[$j]) % 2 === 0) {
                 $accepts[++$j] = $accepts[$i];
             } else {
                 $accepts[$j] .= (',' . $accepts[$i]);
@@ -155,7 +64,7 @@ class MediaType
 
         if ($m_length > 3) {
             $kvps = self::splitParameters($matches[3]);
-            $kvps = array_map(split_key_val_pair(), $kvps);
+            $kvps = array_map(Tool::split_key_val_pair(), $kvps);
 
             foreach ($kvps as $item) {
                 $pair = $item;
@@ -260,7 +169,7 @@ class MediaType
     {
         $parameters = explode(';', $str);
         for ($i = 1, $j = 0; $i < count($parameters); $i++) {
-            if (quote_count($parameters[$i]) % 2 === 0) {
+            if (Tool::quote_count($parameters[$i]) % 2 === 0) {
                 $parameters[++$j] = $parameters[$i];
             } else {
                 $parameters[$j] .= (';' . $parameters[$i]);
@@ -276,17 +185,17 @@ class MediaType
         return $parameters;
     }
 
-    public static function preferredMediaTypes(string $accept = '', $provided = null)
+    public static function preferredMediaTypes($accept = '', $provided = null)
     {
         // RFC 2616 sec 14.2: no header = */*
         $accept = empty($accept) ? '*/*' : $accept;
         $accepts = self::parseAccept($accept);
 
         if (!$provided && is_array($provided) === false) {
-            $f = array_filter($accepts, is_quality());
+            $f = array_filter($accepts, Tool::is_quality());
 //         compare specs
-            usort($f, compare_specs());
-            return array_map(get_full_type(), $f);
+            usort($f, Tool::compare_specs());
+            return array_map(Tool::get_full_type(), $f);
         }
 
         $priorities = [];
@@ -294,10 +203,10 @@ class MediaType
             $priorities[$key] = self::getMediaTypePriority($val, $accepts, $key);
         }
 
-        $priorities_ = array_filter($priorities, is_quality());
+        $priorities_ = array_filter($priorities, Tool::is_quality());
         // sorted list of accepted media types
 
-        usort($priorities_, compare_specs());
+        usort($priorities_, Tool::compare_specs());
         return array_map(function ($p) use ($provided, $priorities) {
             $index = array_search($p, $priorities);
             return $provided[$index];

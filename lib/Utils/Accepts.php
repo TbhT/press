@@ -74,7 +74,7 @@ class Accepts
             return false;
         }
 
-        $index = array_search($mime, $accepts[0]);
+        $index = array_search($mime, $accepts);
         return $types[$index];
     }
 
@@ -157,7 +157,7 @@ class Accepts
     private function language_($args, $languages_)
     {
         // support flattened arguments
-        if ($args && !is_array($args)) {
+        if ($args && !is_array($languages_)) {
             $languages_ = $args;
         }
 
@@ -167,7 +167,7 @@ class Accepts
         }
 
         $language = $this->negotiator->languages($languages_);
-        $result = empty($languages_) ? false : $language[0];
+        $result = empty($language) ? false : $language[0];
         return $result;
     }
 

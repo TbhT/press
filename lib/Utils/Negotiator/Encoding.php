@@ -10,57 +10,6 @@ declare(strict_types=1);
 namespace Press\Utils\Negotiator;
 
 
-function array_key_compare($a, $b, $key)
-{
-    return array_key_exists($key, $a) ? $a[$key] - $b[$key] : 0;
-}
-
-
-function array_key_compare_val($a, $b, $key)
-{
-    return $a[$key] - $b[$key];
-}
-
-
-function compare_specs()
-{
-    return function ($a, $b) {
-        $flag = 0;
-        $cmp_array = ['q', 's', 'o', 'i'];
-        foreach ($cmp_array as $value) {
-            if ($value === 'q' || $value === 's') {
-                $cmp = array_key_compare($b, $a, $value);
-            } else {
-                $cmp = array_key_compare($a, $b, $value);
-            }
-
-            if ($cmp !== 0) {
-                $flag = $cmp > 0 ? 1 : -1;
-                break;
-            }
-        }
-
-        return $flag;
-    };
-}
-
-
-function is_quality()
-{
-    return function ($spec) {
-        return $spec['q'] > 0;
-    };
-}
-
-
-function get_full_encoding()
-{
-    return function ($spec) {
-        return $spec['encoding'];
-    };
-}
-
-
 class Encoding
 {
     /**
@@ -159,16 +108,16 @@ class Encoding
      * @param $provided
      * @return array
      */
-    public static function preferredEncodings(string $accept = '', $provided)
+    public static function preferredEncodings($accept = '', $provided)
     {
         $accept = empty($accept) ? '' : $accept;
         $accepts = self::parseAcceptEncoding($accept);
 
         if (!$provided && is_array($provided) === false) {
-            $f = array_filter($accepts, is_quality());
+            $f = array_filter($accepts, Tool::is_quality());
 
-            usort($f, compare_specs());
-            return array_map(get_full_encoding(), $f);
+            usort($f, Tool::compare_specs());
+            return array_map(Tool::get_full_encoding(), $f);
         }
 
         $priorities = [];
@@ -176,9 +125,9 @@ class Encoding
             $priorities[$key] = self::getEncodingPriority($priority, $accepts, $key);
         }
 
-        $priorities_ = array_filter($priorities, is_quality());
+        $priorities_ = array_filter($priorities, Tool::is_quality());
         // sorted list of accepted encodings
-        usort($priorities_, compare_specs());
+        usort($priorities_, Tool::compare_specs());
         return array_map(function ($p) use ($provided, $priorities) {
             $index = array_search($p, $priorities);
             return $provided[$index];

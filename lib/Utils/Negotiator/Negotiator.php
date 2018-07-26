@@ -51,7 +51,7 @@ class Negotiator
     {
         $accept_encoding = array_key_exists('accept-encoding', $this->request->headers) ?
             $this->request->headers['accept-encoding'] : '';
-        $accept_encoding = empty($accept_encoding) ? '' : $accept_encoding;
+        $accept_encoding = $accept_encoding === '' ? '' : $accept_encoding;
         return Encoding::preferredEncodings($accept_encoding, $available);
     }
 
@@ -67,7 +67,7 @@ class Negotiator
     {
         $accept_language = array_key_exists('accept-language', $this->request->headers) ?
             $this->request->headers['accept-language'] : '';
-        $accept_language = empty($accept_language) ? '' : $accept_language;
+        $accept_language = $accept_language === '' ? '' : $accept_language;
         return Language::preferredLanguage($accept_language, $available);
     }
 
@@ -83,7 +83,7 @@ class Negotiator
     {
         $accept_media_type = array_key_exists('accept', $this->request->headers) ?
             $this->request->headers['accept'] : '';
-        $accept_media_type = empty($accept_media_type) ? '' : $accept_media_type;
+        $accept_media_type = $accept_media_type === '' ? '' : $accept_media_type;
 
         return MediaType::preferredMediaTypes($accept_media_type, $available);
     }
