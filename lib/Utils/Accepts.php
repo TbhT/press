@@ -74,7 +74,7 @@ class Accepts
             return false;
         }
 
-        $index = array_search($mime, $accepts);
+        $index = array_search($accepts[0], $mime);
         return $types[$index];
     }
 

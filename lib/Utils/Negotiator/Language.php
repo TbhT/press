@@ -16,20 +16,20 @@ class Language
     private static function parseAcceptLanguage(string $accept): array
     {
         $accepts = explode(',', $accept);
-
+        $accepts_ = [];
         for ($i = 0, $j = 0; $i < count($accepts); $i++) {
             $val = trim($accepts[$i]);
             $language = self::parseLanguage($val, $i);
 
             if (empty($language) === false) {
-                $accepts[$j++] = $language;
+                $accepts_[$j++] = $language;
             }
         }
 
 //        trim accepts
 //        $accepts['length'] = $j;
 
-        return $accepts;
+        return $accepts_;
     }
 
 
@@ -123,10 +123,10 @@ class Language
         ];
     }
 
-    public static function preferredLanguage($accept = '', $provided = null)
+    public static function preferredLanguage($accept = null, $provided = null)
     {
         // RFC 2616 sec 14.4: no header = *
-        $accept = empty($accept) ? '*' : $accept;
+        $accept = $accept === null ? '*' : $accept;
         $accepts = self::parseAcceptLanguage($accept);
 
         if (!$provided && is_array($provided) === false) {

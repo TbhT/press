@@ -16,20 +16,20 @@ class MediaType
     {
         $accepts = self::splitMediaTypes($accept);
         $m_length = count($accepts);
+        $accepts_ = [];
 
-//        $accepts_ = [];
         for ($i = 0, $j = 0; $i < $m_length; $i++) {
             $val = trim($accepts[$i]);
             $media_type = self::parseMediaType($val, $i);
 
             if (empty($media_type) === false) {
-                $accepts[$j++] = $media_type;
+                $accepts_[$j++] = $media_type;
             }
         }
 
 //        $accepts['length'] = $j;
 
-        return $accepts;
+        return $accepts_;
     }
 
 
@@ -50,6 +50,7 @@ class MediaType
 
         return $accepts;
     }
+
 
     private static function parseMediaType(string $accept, int $i = -1)
     {
@@ -122,6 +123,7 @@ class MediaType
         return $priority;
     }
 
+
     private static function specify($type, $spec, $index)
     {
         $p = self::parseMediaType($type);
@@ -165,6 +167,7 @@ class MediaType
         ];
     }
 
+
     private static function splitParameters(string $str)
     {
         $parameters = explode(';', $str);
@@ -185,10 +188,11 @@ class MediaType
         return $parameters;
     }
 
-    public static function preferredMediaTypes($accept = '', $provided = null)
+
+    public static function preferredMediaTypes($accept = null, $provided = null)
     {
         // RFC 2616 sec 14.2: no header = */*
-        $accept = empty($accept) ? '*/*' : $accept;
+        $accept = $accept === null ? '*/*' : $accept;
         $accepts = self::parseAccept($accept);
 
         if (!$provided && is_array($provided) === false) {
@@ -212,4 +216,6 @@ class MediaType
             return $provided[$index];
         }, $priorities_);
     }
+
+
 }
