@@ -14,7 +14,6 @@ use Press\Request;
 const CACHE_CONTROL_NO_CACHE_REG_EXP = '/(?:^|,)\s*?no-cache\s*?(?:,|$)/';
 
 
-
 class Fresh
 {
     public static function fresh($req_headers, $res_headers)
@@ -38,6 +37,19 @@ class Fresh
             }
         }
 
+    }
 
+
+    public static function parse_to_token_list(string $str)
+    {
+        $end = 0;
+        $list = [];
+        $start = 0;
+
+        // gather tokens
+        $length = strlen($str);
+        for ($i = 0; $i < $length; $i++) {
+
+        }
     }
 }

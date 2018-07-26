@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Press;
 
 
+use function foo\func;
 use Swoole\Http\Request as SRequest;
 use Press\Utils\Accepts;
 use Press\Utils\TypeIs;
@@ -63,8 +64,41 @@ class Request extends SRequest
 
     public function accepts()
     {
+        $args = func_get_args();
         $accepts = new Accepts($this);
-        return $accepts->types();
+        return $accepts->types($args);
     }
+
+
+    public function accepts_encodings()
+    {
+        $args = func_get_args();
+        $accepts = new Accepts($this);
+        return $accepts->encodings($args);
+    }
+
+
+    public function accepts_charsets()
+    {
+        $args = func_get_args();
+        $accepts = new Accepts($this);
+        return $accepts->charsets($args);
+    }
+
+
+    public function accepts_languages()
+    {
+        $args = func_get_args();
+        $accepts = new Accepts($this);
+        return $accepts->languages($args);
+    }
+
+
+    public function range()
+    {
+
+    }
+
+
 
 }
