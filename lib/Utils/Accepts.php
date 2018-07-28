@@ -9,34 +9,9 @@ declare(strict_types=1);
 
 namespace Press\Utils;
 
-use function foo\func;
 use Press\Request;
 use Press\Utils\Negotiator;
-use Press\Utils\Mime;
-
-
-/**
- * convert extnames to mime
- * @return \Closure
- */
-function ext_to_mime()
-{
-    return function ($type) {
-        return strpos($type, '/') === false ?
-            Mime\MimeTypes::lookup($type) : $type;
-    };
-}
-
-
-/**
- * @return \Closure
- */
-function valid_mime()
-{
-    return function ($type) {
-        return is_string($type);
-    };
-}
+use Press\Utils\Negotiator\Tool;
 
 
 class Accepts
@@ -66,8 +41,8 @@ class Accepts
             return $types[0];
         }
 
-        $mime = array_map(ext_to_mime(), $types);
-        $mime = array_filter($mime, valid_mime());
+        $mime = array_map(Tool::ext_to_mime(), $types);
+        $mime = array_filter($mime, Tool::valid_mime());
         $accepts = $this->negotiator->mediaTypes($mime);
 
         if (count($accepts) === 0 || !$accepts[0]) {
