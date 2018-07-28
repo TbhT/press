@@ -15,14 +15,14 @@ const CACHE_CONTROL_NO_CACHE_REG_EXP = '/(?:^|,)\s*?no-cache\s*?(?:,|$)/';
 
 class Fresh
 {
-    public static function fresh($req_headers, $res_headers)
+    public static function fresh(array $req_headers, array $res_headers)
     {
         // fields
         $modified_since = array_key_exists('if-modified-since', $req_headers);
         $none_match = array_key_exists('if-none-match', $req_headers);
 
         // unconditional request
-        if (!$modified_since || !$none_match) {
+        if (!$modified_since && !$none_match) {
             return false;
         }
 
@@ -31,24 +31,26 @@ class Fresh
         $cache_control = array_key_exists('cache-control', $req_headers);
         if ($cache_control) {
             preg_match(CACHE_CONTROL_NO_CACHE_REG_EXP, $req_headers['cache-control'], $cache_control_m);
-            if (count($cache_control_m) === 0) {
+            if (count($cache_control_m) !== 0) {
                 return false;
             }
         }
 
         // if-none-match
-        $none_match_val = $req_headers['if-none-match'];
+        $none_match_val = array_key_exists('if-none-match', $req_headers) ? $req_headers['if-none-match'] : '';
         if ($none_match_val && $none_match_val !== '*') {
-            $etag = array_key_exists('etag', $req_headers);
+            $etag = array_key_exists('etag', $res_headers);
 
             if (!$etag) {
                 return false;
+            } else {
+                $etag = $res_headers['etag'];
             }
 
             $etag_stale = true;
             $matches = self::parseToTokenList($none_match_val);
             foreach ($matches as $match) {
-                if ($match === $etag || $match === '\W' . $etag || '\W' . $match === $etag) {
+                if ($match === $etag || $match === ('W/' . $etag) || ('W/' . $match) === $etag) {
                     $etag_stale = false;
                     break;
                 }
@@ -61,8 +63,10 @@ class Fresh
 
         // if-modified-since
         if ($modified_since) {
-            $last_modified = $res_headers['last-modified'];
-            $modified_stale = !$last_modified || !self::parseHttpData($last_modified) <= self::parseHttpData($modified_since);
+            $last_modified = array_key_exists('last-modified', $res_headers) ? $res_headers['last-modified'] : false;
+            $modified_since = $req_headers['if-modified-since'];
+            $modified_stale = !$last_modified || !self::parseHttpDate($last_modified, $modified_since);
+
             if ($modified_stale) {
                 return false;
             }
@@ -98,16 +102,21 @@ class Fresh
         }
 
         // final token
-        array_push($list, substr($start, $end));
+        array_push($list, substr($str, $start, $end));
 
         return $list;
     }
 
 
-    private static function parseHttpData($date)
+    private static function parseHttpDate($last_modified, $modified_since)
     {
-        $timestamp = strtotime($date);
+        $last_modified = strtotime($last_modified);
+        $modified_since = strtotime($modified_since);
 
-        return $timestamp === false ? false : $timestamp;
+        if (!is_integer($last_modified) || !is_integer($modified_since)) {
+            return false;
+        }
+
+        return $last_modified <= $modified_since;
     }
 }
