@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace Press\Utils\Negotiator;
 
+use Press\Utils\Mime;
+
 
 class Tool
 {
@@ -113,4 +115,29 @@ class Tool
         $flag = $a[$key] - $b[$key];
         return $flag === 0;
     }
+
+
+    /**
+     * convert extnames to mime
+     * @return \Closure
+     */
+    public static function ext_to_mime()
+    {
+        return function ($type) {
+            return strpos($type, '/') === false ?
+                Mime\MimeTypes::lookup($type) : $type;
+        };
+    }
+
+
+    /**
+     * @return \Closure
+     */
+    public static function valid_mime()
+    {
+        return function ($type) {
+            return is_string($type);
+        };
+    }
+
 }
