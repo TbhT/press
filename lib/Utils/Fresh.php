@@ -10,7 +10,6 @@ declare(strict_types=1);
 namespace Press\Utils;
 
 
-use Press\Request;
 const CACHE_CONTROL_NO_CACHE_REG_EXP = '/(?:^|,)\s*?no-cache\s*?(?:,|$)/';
 
 
@@ -37,10 +36,43 @@ class Fresh
             }
         }
 
+        // if-none-match
+        $none_match_val = $req_headers['if-none-match'];
+        if ($none_match_val && $none_match_val !== '*') {
+            $etag = array_key_exists('etag', $req_headers);
+
+            if (!$etag) {
+                return false;
+            }
+
+            $etag_stale = true;
+            $matches = self::parseToTokenList($none_match_val);
+            foreach ($matches as $match) {
+                if ($match === $etag || $match === '\W' . $etag || '\W' . $match === $etag) {
+                    $etag_stale = false;
+                    break;
+                }
+            }
+
+            if ($etag_stale) {
+                return false;
+            }
+        }
+
+        // if-modified-since
+        if ($modified_since) {
+            $last_modified = $res_headers['last-modified'];
+            $modified_stale = !$last_modified || !self::parseHttpData($last_modified) <= self::parseHttpData($modified_since);
+            if ($modified_stale) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 
-    public static function parse_to_token_list(string $str)
+    private static function parseToTokenList(string $str)
     {
         $end = 0;
         $list = [];
@@ -49,7 +81,33 @@ class Fresh
         // gather tokens
         $length = strlen($str);
         for ($i = 0; $i < $length; $i++) {
-
+            switch (ord($str[$i])) {
+                case 32: /* */
+                    if ($start === $end) {
+                        $start = $end = $i + 1;
+                    }
+                    break;
+                case 44: /* , */
+                    array_push($list, substr($str, $start, $end));
+                    $start = $end = $i + 1;
+                    break;
+                default:
+                    $end = $i + 1;
+                    break;
+            }
         }
+
+        // final token
+        array_push($list, substr($start, $end));
+
+        return $list;
+    }
+
+
+    private static function parseHttpData($date)
+    {
+        $timestamp = strtotime($date);
+
+        return $timestamp === false ? false : $timestamp;
     }
 }
