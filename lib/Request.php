@@ -11,6 +11,7 @@ namespace Press;
 
 
 use function foo\func;
+use Press\Utils\RangeParser;
 use Swoole\Http\Request as SRequest;
 use Press\Utils\Accepts;
 use Press\Utils\TypeIs;
@@ -19,6 +20,9 @@ use Press\Utils\TypeIs;
 class Request extends SRequest
 {
     public $headers;
+    public $params = [];
+    public $query = [];
+    public $body = [];
 
     public function __construct()
     {
@@ -94,11 +98,44 @@ class Request extends SRequest
     }
 
 
-    public function range()
+    public function range($size, $options)
     {
-
+        $range = $this->get('Range');
+        if ($range) {
+            return RangeParser::rangeParser($size, $range, $options);
+        }
     }
 
 
+    public function param($name, $default_value)
+    {
+        $params = $this->params;
+        $body = $this->body;
+        $query = $this->query;
+
+        if (array_key_exists($name, $params)) {
+            return $params[$name];
+        }
+
+        if (array_key_exists($name, $body)) {
+            return $body[$name];
+        }
+
+        if (array_key_exists($name, $query)) {
+            return $query[$name];
+        }
+
+        return $default_value;
+    }
+
+
+    public function is($types)
+    {
+        if (is_array($types) === false) {
+            $types = func_get_args();
+        }
+
+        return TypeIs::typeOfRequest($this, $types);
+    }
 
 }
