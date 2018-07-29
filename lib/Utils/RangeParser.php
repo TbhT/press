@@ -13,7 +13,7 @@ namespace Press\Utils;
 class RangeParser
 {
 
-    public static function rangeParser($size, $str, $options)
+    public static function rangeParser($size, $str, $options = null)
     {
         if (is_string($str) === false) {
             throw new \TypeError('argument $str must be string');
@@ -28,8 +28,8 @@ class RangeParser
         $arr = explode(',', substr($str, $index + 1));
         $ranges = [];
 
-        // add ranges types todo : maybe can be refactor
-//        $ranges['type'] = substr(0, $index);
+        //  add ranges types todo : maybe can be refactor
+        //  $ranges['type'] = substr(0, $index);
 
         // parse all ranges
         foreach ($arr as $v) {
@@ -38,13 +38,13 @@ class RangeParser
             $end = intval($range[1], 10);
 
             // -nnn
-            if ($range[0] === '') {
+            if (is_numeric($range[0]) === false) {
                 $end = intval($range[1], 10);
                 $start = $size - $end;
                 $end = $size - 1;
 
                 // nnn-
-            } else if ($range[1] === '') {
+            } else if (is_numeric($range[1]) === false) {
                 $end = $size - 1;
             }
 
@@ -53,8 +53,8 @@ class RangeParser
                 $end = $size - 1;
             }
 
-            // invalid or unsatisifiable
-            if (!is_numeric($range[0]) || !is_numeric($range[1]) || $start > $end || $start < 0) {
+            // invalid or unsatisfiable
+            if (!is_numeric($start) || !is_numeric($end) || $start > $end || $start < 0) {
                 continue;
             }
 
@@ -62,7 +62,7 @@ class RangeParser
         }
 
         if (count($ranges) < 1) {
-            // unsatisifiable
+            // unsatisfiable
             return -1;
         }
 
@@ -72,18 +72,16 @@ class RangeParser
 
     private static function combineRanges($ranges)
     {
-        $ranges = array_map(static::mapWithIndex(), $ranges);
-        usort($ranges, static::sortByRangeIndex());
-        $ordered = [];
-        $ordered[0] = $ranges[0];
+        array_walk($ranges, static::mapWithIndex());
+        usort($ranges, static::sortByRangeStart());
 
         for ($j = 0, $i = 1; $i < count($ranges); $i++) {
-            $range = $ranges[$i];
-            $current = $ranges[$j];
+            $range = &$ranges[$i];
+            $current = &$ranges[$j];
 
             if ($range['start'] > $current['end'] + 1) {
                 // next range
-                $ordered[++$j] = $range;
+                $ranges[++$j] = $range;
             } else if ($range['end'] > $current['end']) {
                 // extend range
                 $current['end'] = $range['end'];
@@ -91,16 +89,18 @@ class RangeParser
             }
         }
 
-        usort($ordered, static::sortByRangeIndex());
-        $ordered = array_map(static::mapWithoutIndex(), $ordered);
+        $ranges = array_slice($ranges, 0, $j + 1);
 
-        return $ordered;
+        usort($ranges, static::sortByRangeIndex());
+        $ranges = array_map(static::mapWithoutIndex(), $ranges);
+
+        return $ranges;
     }
 
     private static function mapWithIndex()
     {
-        return function ($range, $index) {
-            return [
+        return function (& $range, $index) {
+            return $range = [
                 'start' => $range['start'],
                 'end' => $range['end'],
                 'index' => $index
