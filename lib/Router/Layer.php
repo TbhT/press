@@ -6,6 +6,7 @@ declare(strict_types=1);
 namespace Press\Router;
 
 use Press\Helper\UrlHelper;
+use Throwable;
 
 
 /**
@@ -62,7 +63,7 @@ class Layer
     {
         try {
             $this->handle($error, $req, $res, $next);
-        } catch (\Exception $error) {
+        } catch (Throwable $error) {
             $next($error);
         }
     }
@@ -77,7 +78,7 @@ class Layer
     {
         try {
             $this->handle($req, $res, $next);
-        } catch (\Exception $error) {
+        } catch (Throwable $error) {
             $next($error);
         }
     }
