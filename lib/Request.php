@@ -147,4 +147,11 @@ class Request extends SRequest
 
     }
 
+    private function protocol()
+    {
+
+    }
+
+    
+
 }
