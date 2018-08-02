@@ -23,6 +23,10 @@ class Request extends SRequest
     public $params = [];
     public $query = [];
     public $body = [];
+    private $property_array = [
+        'protocol', 'secure', 'ip', 'ips', 'subdomains', 'path',
+        'hostname', 'fresh', 'stale', 'xhr'
+    ];
 
     public function __construct()
     {
@@ -136,6 +140,11 @@ class Request extends SRequest
         }
 
         return TypeIs::typeOfRequest($this, $types);
+    }
+
+    public function __get($name)
+    {
+
     }
 
 }
