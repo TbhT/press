@@ -53,7 +53,7 @@ class Forwarded
     }
 
 
-    public function forwarded(Request $req)
+    public static function forwarded(Request $req)
     {
         $header = array_key_exists('x-forward-for', $req->headers) ? $req->headers['x-forward-for'] : '';
         $proxy_addr = self::parse($header);

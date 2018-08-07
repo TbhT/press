@@ -10,7 +10,6 @@ declare(strict_types=1);
 namespace Press;
 
 
-use function foo\func;
 use Press\Utils\RangeParser;
 use Swoole\Http\Request as SRequest;
 use Press\Utils\Accepts;
@@ -142,9 +141,36 @@ class Request extends SRequest
         return TypeIs::typeOfRequest($this, $types);
     }
 
+
     public function __get($name)
+    {
+        $pos = array_search($this->property_array, $name);
+
+        if ($pos !== false) {
+            return $this->$name;
+        } else {
+            throw new \TypeError("Request has no property {$name}");
+        }
+    }
+
+
+    private function set_protocol()
+    {
+        $server_protocol = $this->headers['server_protocol'];
+        $sp_array = explode('/', $server_protocol);
+
+        $this->protocol = strtolower($sp_array[0]) === 'https' ? 'https' : 'http';
+    }
+
+
+    private function set_secure()
+    {
+        $this->secure = $this->protocol === 'https';
+    }
+
+
+    private function set_ip()
     {
 
     }
-
 }
