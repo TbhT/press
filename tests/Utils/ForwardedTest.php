@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
 
 class ForwardedTest extends TestCase
 {
-    private function createReq($socket_addr, $headers = null)
+    private function createReq($socket_addr, $headers = [])
     {
         if (count($headers) === 0) {
             $headers = [];

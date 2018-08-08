@@ -22,10 +22,10 @@ class Forwarded
     {
         $end = strlen($header);
         $list = [];
-        $start = strlen($end);
+        $start = strlen($header);
 
         // gather addresses, backwards
-        for ($i = strlen($header); $i >= 0; $i--) {
+        for ($i = strlen($header) - 1; $i >= 0; $i--) {
             switch (ord($header[$i])) {
                 case 0x20: /*   */
                     if ($start === $end) {
@@ -55,10 +55,10 @@ class Forwarded
 
     public static function forwarded(Request $req)
     {
-        $header = array_key_exists('x-forward-for', $req->headers) ? $req->headers['x-forward-for'] : '';
+        $header = array_key_exists('x-forwarded-for', $req->headers) ? $req->headers['x-forwarded-for'] : '';
         $proxy_addr = self::parse($header);
         $socket_addr = $req->server['remote_addr'];
 
-        return array_combine($socket_addr, $proxy_addr);
+        return array_merge([$socket_addr], $proxy_addr);
     }
 }
