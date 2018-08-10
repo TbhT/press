@@ -9,6 +9,11 @@
 namespace Press\Utils;
 
 
+const IPV4_FOUR_OCTET = '/^(0?\d+|0x[a-f0-9]+)\.(0?\d+|0x[a-f0-9]+)\.(0?\d+|0x[a-f0-9]+)\.(0?\d+|0x[a-f0-9]+)$/i';
+
+const IPV4_LONG_VALUE = '/^(0?\d+|0x[a-f0-9]+)$/i';
+
+
 function matchCIDR(array $first, array $second, $partSize, $cidrBits)
 {
     if (count($first) !== count($second)) {
@@ -198,7 +203,40 @@ class IPv4
 
     public static function parser(string $string)
     {
+        preg_match(IPV4_FOUR_OCTET, $string, $match_four);
+        preg_match(IPV4_LONG_VALUE, $string, $match_long);
 
+        if (count($match_four) > 0) {
+            $result = [];
+            for ($i = 1; $i < count($match_four); $i++) {
+                $part = $match_four[$i];
+                array_push($result, self::parseIntAuto($part));
+            }
+
+            return $result;
+        } elseif (count($match_long) > 0) {
+            $value = self::parseIntAuto($match_long[1]);
+            if ($value > 0xffffffff || $value < 0) {
+                throw new \TypeError('IpAddr: address outside defined range');
+            }
+            $result = [];
+            for ($shift = $k = 0; $k <= 24; $shift = $k += 8) {
+                array_push($result, ($value >> $shift) & 0xff);
+            }
+
+            return array_reverse($result);
+        } else {
+            return null;
+        }
+    }
+
+    private static function parseIntAuto(string $string)
+    {
+        if ($string[0] === '0' && $string[1] === 'x') {
+            return intval($string, 8);
+        } else {
+            return intval($string);
+        }
     }
 }
 
