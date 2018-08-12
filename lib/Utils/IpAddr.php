@@ -10,7 +10,6 @@ declare(strict_types=1);
 namespace Press\Utils;
 
 
-use Doctrine\Instantiator\Exception\InvalidArgumentException;
 const IPV4_FOUR_OCTET = '/^(0?\d+|0x[a-f0-9]+)\.(0?\d+|0x[a-f0-9]+)\.(0?\d+|0x[a-f0-9]+)\.(0?\d+|0x[a-f0-9]+)$/i';
 
 const IPV4_LONG_VALUE = '/^(0?\d+|0x[a-f0-9]+)$/i';
@@ -112,21 +111,62 @@ function expandIPv6(string $string, $parts)
 }
 
 
-function fromByteArray($bytes)
-{
-    $length = count($bytes);
-    if ($length === 4) {
-        return new IPv4($bytes);
-    } else if ($length === 16) {
-        return new IPv6($bytes);
-    } else {
-        throw new \TypeError('IpAddr: the binary input is neither an IPv6 nor IPv4 address');
-    }
-}
-
 class IpAddr
 {
+    public static function isValid(string $str)
+    {
+        return IPv6::isValid($str) || IPv4::isValid($str);
+    }
 
+
+    public static function parse(string $str)
+    {
+        if (IPv6::isValid($str)) {
+            return IPv6::parse($str);
+        } else if (IPv4::isValid($str)) {
+            return IPv4::parse($str);
+        } else {
+            throw new \TypeError('IpAddr: the address has neither IPv6 nor IPv4 format');
+        }
+    }
+
+
+    public static function parseCIDR(string $str)
+    {
+        try {
+            return IPv6::parseCIDR($str);
+        } catch (\Throwable $e1) {
+            try {
+                return IPv4::parseCIDR($str);
+            } catch (\Throwable $e2) {
+                throw new \TypeError('IpAddr: the address has neither IPv6 nor IPv4 CIDR format');
+            }
+        }
+    }
+
+
+    public static function fromByteArray($bytes)
+    {
+        $length = count($bytes);
+        if ($length === 4) {
+            return new IPv4($bytes);
+        } else if ($length === 16) {
+            return new IPv6($bytes);
+        } else {
+            throw new \TypeError('IpAddr: the binary input is neither an IPv6 nor IPv4 address');
+        }
+    }
+
+
+    public static function process(string $str)
+    {
+        $addr = static::parse($str);
+        if ($addr->kind() === 'ipv6' && $addr->isIPv4MappedAddress()) {
+            return $addr->toIPv4Address();
+        } else {
+            return $addr;
+        }
+    }
 }
 
 
@@ -334,7 +374,7 @@ class IPv4
     }
 
 
-    public function isValid(string $str)
+    public static function isValid(string $str)
     {
         try {
             new IPv4(static::parser($str));
@@ -650,7 +690,7 @@ class IPv6
     }
 
 
-    public function isValid(string $string)
+    public static function isValid(string $string)
     {
         if (is_string($string) && strpos($string, ':') === -1) {
             return false;
@@ -665,7 +705,7 @@ class IPv6
     }
 
 
-    public function parseCIDR(string $string)
+    public static function parseCIDR(string $string)
     {
         preg_match('/^(.+)\/(\d+)$/', $string, $m);
         if (count($m) > 0) {
@@ -677,7 +717,5 @@ class IPv6
 
         throw new \TypeError('IpAddr: string is not formatted like an IPv6 CIDR range');
     }
-
-
 
 }
