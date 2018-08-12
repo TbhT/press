@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Created by PhpStorm.
  * User: erub
@@ -9,6 +10,7 @@
 namespace Press\Utils;
 
 
+use Doctrine\Instantiator\Exception\InvalidArgumentException;
 const IPV4_FOUR_OCTET = '/^(0?\d+|0x[a-f0-9]+)\.(0?\d+|0x[a-f0-9]+)\.(0?\d+|0x[a-f0-9]+)\.(0?\d+|0x[a-f0-9]+)$/i';
 
 const IPV4_LONG_VALUE = '/^(0?\d+|0x[a-f0-9]+)$/i';
@@ -109,6 +111,19 @@ function expandIPv6(string $string, $parts)
     return $result;
 }
 
+
+function fromByteArray($bytes)
+{
+    $length = count($bytes);
+    if ($length === 4) {
+        return new IPv4($bytes);
+    } else if ($length === 16) {
+        return new IPv6($bytes);
+    } else {
+        throw new \TypeError('IpAddr: the binary input is neither an IPv6 nor IPv4 address');
+    }
+}
+
 class IpAddr
 {
 
@@ -176,20 +191,24 @@ class IPv4
         ];
     }
 
+
     public function kind()
     {
         return 'ipv4';
     }
+
 
     public function toString()
     {
         return join('.', $this->octets);
     }
 
+
     public function toByteArray()
     {
         return $this->octets;
     }
+
 
     public function match($other, $cidrRange)
     {
@@ -205,15 +224,19 @@ class IPv4
         return matchCIDR($this->octets, $other['octets'], 8, $cidrRange);
     }
 
+
     public function range()
     {
         return subnetMatch($this, $this->specialRanges);
     }
 
+
     public function toIPv4MappedAddress()
     {
-        return IPv6::parse();
+        $str = $this->toString();
+        return IPv6::parse("::ffff:{$str}");
     }
+
 
     public function prefixLengthFromSubnetMask()
     {
@@ -253,6 +276,7 @@ class IPv4
         return 32 - $cidr;
     }
 
+
     public static function parser(string $string)
     {
         preg_match(IPV4_FOUR_OCTET, $string, $match_four);
@@ -282,6 +306,7 @@ class IPv4
         }
     }
 
+
     private static function parseIntAuto(string $string)
     {
         if ($string[0] === '0' && $string[1] === 'x') {
@@ -301,6 +326,85 @@ class IPv4
 
         return new IPv4($parts);
     }
+
+
+    public static function isIPv4(string $string)
+    {
+        return static::parser($string);
+    }
+
+
+    public function isValid(string $str)
+    {
+        try {
+            new IPv4(static::parser($str));
+            return true;
+        } catch (\Throwable $exception) {
+            return false;
+        }
+    }
+
+
+    public function isValidFourPartDecimal(string $str)
+    {
+        preg_match('/^\d+(\.\d+){3}$/', $str, $m);
+        if (static::isIPv4($str) && count($m) > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+    public static function parseCIDR(string $string)
+    {
+        preg_match('/^(.+)\/(\d+)$/', $string, $m);
+        if (count($m) > 0) {
+            $maskLength = intval($m[2]);
+            if ($maskLength >= 0 && $maskLength <= 32) {
+                return [static::parse($m[1]), $maskLength];
+            }
+        }
+
+        throw new \TypeError('IpAddr: string is not formatted like an IPv4 CIDR range');
+    }
+
+
+    public function broadcastAddressFromCIDR(string $str)
+    {
+        try {
+            $cidrValue = IPv4::parseCIDR($str);
+            $ipInterface = $cidrValue[0];
+            $subnetMask = IPv4::subnetMaskFromPrefixLength($cidrValue[1]);
+            $octets = [];
+            $i = 0;
+            while ($i < 4) {
+                array_push($octets, intval($ipInterface->octets[$i], 10) | intval($subnetMask[$i], 10) ^ 255);
+                $i++;
+            }
+
+            return new IPv4($octets);
+        } catch (\Throwable $exception) {
+            throw new \TypeError('IpAddr: the address does not have ipv4 CIDR format');
+        }
+    }
+
+    public static function subnetMaskFromPrefixLength($prefix)
+    {
+        if ($prefix < 0 || $prefix > 32) {
+            throw new \TypeError('IpAddr: invalid prefix length');
+        }
+
+        $octets = [0, 0, 0, 0];
+        $j = 0;
+        while ($j < floor($prefix / 8)) {
+            $octets[$j] = 255;
+            $j++;
+        }
+
+        $octets = [floor($prefix / 8)] = pow(2, $prefix % 8) - 1 << 8 - ($prefix % 8);
+        return new IPv4($octets);
+    }
 }
 
 
@@ -318,7 +422,7 @@ class IPv6
         'rfc6052' => [],
         '6to4' => [],
         'teredo' => [],
-        'reserved'=> []
+        'reserved' => []
     ];
 
 
@@ -538,4 +642,42 @@ class IPv6
 
         return new IPv6($parts);
     }
+
+
+    public function isIPv6(string $string)
+    {
+        return static::parser($string);
+    }
+
+
+    public function isValid(string $string)
+    {
+        if (is_string($string) && strpos($string, ':') === -1) {
+            return false;
+        }
+
+        try {
+            new IPv6(static::parser($string));
+            return true;
+        } catch (\Throwable $exception) {
+            return false;
+        }
+    }
+
+
+    public function parseCIDR(string $string)
+    {
+        preg_match('/^(.+)\/(\d+)$/', $string, $m);
+        if (count($m) > 0) {
+            $maskLength = intval($m[2]);
+            if ($maskLength >= 0 && $maskLength <= 128) {
+                return [static::parse($m[1]), $maskLength];
+            }
+        }
+
+        throw new \TypeError('IpAddr: string is not formatted like an IPv6 CIDR range');
+    }
+
+
+    
 }
