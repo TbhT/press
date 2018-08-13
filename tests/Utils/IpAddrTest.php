@@ -161,4 +161,141 @@ class IpAddrTest extends TestCase
     {
         self::assertEquals(IPv4::parse($ip)->range(), $range);
     }
+
+    public function testCheckConventionalIPv4AddressFormat()
+    {
+        self::assertEquals(true, IPv4::isValidFourPartDecimal('192.168.1.1'));
+        self::assertEquals(false, IPv4::isValidFourPartDecimal('0xc0.168.1.1'));
+    }
+
+    public function testConstructIPv6From16BitsParts()
+    {
+        new IPv6([0x2001, 0xdb8, 0xf53a, 0, 0, 0, 0, 1]);
+        self::assertTrue(true);
+    }
+
+    public function testConstructIPv6From8BitsParts()
+    {
+        new IPv6([0x20, 0x01, 0xd, 0xb8, 0xf5, 0x3a, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
+        self::assertEquals(new IPv6([0x20, 0x01, 0xd, 0xb8, 0xf5, 0x3a, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]), new IPv6([0x2001, 0xdb8, 0xf53a, 0, 0, 0, 0, 1]));
+    }
+
+    public function refusesToConstructInvalidIPv6Data()
+    {
+        return [
+            [0xfffff, 0, 0, 0, 0, 0, 0, 1],
+            [0xfffff, 0, 0, 0, 0, 0, 1],
+            [0xffff, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+        ];
+    }
+
+
+    /**
+     * @dataProvider refusesToConstructInvalidIPv6Data
+     * @expectedException TypeError
+     */
+    public function testRefusesToConstructInvalidIPv6($ip)
+    {
+        new IPv6($ip);
+    }
+
+    public function testConvertIPv6ToStringCorrect()
+    {
+        $addr = new IPv6([0x2001, 0xdb8, 0xf53a, 0, 0, 0, 0, 1]);
+        self::assertEquals('2001:db8:f53a:0:0:0:0:1', $addr->toNormalizedString());
+        self::assertEquals('2001:db8:f53a::1', $addr->toString());
+        self::assertEquals('::1', new IPv6([0, 0, 0, 0, 0, 0, 0, 1]));
+        self::assertEquals('2001:db8::', new IPv6([0x2001, 0xdb8, 0, 0, 0, 0, 0, 0]));
+    }
+
+    public function testReturnCorrectKindForIPv6()
+    {
+        $addr = new IPv6([0x2001, 0xdb8, 0xf53a, 0, 0, 0, 0, 1]);
+        self::assertEquals('ipv6', $addr->kind());
+    }
+
+    public function testAllowAccessIPv6AddressPart()
+    {
+        $addr = new IPv6([0x2001, 0xdb8, 0xf53a, 0, 0, 42, 0, 1]);
+        self::assertEquals(42, $addr->parts[5]);
+    }
+
+    public function checkIPv6AddressFormat()
+    {
+        return [
+            ['2001:db8:F53A::1', true],
+            ['200001::1', true],
+            ['::ffff:192.168.1.1', true],
+            ['::ffff:300.168.1.1', false],
+            ['::ffff:300.168.1.1:0', false],
+            ['fe80::wtf', false]
+        ];
+    }
+
+    public function testCheckIPv6AddressFormat($ip, $expected)
+    {
+        self::assertEquals($expected, IPv6::isIPv6($ip));
+    }
+
+    public function validatesIPv6Address()
+    {
+        return [
+            ['2001:db8:F53A::1', true],
+            ['200001::1', false],
+            ['::ffff:192.168.1.1', true],
+            ['::ffff:300.168.1.1', false],
+            ['::ffff:300.168.1.1:0', false],
+            ['::ffff:222.1.41.9000', false],
+            ['2001:db8::F53A::1', false],
+            ['fe80::wtf', false],
+            ['2002::2:', false],
+            [null, false]
+        ];
+    }
+
+    public function testValidatesIPv6Address($ip, $expected)
+    {
+        self::assertEquals($expected, IPv6::isValid($ip));
+    }
+
+    public function parsesIPv6InDiffFormats()
+    {
+        return [
+            ['2001:db8:F53A:0:0:0:0:1', [0x2001, 0xdb8, 0xf53a, 0, 0, 0, 0, 1]],
+            ['fe80::10', [0xfe80, 0, 0, 0, 0, 0, 0, 0x10]],
+            ['2001:db8:F53A::', [0x2001, 0xdb8, 0xf53a, 0, 0, 0, 0, 0]],
+            ['::1', [0, 0, 0, 0, 0, 0, 0, 1]],
+            ['::', [0, 0, 0, 0, 0, 0, 0, 0]]
+        ];
+    }
+
+    /**
+     * @dataProvider parsesIPv6InDiffFormats
+     */
+    public function testParsesIPv6InDiffFormats($string, $expected)
+    {
+        self::assertEquals($expected, IPv6::parse($string)->parts);
+    }
+
+    /**
+     * @expectedException TypeError
+     */
+    public function testBarfsAtInvalidIPv6()
+    {
+        IPv6::parse('fe80::0::1');
+    }
+
+    public function testMatchesIPv6CIDRCorrect()
+    {
+        $addr = IPv6::parse('2001:db8:f53a::1');
+        self::assertEquals(true, $addr->match(IPv6::parse('::'), 0));
+        self::assertEquals(true, $addr->match(IPv6::parse('2001:db8:f53a::1:1'), 64));
+        self::assertEquals(false, $addr->match(IPv6::parse('2001:db8:f53b::1:1'), 48));
+        self::assertEquals(true, $addr->match(IPv6::parse('2001:db8:f531::1:1'), 44));
+        self::assertEquals(true, $addr->match(IPv6::parse('2001:db8:f500::1'), 40));
+        self::assertEquals(false, $addr->match(IPv6::parse('2001:db9:f500::1'), 40));
+        self::assertEquals(true, $addr->match($addr, 128));
+    }
+
+    
 }

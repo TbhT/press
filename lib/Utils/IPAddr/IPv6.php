@@ -217,7 +217,7 @@ class IPv6
     }
 
 
-    public function isIPv6(string $string)
+    public static function isIPv6(string $string)
     {
         return static::parser($string) !== null;
     }

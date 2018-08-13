@@ -194,7 +194,7 @@ class IPv4
     }
 
 
-    public function isValidFourPartDecimal(string $str)
+    public static function isValidFourPartDecimal(string $str)
     {
         preg_match('/^\d+(\.\d+){3}$/', $str, $m);
         if (static::isIPv4($str) && count($m) > 0) {
