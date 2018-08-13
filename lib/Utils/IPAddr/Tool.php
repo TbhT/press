@@ -119,7 +119,7 @@ class Tool
         $colonCount = 0;
         $lastColon = -1;
 
-        while (($lastColon = strpos($string, ':', $lastColon + 1)) >= 0) {
+        while (($lastColon = strpos($string, ':', $lastColon + 1))) {
             $colonCount++;
         }
 
@@ -136,7 +136,7 @@ class Tool
         }
 
         $replacementCount = $parts - $colonCount;
-        $replacement = '';
+        $replacement = ':';
 
         while ($replacementCount--) $replacement .= '0:';
 
@@ -152,7 +152,7 @@ class Tool
         $strs = explode(':', $string);
         $result = [];
         foreach ($strs as $str) {
-            array_push($result, intval($str, 16));
+            array_push($result, dechex(intval($str, 16)));
         }
 
         return $result;

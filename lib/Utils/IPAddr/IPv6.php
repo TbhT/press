@@ -12,7 +12,7 @@ namespace Press\Utils\IPAddr;
 
 const IPV6_NATIVE = '/^(::)?((?:[0-9a-f]+::?)+)?([0-9a-f]+)?(::)?$/i';
 
-const IPV6_TRANSITIONAL = '/^((?:(?:[0-9a-f]+::?)+)|(?:::)(?:(?:[0-9a-f]+::?)+)?)(?:[0-9a-f]+::?)+\.(?:[0-9a-f]+::?)+\.(?:[0-9a-f]+::?)+\.(?:[0-9a-f]+::?)+$/i';
+const IPV6_TRANSITIONAL = '/^((?:(?:[0-9a-f]+::?)+)|(?:::)(?:(?:[0-9a-f]+::?)+)?)(0?\d+|0x[a-f0-9]+)\.(0?\d+|0x[a-f0-9]+)\.(0?\d+|0x[a-f0-9]+)\.(0?\d+|0x[a-f0-9]+)$/i';
 
 
 class IPv6
@@ -65,7 +65,7 @@ class IPv6
     {
         $stringParts = [];
         foreach ($this->parts as $part) {
-            array_push($stringParts, $part);
+            array_push($stringParts, dechex(intval($part, 16)));
         }
 
         $compactStringParts = [];
@@ -102,14 +102,14 @@ class IPv6
                     array_push($compactStringParts, $part);
                     break;
             }
-
-            if ($state === 2) {
-                array_push($compactStringParts, '');
-                array_push($compactStringParts, '');
-            }
-
-            return join($compactStringParts, ':');
         }
+
+        if ($state === 2) {
+            array_push($compactStringParts, '');
+            array_push($compactStringParts, '');
+        }
+
+        return join($compactStringParts, ':');
     }
 
 
@@ -130,7 +130,7 @@ class IPv6
         $parts_ = [];
 
         foreach ($this->parts as $value) {
-            array_push($parts_, strval(intval($value, 16)));
+            array_push($parts_, dechex(intval($value, 16)));
         }
 
         return join($parts_, ':');
@@ -184,9 +184,9 @@ class IPv6
         preg_match(IPV6_TRANSITIONAL, $string, $m2);
 
         if (count($m1) > 0) {
-            return IPAddr::expandIPv6($string, 8);
+            return Tool::expandIPv6($string, 8);
         } else if (count($m2) > 0) {
-            $parts = IPAddr::expandIPv6(substr($m2[1], 0, -1), 6);
+            $parts = Tool::expandIPv6(substr($m2[1], 0, -1), 6);
             if (empty($parts) === false) {
                 $octets = [intval($m2[2]), intval($m2[3]), intval($m2[4]), intval($m2[5])];
 
@@ -225,7 +225,7 @@ class IPv6
 
     public static function isValid(string $string)
     {
-        if (is_string($string) && strpos($string, ':') === -1) {
+        if (is_string($string) && strpos($string, ':') === false) {
             return false;
         }
 
@@ -259,7 +259,7 @@ class IPv6
             return $this->specialRangesArray;
         }
     }
-    
+
     private function specialRanges()
     {
         $this->specialRangesArray['uniqueLocal'] = [
