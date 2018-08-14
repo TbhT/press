@@ -12,7 +12,7 @@ namespace Press\Utils\IPAddr;
 
 const IPV6_NATIVE = '/^(::)?((?:[0-9a-f]+::?)+)?([0-9a-f]+)?(::)?$/i';
 
-const IPV6_TRANSITIONAL = '/^((?:(?:[0-9a-f]+::?)+)|(?:::)(?:(?:[0-9a-f]+::?)+)?)(0?\d+|0x[a-f0-9]+)\.(0?\d+|0x[a-f0-9]+)\.(0?\d+|0x[a-f0-9]+)\.(0?\d+|0x[a-f0-9]+)$/i';
+const IPV6_TRANSITIONAL = '/^((?:(?:[0-9a-f]+::?)+)|(?:::)(?:(?:[0-9a-f]+::?)+)?)(0?\\d+|0x[a-f0-9]+)\\.(0?\\d+|0x[a-f0-9]+)\\.(0?\\d+|0x[a-f0-9]+)\\.(0?\\d+|0x[a-f0-9]+)$/i';
 
 
 class IPv6
@@ -140,8 +140,8 @@ class IPv6
     public function match($other, $cidrRange)
     {
         if (empty($cidrRange)) {
-            $other = $other[0];
             $cidrRange = $other[1];
+            $other = $other[0];
         }
 
         if ($other->kind() !== 'ipv6') {
@@ -196,8 +196,8 @@ class IPv6
                     }
                 }
 
-                array_push($parts, $octets[0] << 8 | $octets[1]);
-                array_push($parts, $octets[2] << 8 | $octets[3]);
+                array_push($parts, dechex($octets[0] << 8 | $octets[1]));
+                array_push($parts, dechex($octets[2] << 8 | $octets[3]));
                 return $parts;
             }
         }
@@ -223,7 +223,7 @@ class IPv6
     }
 
 
-    public static function isValid(string $string)
+    public static function isValid($string)
     {
         if (is_string($string) && strpos($string, ':') === false) {
             return false;
