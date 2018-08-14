@@ -137,9 +137,9 @@ class IPv6
     }
 
 
-    public function match($other, $cidrRange)
+    public function match($other, $cidrRange = null)
     {
-        if (empty($cidrRange)) {
+        if ($cidrRange === null) {
             $cidrRange = $other[1];
             $other = $other[0];
         }
@@ -148,13 +148,13 @@ class IPv6
             throw new \TypeError('IpAddr: cannot match ipv6 address with non-ipv6 one');
         }
 
-        return matchCIDR($this->parts, $other->parts, 16, $cidrRange);
+        return Tool::matchCIDR($this->parts, $other->parts, 16, $cidrRange);
     }
 
 
     public function range()
     {
-        return subnetMatch($this, $this->specialRanges);
+        return Tool::subnetMatch($this, $this->specialRanges);
     }
 
 

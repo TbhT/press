@@ -224,11 +224,11 @@ class IpAddrTest extends TestCase
     {
         return [
             ['2001:db8:F53A::1', true],
-//            ['200001::1', true],
-//            ['::ffff:192.168.1.1', true],
-//            ['::ffff:300.168.1.1', false],
-//            ['::ffff:300.168.1.1:0', false],
-//            ['fe80::wtf', false]
+            ['200001::1', true],
+            ['::ffff:192.168.1.1', true],
+            ['::ffff:300.168.1.1', false],
+            ['::ffff:300.168.1.1:0', false],
+            ['fe80::wtf', false]
         ];
     }
 
@@ -243,15 +243,15 @@ class IpAddrTest extends TestCase
     public function validatesIPv6Address()
     {
         return [
-//            ['2001:db8:F53A::1', true],
-//            ['200001::1', false],
+            ['2001:db8:F53A::1', true],
+            ['200001::1', false],
             ['::ffff:192.168.1.1', true],
-//            ['::ffff:300.168.1.1', false],
-//            ['::ffff:300.168.1.1:0', false],
-//            ['::ffff:222.1.41.9000', false],
-//            ['2001:db8::F53A::1', false],
-//            ['fe80::wtf', false],
-//            ['2002::2:', false],
+            ['::ffff:300.168.1.1', false],
+            ['::ffff:300.168.1.1:0', false],
+            ['::ffff:222.1.41.9000', false],
+            ['2001:db8::F53A::1', false],
+            ['fe80::wtf', false],
+            ['2002::2:', false],
             [null, false]
         ];
     }
