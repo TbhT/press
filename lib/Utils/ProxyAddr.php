@@ -100,7 +100,7 @@ class ProxyAddr
                 return false;
             }
 
-            // convert ip to match subnet ip kind 
+            // convert ip to match subnet ip kind
         };
     }
 }
