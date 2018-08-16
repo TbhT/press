@@ -156,7 +156,7 @@ class Request extends SRequest
 
     private function set_protocol()
     {
-        $server_protocol = $this->headers['server_protocol'];
+        $server_protocol = $this->headers['server']['server_protocol'];
         $sp_array = explode('/', $server_protocol);
 
         $this->protocol = strtolower($sp_array[0]) === 'https' ? 'https' : 'http';

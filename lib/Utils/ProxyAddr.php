@@ -29,13 +29,13 @@ class ProxyAddr
      * @param $trust
      * @return mixed
      */
-    public static function proxyaddr(Request $req, $trust)
+    public static function proxyaddr(Request $req, $trust = null)
     {
         if (!$req) {
             throw new \TypeError('req argument is required');
         }
 
-        if (!$trust) {
+        if ($trust === null) {
             throw new \TypeError('trust argument is required');
         }
 
@@ -44,6 +44,11 @@ class ProxyAddr
 
         return $addr;
     }
+
+    public static function all(Request $req, $trust) {
+        return self::alladdrs($req, $trust);
+    }
+
 
     /**
      * Get all addresses in the request, optionally stopping at the first untrusted
@@ -65,7 +70,7 @@ class ProxyAddr
             $trust = static::compile($trust);
         }
 
-        for ($i = 0; $i < count($trust) - 1; $i++) {
+        for ($i = 0; $i < count($addrs) - 1; $i++) {
             if ($trust($addrs[$i], $i)) {
                 continue;
             }
@@ -93,7 +98,7 @@ class ProxyAddr
         for ($i = 0; $i < count($trust); $i++) {
             $val = $trust[$i];
 
-            if (!IP_RANGES[$val]) {
+            if (!array_key_exists($val, IP_RANGES)) {
                 continue;
             }
 
