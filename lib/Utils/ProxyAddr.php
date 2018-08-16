@@ -22,10 +22,34 @@ const IP_RANGES = [
 
 class ProxyAddr
 {
+
+    /**
+     * determine address of proxied request
+     * @param Request $req
+     * @param $trust
+     * @return mixed
+     */
+    public static function proxyaddr(Request $req, $trust)
+    {
+        if (!$req) {
+            throw new \TypeError('req argument is required');
+        }
+
+        if (!$trust) {
+            throw new \TypeError('trust argument is required');
+        }
+
+        $addrs = self::alladdrs($req, $trust);
+        $addr = $addrs[count($addrs) - 1];
+
+        return $addr;
+    }
+
     /**
      * Get all addresses in the request, optionally stopping at the first untrusted
      * @param Request $req
      * @param $trust
+     * @return array
      */
     public static function alladdrs(Request $req, $trust)
     {
@@ -52,7 +76,7 @@ class ProxyAddr
         return $addrs;
     }
 
-    public static function compile($val)
+    private static function compile($val)
     {
         if (!$val) {
             throw new \TypeError('arguments is required');
@@ -82,7 +106,7 @@ class ProxyAddr
         return static::compileTrust(static::compileRangeSubnets($trust));
     }
 
-    public static function compileTrust($rangeSubnets)
+    private static function compileTrust($rangeSubnets)
     {
         // return optimized function based on length
         $length = count($rangeSubnets);
@@ -95,7 +119,7 @@ class ProxyAddr
      * @param $arr
      * @return array
      */
-    public static function compileRangeSubnets($arr)
+    private static function compileRangeSubnets($arr)
     {
         $rangeSubnets = [];
         foreach ($arr as $value) {
