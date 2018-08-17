@@ -303,5 +303,4 @@ class IpAddrTest extends TestCase
         self::assertEquals(true, $addr->match($addr, 128));
     }
 
-    
 }
