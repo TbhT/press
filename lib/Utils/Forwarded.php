@@ -34,7 +34,7 @@ class Forwarded
                     break;
                 case 0x2c: /* , */
                     if ($start !== $end) {
-                        array_push($list, substr($header, $start, $end));
+                        array_push($list, substr($header, $start, $end - $start));
                     }
                     $start = $end = $i;
                     break;

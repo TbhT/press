@@ -41,7 +41,7 @@ class ProxyAddrTest extends TestCase
     {
         $req = new Request();
         $req->headers = empty($headers) ? [] : $headers;
-        $req->headers['server']['remote_addr'] = $socketAddr;
+        $req->server['remote_addr'] = $socketAddr;
         return $req;
     }
 
@@ -169,8 +169,8 @@ class ProxyAddrTest extends TestCase
         $log = [];
         $req = self::createReq('127.0.0.1', ['x-forwarded-for' => '192.168.0.1, 10.0.0.1']);
 
-        ProxyAddr::proxyaddr($req, function ($addr) use (& $log) {
-            return array_push($log, $addr);
+        ProxyAddr::proxyaddr($req, function ($addr, $i) use (& $log) {
+            return array_push($log, [$addr, $i]);
         });
 
         self::assertEquals([
@@ -261,7 +261,7 @@ class ProxyAddrTest extends TestCase
     public function testShouldReturnSocketAddressIfNoneMatch()
     {
         $req = self::createReq('10.0.0.1', ['x-forwarded-for' => '192.168.0.1, 10.0.0.2']);
-        self::assertEquals('10.0.0.1', ProxyAddr::proxyaddr($req, ['127.0.0.1', '1923.168.0.100']));
+        self::assertEquals('10.0.0.1', ProxyAddr::proxyaddr($req, ['127.0.0.1', '192.168.0.100']));
     }
 
     // when array empty
@@ -287,7 +287,7 @@ class ProxyAddrTest extends TestCase
     public function testAcceptCIDRNotationWhenIPv4()
     {
         $req = self::createReq('10.0.0.1', ['x-forwarded-for' => '192.168.0.1, 10.0.0.200']);
-        self::assertEquals('10.0.0.200', ProxyAddr::proxyaddr($req, '10.0.p.2/26'));
+        self::assertEquals('10.0.0.200', ProxyAddr::proxyaddr($req, '10.0.0.2/26'));
     }
 
     public function testAcceptNetmaskNotation()

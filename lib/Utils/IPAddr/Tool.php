@@ -95,7 +95,7 @@ class Tool
     public static function subnetMatch($address, array $rangeList, $defaultName = 'unicast')
     {
         foreach ($rangeList as $rangeName => $rangeSubnets) {
-            if ($rangeSubnets[0] && is_array($rangeSubnets[0]) === false) {
+            if ($rangeSubnets && $rangeSubnets[0] && is_array($rangeSubnets[0]) === false) {
                 $rangeSubnets = [$rangeSubnets];
             }
 

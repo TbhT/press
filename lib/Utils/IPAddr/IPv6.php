@@ -171,8 +171,8 @@ class IPv6
         }
 
         $ref = array_slice($this->parts, -2);
-        $high = $ref[0];
-        $low = $ref[1];
+        $high = intval($ref[0], 16);
+        $low = intval($ref[1], 16);
 
         return new IPv4([$high >> 8, $high & 0xff, $low >> 8, $low & 0xff]);
     }

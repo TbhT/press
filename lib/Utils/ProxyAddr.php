@@ -45,7 +45,8 @@ class ProxyAddr
         return $addr;
     }
 
-    public static function all(Request $req, $trust) {
+    public static function all(Request $req, $trust)
+    {
         return self::alladdrs($req, $trust);
     }
 
@@ -61,7 +62,7 @@ class ProxyAddr
         // get all addresses
         $addrs = Forwarded::forwarded($req);
 
-        if (!$trust) {
+        if (!$trust && is_array($trust) === false) {
             // return all addresses
             return $addrs;
         }
@@ -75,7 +76,7 @@ class ProxyAddr
                 continue;
             }
 
-            array_splice($trust, 0, $i + 1);
+            $addrs = array_slice($addrs, 0, $i + 1);
         }
 
         return $addrs;
@@ -83,7 +84,7 @@ class ProxyAddr
 
     private static function compile($val)
     {
-        if (!$val) {
+        if (!$val && is_array($val) === false) {
             throw new \TypeError('arguments is required');
         }
 
@@ -115,8 +116,12 @@ class ProxyAddr
     {
         // return optimized function based on length
         $length = count($rangeSubnets);
-        return $length === 0 ? static::trustNone() : $length === 1 ?
-            static::trustSingle($rangeSubnets[0]) : static::trustMulti($rangeSubnets);
+        return $length === 0 ?
+            static::trustNone() :
+            (
+                $length === 1 ?
+                static::trustSingle($rangeSubnets[0]) : static::trustMulti($rangeSubnets)
+            );
     }
 
     /**
@@ -151,7 +156,7 @@ class ProxyAddr
         }
 
         $max = $ip->kind() === 'ipv6' ? 128 : 32;
-        $range = $pos !== false ? substr($pos + 1, strlen($note)) : null;
+        $range = $pos !== false ? substr($note, $pos + 1, strlen($note)) : null;
         preg_match('/^[0-9]+$/', $range, $m);
 
         if ($range === null) {
