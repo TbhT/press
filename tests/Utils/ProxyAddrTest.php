@@ -309,5 +309,106 @@ class ProxyAddrTest extends TestCase
         self::assertEquals('fe80::ff00', ProxyAddr::proxyaddr($req, 'fe80::/125'));
     }
 
+    // when IP versions mixed
+    public function testMatchRespectiveVersions()
+    {
+        $req = self::createReq('::1', ['x-forwarded-for' => '2002:c000:203::1']);
+        self::assertEquals('2002:c000:203::1', ProxyAddr::proxyaddr($req, ['127.0.0.1', '::1']));
+    }
+
+    public function testNotMatchIPv4ToIPv6()
+    {
+        $req = self::createReq('::1', ['x-forwarded-for' => '2002:c000:203::1']);
+        self::assertEquals('::1', ProxyAddr::proxyaddr($req, '127.0.0.1'));
+    }
+
+
+    // when ipv4-mapped ipv6 addresses
+    public function testMatchIPv4TrustToIPv6Request()
+    {
+        $req = self::createReq('::ffff:a00:1', ['x-forwarded-for' => '192.168.0.1, 10.0.0.2']);
+        self::assertEquals('192.168.0.1', ProxyAddr::proxyaddr($req, ['10.0.0.1/16']));
+    }
+
+    public function testMatchIPv6TrustToIPv4Request()
+    {
+        $req = self::createReq('10.0.0.1', ['x-forwarded-for' => '192.168.0.1, 10.0.0.2']);
+        self::assertEquals('192.168.0.1', ProxyAddr::proxyaddr($req, ['::ffff:a00:1', '::ffff:a00:2']));
+    }
+
+    public function testMatchCIDRNotationFOrIPv4MappedAddress()
+    {
+        $req = self::createReq('10.0.0.1', ['x-forwarded-for' => '192.168.0.1, 10.0.0.2']);
+        self::assertEquals('10.0.0.200', ProxyAddr::proxyaddr($req, '::ffff:a00:2/122'));
+    }
+
+    public function testMatchCIDRNotationForIPv4MappedAddressMixedWithIPv6CIDR()
+    {
+        $req = self::createReq('10.0.0.1', ['x-forwarded-for' => '192.168.0.1, 10.0.0.200']);
+        self::assertEquals('10.0.0.200', ProxyAddr::proxyaddr($req, ['::ffff:a00:2/122', 'fe80::/125']));
+    }
+
+    public function testMatchCIDRNotationFOrIPv4MappedAddressMixedWithIPv4Address()
+    {
+        $req = self::createReq('10.0.0.1', ['x-forwarded-for' => '192.168.0.1, 10.0.0.200']);
+        self::assertEquals('10.0.0.200', ProxyAddr::proxyaddr($req, ['::ffff:a00:2/122', '127.0.0.1']));
+    }
+
+    // when given pre-defined names
+    public function testAcceptSinglePredefinedName()
+    {
+        $req = self::createReq('fe80::1', ['x-forwarded-for' => '2002:c000:203::1, fe80::2']);
+        self::assertEquals('2002:c000:203::1', ProxyAddr::proxyaddr($req, 'linklocal'));
+    }
+
+    public function testAcceptMultiplePredefinedNames()
+    {
+        $req = self::createReq('::1', ['x-forwarded-for' => '2002:c000:203::1, fe80::2']);
+        self::assertEquals('2002:c000:203::1', ProxyAddr::proxyaddr($req, ['loopback', 'linklocal']));
+    }
+
+    // when header contains non0ip addresses
+    public function testStopAtFirstNonIPAfterTrusted()
+    {
+        $req = self::createReq('127.0.0.1', ['x-forwarded-for' => 'myrouter, 127.0.0.1, proxy']);
+        self::assertEquals('proxy', ProxyAddr::proxyaddr($req, '127.0.0.1'));
+    }
+
+    public function testSopAtFirstMalformedIpAfterTrusted()
+    {
+        $req = self::createReq('127.0.0.1', ['x-forwarded-for' => 'myrouter, 127.0.0.1, ::8:8:8:8:8:8:8:8:8']);
+        self::assertEquals('::8:8:8:8:8:8:8:8:8', ProxyAddr::proxyaddr($req, '127.0.0.1'));
+    }
+
+    public function testProvideAllValuesToFunction()
+    {
+        $log = [];
+        $req = self::createReq('127.0.0.1', ['x-forwarded-for' => 'myrouter, 127.0.0.1, proxy']);
+
+        ProxyAddr::proxyaddr($req, function ($addr, $i) use (& $log) {
+            return array_push($log, [$addr, $i]);
+        });
+
+        self::assertEquals([
+            ['127.0.0.1', 0],
+            ['proxy', 1],
+            ['127.0.0.1', 2]
+        ], $log);
+    }
+
+    // when socket address null
+    public function testReturnNullAsAddress()
+    {
+        $req = self::createReq(null);
+        self::assertEquals(null, ProxyAddr::proxyaddr($req, '127.0.0.1'));
+    }
+
+    public function testReturnNullEvenWithTrustedHeaders()
+    {
+        $req = self::createReq(null, ['x-forwarded-for' => '127.0.0.1, 10.0.0.1']);
+        self::assertEquals(null, ProxyAddr::proxyaddr($req, '127.0.0.1'));
+    }
+
+    // proxyaddr.all
 
 }
