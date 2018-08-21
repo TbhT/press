@@ -466,5 +466,74 @@ class ProxyAddrTest extends TestCase
         ProxyAddr::compile();
     }
 
-    public function testArguments
+
+    public function testArgumentsShouldAccept()
+    {
+        self::assertTrue(is_callable(ProxyAddr::compile([])));
+        self::assertTrue(is_callable(ProxyAddr::compile('127.0.0.1')));
+        self::assertTrue(is_callable(ProxyAddr::compile('::1')));
+        self::assertTrue(is_callable(ProxyAddr::compile('::ffff:127.0.0.1')));
+        self::assertTrue(is_callable(ProxyAddr::compile('loopback')));
+        self::assertTrue(is_callable(ProxyAddr::compile(['loopback', '10.0.0.1'])));
+    }
+
+    /**
+     * @expectedException TypeError
+     */
+    public function testArgumentsShouldRejectNumber()
+    {
+        ProxyAddr::compile(42);
+    }
+
+    public function testArgumentsShouldRejectNonIP()
+    {
+        ProxyAddr::compile('blargh');
+    }
+
+    /**
+     * @expectedException TypeError
+     */
+    public function testArgumentsShouldBeRejectNonIP2()
+    {
+        ProxyAddr::compile(ProxyAddr::compile('-1'));
+    }
+
+    /**
+     * @expectedException TypeError
+     */
+    public function testArgumentsShouldBeRejectedBadCIDR1()
+    {
+        ProxyAddr::compile('10.0.0.1/6000');
+    }
+
+    /**
+     * @expectedException TypeError
+     */
+    public function testArgumentsShouldBeRejectedBadCIDR2()
+    {
+        ProxyAddr::compile('::1/6000');
+    }
+
+    /**
+     * @expectedException TypeError
+     */
+    public function testArgumentsShouldBeRejectedBadCIDR3()
+    {
+        ProxyAddr::compile('::ffff:a00:2/136');
+    }
+
+    /**
+     * @expectedException TypeError
+     */
+    public function testArgumentsShouldBeRejectedBadCIDR4()
+    {
+        ProxyAddr::compile('::ffff:a00:2/-46');
+    }
+
+    public function testShouldNotAlterInputArray()
+    {
+        $arr = ['loopback', '10.0.0.1'];
+        self::assertTrue(is_callable(ProxyAddr::compile($arr)));
+        self::assertEquals(['loopback', '10.0.0.1'], $arr);
+    }
 }
