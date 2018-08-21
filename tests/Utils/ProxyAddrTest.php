@@ -411,4 +411,60 @@ class ProxyAddrTest extends TestCase
 
     // proxyaddr.all
 
+    /**
+     * @expectedException TypeError
+     */
+    public function testArgumentsShouldBeRequired()
+    {
+        ProxyAddr::all();
+    }
+
+    public function testArgumentsShouldBeOptional()
+    {
+        $req = self::createReq('127.0.0.1');
+        ProxyAddr::all($req);
+        self::assertTrue(true);
+    }
+
+    public function testWithNoHeaders()
+    {
+        $req = self::createReq('127.0.0.1');
+        self::assertEquals(['127.0.0.1'], ProxyAddr::all($req));
+    }
+
+    public function testShouldIncludeXForwardedForHeader()
+    {
+        $req = self::createReq('127.0.0.1', ['x-forwarded-for' => '10.0.0.1']);
+        self::assertEquals(['127.0.0.1', '10.0.0.1'], ProxyAddr::all($req));
+    }
+
+    public function testShouldIncludeXForWardedForInCorrectOrder()
+    {
+        $req = self::createReq('127.0.0.1', ['x-forwarded-for' => '10.0.0.1, 10.0.0.2']);
+        self::assertEquals(['127.0.0.1', '10.0.0.1', '10.0.0.2'], ProxyAddr::all($req));
+    }
+
+    public function testShouldStopAtFirstUntrusted()
+    {
+        $req = self::createReq('127.0.0.1', ['x-forwarded-for' => '10.0.0.1, 10.0.0.2']);
+        self::assertEquals(['127.0.0.1', '10.0.0.2'], ProxyAddr::all($req, '127.0.0.1'));
+    }
+
+    public function testShouldBeOnlySocketAddressForNoTrust()
+    {
+        $req = self::createReq('127.0.0.1', ['x-forwarded-for' => '10.0.0.1, 10.0.0.2']);
+        self::assertEquals(['127.0.0.1'], ProxyAddr::all($req, []));
+    }
+
+    // proxyaddr.compile
+
+    /**
+     * @expectedException TypeError
+     */
+    public function testArgumentsShouldBeRequiredInCompile()
+    {
+        ProxyAddr::compile();
+    }
+
+    public function testArguments
 }

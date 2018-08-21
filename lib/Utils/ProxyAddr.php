@@ -45,7 +45,7 @@ class ProxyAddr
         return $addr;
     }
 
-    public static function all(Request $req, $trust)
+    public static function all(Request $req, $trust = null)
     {
         return self::alladdrs($req, $trust);
     }
@@ -57,7 +57,7 @@ class ProxyAddr
      * @param $trust
      * @return array
      */
-    public static function alladdrs(Request $req, $trust)
+    public static function alladdrs(Request $req, $trust = null)
     {
         // get all addresses
         $addrs = Forwarded::forwarded($req);
@@ -82,7 +82,7 @@ class ProxyAddr
         return $addrs;
     }
 
-    private static function compile($val)
+    public static function compile($val)
     {
         if (!$val && is_array($val) === false) {
             throw new \TypeError('arguments is required');
