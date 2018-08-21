@@ -183,7 +183,7 @@ class IPv4
     }
 
 
-    public static function isValid(string $str)
+    public static function isValid($str)
     {
         try {
             new IPv4(static::parser($str));

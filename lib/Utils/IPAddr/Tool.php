@@ -12,7 +12,7 @@ namespace Press\Utils\IPAddr;
 
 class Tool
 {
-    public static function isValid(string $str)
+    public static function isValid($str)
     {
         return IPv6::isValid($str) || IPv4::isValid($str);
     }

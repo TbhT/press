@@ -336,9 +336,9 @@ class ProxyAddrTest extends TestCase
         self::assertEquals('192.168.0.1', ProxyAddr::proxyaddr($req, ['::ffff:a00:1', '::ffff:a00:2']));
     }
 
-    public function testMatchCIDRNotationFOrIPv4MappedAddress()
+    public function testMatchCIDRNotationForIPv4MappedAddress()
     {
-        $req = self::createReq('10.0.0.1', ['x-forwarded-for' => '192.168.0.1, 10.0.0.2']);
+        $req = self::createReq('10.0.0.1', ['x-forwarded-for' => '192.168.0.1, 10.0.0.200']);
         self::assertEquals('10.0.0.200', ProxyAddr::proxyaddr($req, '::ffff:a00:2/122'));
     }
 
@@ -441,7 +441,7 @@ class ProxyAddrTest extends TestCase
     public function testShouldIncludeXForWardedForInCorrectOrder()
     {
         $req = self::createReq('127.0.0.1', ['x-forwarded-for' => '10.0.0.1, 10.0.0.2']);
-        self::assertEquals(['127.0.0.1', '10.0.0.1', '10.0.0.2'], ProxyAddr::all($req));
+        self::assertEquals(['127.0.0.1', '10.0.0.2', '10.0.0.1'], ProxyAddr::all($req));
     }
 
     public function testShouldStopAtFirstUntrusted()
@@ -485,6 +485,9 @@ class ProxyAddrTest extends TestCase
         ProxyAddr::compile(42);
     }
 
+    /**
+     * @expectedException TypeError
+     */
     public function testArgumentsShouldRejectNonIP()
     {
         ProxyAddr::compile('blargh');

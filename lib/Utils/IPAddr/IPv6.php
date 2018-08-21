@@ -196,8 +196,8 @@ class IPv6
                     }
                 }
 
-                array_push($parts, dechex($octets[0] << 8 | $octets[1]));
-                array_push($parts, dechex($octets[2] << 8 | $octets[3]));
+                array_push($parts, $octets[0] << 8 | $octets[1]);
+                array_push($parts, $octets[2] << 8 | $octets[3]);
                 return $parts;
             }
         }
