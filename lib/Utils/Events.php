@@ -11,6 +11,8 @@ declare(strict_types=1);
 namespace Press\Utils;
 
 
+use PHPUnit\Util\Type;
+
 class Events
 {
     private $events = [];
@@ -18,11 +20,11 @@ class Events
     /**
      *  Finds the index of the listener for the event in its storage array.
      */
-    private function index_of_listener($listeners, $liener)
+    private function index_of_listener($listeners, $listener)
     {
         $length = count($listeners);
         while ($length--) {
-            if ($listeners[$length]->listener === $liener) {
+            if ($listeners[$length]->listener === $listener) {
                 return $length;
             }
         }
@@ -35,9 +37,21 @@ class Events
         return $this->events;
     }
 
-    private function is_valid_listener()
+    private function is_valid_listener($listener)
     {
-
+        if (is_callable($listener)) {
+            return true;
+        } else if (is_array($listener)) {
+            $flag = true;
+            foreach ($listener as $item) {
+                if (is_callable($item)) {
+                    $flag = false;
+                }
+            }
+            return $flag;
+        } else {
+            return false;
+        }
     }
 
     private function get_once_return_value()
@@ -54,18 +68,52 @@ class Events
     public function get_listeners(string $event)
     {
         $events = $this->get_events();
+        preg_match('/\/\w+\//i', $event, $m);
+        $response = [];
 
+        if (count($m) > 0) {
+            foreach ($events as $evt) {
+                preg_match($event, $evt, $matches);
+                if (count($matches) > 0) {
+                    $response[$evt] = $events[$evt];
+                }
+            }
+        } else if (array_key_exists($event, $events)) {
+            $response = $events[$event];
+        }
 
+        return $response;
     }
 
-    public function flatten_listeners()
+    /**
+     * Takes a list of listener objects and flattens it into a list of listener functions.
+     */
+    public function flatten_listeners(array $listeners)
     {
+        $flat_listeners = [];
 
+        foreach ($listeners as $listener) {
+            array_push($flat_listeners, $listener);
+        }
+
+        return $flat_listeners;
     }
 
-    public function add_listener()
-    {
 
+    /**
+     * Adds a listener function to the specified event.
+     * The listener will not be added if it is a duplicate.
+     * If the listener returns true then it will be removed after it is called.
+     * If you pass a regular expression as the event name then the listener will be added
+     * to all events that match it.
+     */
+    public function add_listener($evt, $listener)
+    {
+        if ($this->is_valid_listener($listener) === false) {
+            throw new \TypeError('listener must be function');
+        }
+
+        $listeners = $this->get_listeners($evt);
     }
 
     public function on()
