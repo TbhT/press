@@ -11,7 +11,6 @@ declare(strict_types=1);
 namespace Press\Utils;
 
 
-
 class Events
 {
     private $events = [];
@@ -26,7 +25,7 @@ class Events
     {
         $length = count($listeners);
         while ($length--) {
-            if ($listeners[$length]['listener'] === $listener) {
+            if ($listeners[$length]['listener'] == $listener) {
                 return $length;
             }
         }
@@ -77,10 +76,10 @@ class Events
         $response = [];
 
         if (count($m) > 0) {
-            foreach ($events as $evt) {
+            foreach ($events as $evt => $value) {
                 preg_match($event, $evt, $matches);
                 if (count($matches) > 0) {
-                    $response[$evt] = $events[$evt];
+                    $response[$evt] = $value;
                 }
             }
         } else if (array_key_exists($event, $events)) {
@@ -103,7 +102,7 @@ class Events
     {
         $listeners = $this->get_listeners($evt);
 
-        if (is_array($listeners)) {
+        if (is_array($listeners) && array_key_exists) {
             $response = [];
             $response[$evt] = $listeners;
         } else {
@@ -136,6 +135,9 @@ class Events
      * If the listener returns true then it will be removed after it is called.
      * If you pass a regular expression as the event name then the listener will be added
      * to all events that match it.
+     * @param $evt
+     * @param $listener
+     * @return Events
      */
     public function add_listener($evt, $listener)
     {
@@ -145,7 +147,7 @@ class Events
 
         $listeners = $this->get_listeners_wrapper($evt);
 
-        foreach ($listeners as $key => $value) {
+        foreach ($listeners as $event => $value) {
             if ($this->index_of_listener($value, $listener) === -1) {
                 if (is_array($listener)) {
                     array_push($value, $listener);
@@ -210,9 +212,24 @@ class Events
         return $this;
     }
 
-    public function remove_listener()
+    /**
+     * @param $evt
+     * @param $listener
+     * @return Events
+     */
+    public function remove_listener($evt, $listener)
     {
+        $listeners = $this->get_listeners_wrapper($evt);
 
+        foreach ($listeners as $l) {
+            $index = $this->index_of_listener($l, $listener);
+
+            if ($index !== -1) {
+                array_splice($l, $index, 1);
+            }
+        }
+
+        return $this;
     }
 
     public function off()
