@@ -83,13 +83,13 @@ class Events
                 }
             }
         } else if (array_key_exists($event, $events)) {
-            $response = $events[$event];
+            $response[$event] = $events[$event];
         } else {
             $events[$event] = [];
+            // update events
+            $this->events = $events;
+            $response[$event] = [];
         }
-
-        // update events
-        $this->events = $events;
 
         return $response;
     }
