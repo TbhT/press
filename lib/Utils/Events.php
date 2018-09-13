@@ -21,11 +21,11 @@ class Events
      * @param $listener
      * @return int
      */
-    private function index_of_listener($listeners, $listener)
+    private function index_of_listener(array $listeners, callable $listener)
     {
         $length = count($listeners);
         while ($length--) {
-            if ($listeners[$length]['listener'] == $listener) {
+            if ($listeners[$length]['listener'] === $listener) {
                 return $length;
             }
         }
@@ -86,27 +86,10 @@ class Events
             $response[$event] = $events[$event];
         } else {
             $events[$event] = [];
+
             // update events
             $this->events = $events;
             $response[$event] = [];
-        }
-
-        return $response;
-    }
-
-    /**
-     * @param string $evt
-     * @return array|mixed
-     */
-    public function get_listeners_wrapper(string $evt)
-    {
-        $listeners = $this->get_listeners($evt);
-
-        if (is_array($listeners) && array_key_exists) {
-            $response = [];
-            $response[$evt] = $listeners;
-        } else {
-            $response = $listeners;
         }
 
         return $response;
@@ -139,21 +122,24 @@ class Events
      * @param $listener
      * @return Events
      */
-    public function add_listener($evt, $listener)
+    public function add_listener(string $evt, callable $listener)
     {
         if ($this->is_valid_listener($listener) === false) {
             throw new \TypeError('listener must be function');
         }
 
-        $listeners = $this->get_listeners_wrapper($evt);
+        $listeners = $this->get_listeners($evt);
+        $events = &$this->events;
 
         foreach ($listeners as $event => $value) {
             if ($this->index_of_listener($value, $listener) === -1) {
                 if (is_array($listener)) {
-                    array_push($value, $listener);
+                    $listener = array_key_exists('listener', $listener) ?
+                        $listener : ['listener' => $listener, 'once' => false];
+
+                    array_push($events[$event], $listener);
                 } else {
-                    $l = ['listener' => $listener, 'once' => false];
-                    array_push($value, $l);
+                    array_push($events[$event], ['listener' => $listener, 'once' => false]);
                 }
             }
         }
@@ -161,7 +147,12 @@ class Events
         return $this;
     }
 
-    public function on($evt, $listener)
+    /**
+     * @param string $evt
+     * @param callable $listener
+     * @return Events
+     */
+    public function on(string $evt, callable $listener)
     {
         return $this->add_listener($evt, $listener);
     }
@@ -171,7 +162,7 @@ class Events
      * @param $listener
      * @return Events
      */
-    public function add_once_listener($evt, $listener)
+    public function add_once_listener(string $evt, callable $listener)
     {
         return $this->add_listener($evt, [
             'listener' => $listener,
@@ -184,7 +175,7 @@ class Events
      * @param $listener
      * @return Events
      */
-    public function once($evt, $listener)
+    public function once(string $evt, callable $listener)
     {
         return $this->add_once_listener($evt, $listener);
     }
@@ -203,7 +194,7 @@ class Events
      * @param $evts
      * @return Events
      */
-    public function define_events($evts)
+    public function define_events(array $evts)
     {
         foreach ($evts as $evt) {
             $this->define_event($evt);
@@ -217,9 +208,9 @@ class Events
      * @param $listener
      * @return Events
      */
-    public function remove_listener($evt, $listener)
+    public function remove_listener(string $evt,callable $listener)
     {
-        $listeners = $this->get_listeners_wrapper($evt);
+        $listeners = $this->get_listeners($evt);
 
         foreach ($listeners as $l) {
             $index = $this->index_of_listener($l, $listener);
@@ -232,9 +223,14 @@ class Events
         return $this;
     }
 
-    public function off()
+    /**
+     * @param string $evt
+     * @param callable $listener
+     * @return Events
+     */
+    public function off(string $evt, callable $listener)
     {
-        return $this->remove_listener();
+        return $this->remove_listener($evt, $listener);
     }
 
     public function add_listeners()
