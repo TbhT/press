@@ -233,14 +233,17 @@ class Events
         return $this->remove_listener($evt, $listener);
     }
 
-    public function add_listeners()
+    public function add_listeners($evt, $listeners)
     {
 
     }
 
-    public function manipulate_listeners()
+    public function manipulate_listeners(bool $remove, $evt, $listeners)
     {
+        $single_fn = $remove ? 'remove_listener' : 'add_listener';
+        $multiple_fn = $remove ? 'remove_listeners' : 'add_listeners';
 
+        
     }
 
     public function remove_event()
