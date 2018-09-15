@@ -14,6 +14,7 @@ namespace Press\Utils;
 class Events
 {
     private $events = [];
+    private $once_return_value = true;
 
     /**
      *  Finds the index of the listener for the event in its storage array.
@@ -36,7 +37,7 @@ class Events
     /**
      * @return array
      */
-    private function get_events()
+    private function & get_events()
     {
         return $this->events;
     }
@@ -56,9 +57,12 @@ class Events
         }
     }
 
+    /**
+     * @return bool
+     */
     private function get_once_return_value()
     {
-
+        return $this->once_return_value;
     }
 
     /**
@@ -69,9 +73,9 @@ class Events
      * @param string $event
      * @return array|mixed
      */
-    public function get_listeners(string $event)
+    public function &get_listeners(string $event)
     {
-        $events = $this->get_events();
+        $events = &$this->get_events();
         preg_match('/\/\w+\//i', $event, $m);
         $response = [];
 
@@ -79,17 +83,13 @@ class Events
             foreach ($events as $evt => $value) {
                 preg_match($event, $evt, $matches);
                 if (count($matches) > 0) {
-                    $response[$evt] = $value;
+                    $response[$evt] = &$value;
                 }
             }
         } else if (array_key_exists($event, $events)) {
-            $response[$event] = $events[$event];
+            $response[$event] = &$events[$event];
         } else {
-            $events[$event] = [];
-
-            // update events
-            $this->events = $events;
-            $response[$event] = [];
+            $response = &$events[$event] = [];
         }
 
         return $response;
@@ -128,15 +128,12 @@ class Events
             throw new \TypeError('listener must be function');
         }
 
-        $listeners = $this->get_listeners($evt);
+        $listeners = &$this->get_listeners($evt);
         $events = &$this->events;
 
         foreach ($listeners as $event => $value) {
             if ($this->index_of_listener($value, $listener) === -1) {
-                if (is_array($listener)) {
-                    $listener = array_key_exists('listener', $listener) ?
-                        $listener : ['listener' => $listener, 'once' => false];
-
+                if (is_array($listener) && array_key_exists('listener', $listener)) {
                     array_push($events[$event], $listener);
                 } else {
                     array_push($events[$event], ['listener' => $listener, 'once' => false]);
@@ -208,9 +205,9 @@ class Events
      * @param $listener
      * @return Events
      */
-    public function remove_listener(string $evt,callable $listener)
+    public function remove_listener(string $evt, callable $listener)
     {
-        $listeners = $this->get_listeners($evt);
+        $listeners = &$this->get_listeners($evt);
 
         foreach ($listeners as $l) {
             $index = $this->index_of_listener($l, $listener);
@@ -233,32 +230,115 @@ class Events
         return $this->remove_listener($evt, $listener);
     }
 
-    public function add_listeners($evt, $listeners)
+    /**
+     * @param $evt
+     * @param array $listeners
+     * @return Events
+     */
+    public function add_listeners($evt, array $listeners)
     {
-
+        return $this->manipulate_listeners(false, $evt, $listeners);
     }
 
-    public function manipulate_listeners(bool $remove, $evt, $listeners)
+    /**
+     * @param bool $remove
+     * @param string $evt
+     * @param array $listeners
+     * @return Events
+     */
+    public function manipulate_listeners(bool $remove, $evt, array $listeners)
     {
         $single_fn = $remove ? 'remove_listener' : 'add_listener';
         $multiple_fn = $remove ? 'remove_listeners' : 'add_listeners';
 
-        
+        preg_match('/\/\w+\//i', $evt, $m);
+
+        if (is_array($evt)) {
+            foreach ($evt as $event => $value) {
+                if (is_callable($value)) {
+                    call_user_func([$this, $single_fn], $event, $value);
+                } else {
+                    call_user_func([$this, $multiple_fn], $event, $value);
+                }
+            }
+        } else {
+            /**
+             * so event must be string and listeners must be an array of listeners
+             * loop over it and pass each one to the multiple method
+             */
+            $i = count($listeners);
+            while ($i--) {
+                call_user_func([$this, $single_fn], $evt, $listeners[$i]);
+            }
+        }
+
+        return $this;
     }
 
-    public function remove_event()
+    /**
+     * @param string $evt
+     * @return $this
+     */
+    public function remove_event(string $evt)
     {
+        $events = &$this->get_events();
+        preg_match('/\/\w+\//i', $evt, $m);
 
+        // Remove different things depending on the state of evt
+        if (is_string($evt)) {
+            // Remove all listeners for the specified event
+            unset($events[$evt]);
+        } else if (count($m) > 0) {
+            // Remove all events matching the regex.
+            foreach ($events as $event => $value) {
+                preg_match($evt, $event, $m);
+                if (count($m) > 0) {
+                    unset($event[$evt]);
+                }
+            }
+        } else {
+            $events = &$this->get_events();
+            $events = [];
+        }
+
+        return $this;
     }
 
-    public function remove_all_listeners()
+    /**
+     * @param string $evt
+     * @return Events
+     */
+    public function remove_all_listeners(string $evt)
     {
-
+        return $this->remove_event($evt);
     }
 
-    public function emit_event()
+    /**
+     * @param string $evt
+     * @param array $args
+     * @return Events
+     */
+    public function emit_event(string $evt, array $args = [])
     {
+        $listeners_map = &$this->get_listeners($evt);
 
+        foreach ($listeners_map as $lst) {
+            foreach ($lst as $listener) {
+                // If the listener returns true then it shall be removed from the event
+                // The function is executed either with a basic call or an apply if there is an args array
+                if ($listener['once'] === true) {
+                    $this->remove_listener($evt, $listener['listener']);
+                }
+
+                $response = call_user_func_array([$this, $listener['listener']], $args);
+
+                if ($response === $this->get_once_return_value()) {
+                    $this->remove_listener($evt, $listener['listener']);
+                }
+            }
+        }
+
+        return $this;
     }
 
     public function trigger()
@@ -271,9 +351,14 @@ class Events
 
     }
 
-    public function set_once_return_value()
+    /**
+     * @param $value
+     * @return $this
+     */
+    public function set_once_return_value($value)
     {
-
+        $this->once_return_value = $value;
+        return $this;
     }
 
 
