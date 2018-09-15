@@ -341,14 +341,24 @@ class Events
         return $this;
     }
 
-    public function trigger()
+    /**
+     * @param string $evt
+     * @param array $args
+     * @return Events
+     */
+    public function trigger(string $evt, array $args = [])
     {
-
+        return $this->emit_event($evt, $args);
     }
 
-    public function emit()
+    /**
+     * @param string $evt
+     * @return Events
+     */
+    public function emit(string $evt)
     {
-
+        $args = array_slice(func_get_args(), 1);
+        return $this->emit_event($evt, $args);
     }
 
     /**
