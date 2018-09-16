@@ -89,7 +89,8 @@ class Events
         } else if (array_key_exists($event, $events)) {
             $response[$event] = &$events[$event];
         } else {
-            $response = &$events[$event] = [];
+            $events[$event] = [];
+            $response = &$events[$event];
         }
 
         return $response;
