@@ -76,7 +76,7 @@ class Events
     public function &get_listeners(string $event)
     {
         $events = &$this->get_events();
-        preg_match('/\/\w+\//i', $event, $m);
+        preg_match('/\/.*\//', $event, $m);
         $response = [];
 
         if (count($m) > 0) {
@@ -129,7 +129,7 @@ class Events
             throw new \TypeError('listener must be function');
         }
 
-        $listeners = &$this->get_listeners($evt);
+        $listeners = $this->get_listeners($evt);
         $events = &$this->events;
 
         foreach ($listeners as $event => $value) {

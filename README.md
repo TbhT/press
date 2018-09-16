@@ -1,4 +1,3 @@
 # Press
 
-> This project is a translation of Express frame of nodejs.
-
+> This project is a translation of Express framework of nodejs.
