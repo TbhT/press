@@ -97,6 +97,22 @@ class Events
     }
 
     /**
+     * @param string $evt
+     * @return array
+     */
+    private function get_listeners_wrapper(string $evt)
+    {
+        $listeners = $this->get_listeners($evt);
+        $response = [];
+
+        if (array_key_exists($evt, $listeners) === false) {
+            $response[$evt] = $listeners;
+        }
+
+        return $response;
+    }
+
+    /**
      * Takes a list of listener objects and flattens it into a list of listener functions.
      * @param array $listeners
      * @return array
@@ -129,7 +145,7 @@ class Events
             throw new \TypeError('listener must be function');
         }
 
-        $listeners = $this->get_listeners($evt);
+        $listeners = $this->get_listeners_wrapper($evt);
         $events = &$this->events;
 
         foreach ($listeners as $event => $value) {
