@@ -1,13 +1,6 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Created by PhpStorm.
- * User: erub
- * Date: 18-8-16
- * Time: 下午11:10
- */
-
 use Press\Utils\ProxyAddr;
 use Press\Request;
 use PHPUnit\Framework\TestCase;

@@ -1,13 +1,6 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Created by PhpStorm.
- * User: erub
- * Date: 18-7-7
- * Time: 上午8:53
- */
-
 use Press\Utils\Accepts;
 use Press\Request;
 use PHPUnit\Framework\TestCase;

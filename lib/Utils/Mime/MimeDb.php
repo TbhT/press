@@ -1,11 +1,5 @@
 <?php
 declare(strict_types=1);
-/**
- * Created by PhpStorm.
- * User: erub
- * Date: 18-7-2
- * Time: 下午8:18
- */
 
 namespace Press\Utils\Mime;
 

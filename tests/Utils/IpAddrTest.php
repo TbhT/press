@@ -1,13 +1,6 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Created by PhpStorm.
- * User: erub
- * Date: 18-8-12
- * Time: 下午4:49
- */
-
 use Press\Utils\IPAddr;
 use Press\Utils\IPAddr\IPv4;
 use Press\Utils\IPAddr\IPv6;

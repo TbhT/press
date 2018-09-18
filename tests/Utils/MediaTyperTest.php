@@ -1,13 +1,6 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Created by PhpStorm.
- * User: erub
- * Date: 18-7-20
- * Time: 下午11:20
- */
-
 use Press\Utils\MediaTyper;
 use PHPUnit\Framework\TestCase;
 

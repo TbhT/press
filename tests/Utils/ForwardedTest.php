@@ -1,10 +1,5 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: 88002
- * Date: 2018-08-07
- * Time: 20:38
- */
+declare(strict_types=1);
 
 use Press\Utils\Forwarded;
 use Press\Request;

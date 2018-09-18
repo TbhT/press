@@ -1,10 +1,5 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: erub
- * Date: 18-9-16
- * Time: 上午10:39
- */
+declare(strict_types=1);
 
 use Press\Utils\Events;
 use PHPUnit\Framework\TestCase;

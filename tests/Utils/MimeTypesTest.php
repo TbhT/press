@@ -1,13 +1,6 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Created by PhpStorm.
- * User: erub
- * Date: 18-7-4
- * Time: 上午8:29
- */
-
 use Press\Utils\Mime\MimeTypes;
 use PHPUnit\Framework\TestCase;
 

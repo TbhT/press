@@ -1,13 +1,6 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Created by PhpStorm.
- * User: erub
- * Date: 18-7-29
- * Time: 上午10:40
- */
-
 use Press\Utils\RangeParser;
 use PHPUnit\Framework\TestCase;
 

@@ -1,11 +1,5 @@
 <?php
 declare(strict_types=1);
-/**
- * Created by PhpStorm.
- * User: erub
- * Date: 18-7-22
- * Time: 上午11:05
- */
 
 namespace Press\Utils;
 

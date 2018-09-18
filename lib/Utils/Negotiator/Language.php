@@ -1,11 +1,5 @@
 <?php
 declare(strict_types=1);
-/**
- * Created by PhpStorm.
- * User: erub
- * Date: 18-6-25
- * Time: 下午10:06
- */
 
 namespace Press\Utils\Negotiator;
 

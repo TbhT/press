@@ -1,10 +1,6 @@
 <?php
 declare(strict_types=1);
 /**
- * Created by PhpStorm.
- * User: erub
- * Date: 18-9-6
- * Time: 下午10:32
  * @see https://github.com/Olical/EventEmitter/blob/master/EventEmitter.js
  */
 
