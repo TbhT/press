@@ -54,4 +54,58 @@ class EventsTest extends TestCase
         self::assertEquals('bar', $listeners['bar'][0]['listener']());
         self::assertEquals('baz', $listeners['baz'][0]['listener']());
     }
+
+    public function testNotReturnMatchedSubstring()
+    {
+        $check = function () {
+        };
+        $ee = new Events();
+
+        $ee->add_listener('foo', function () {
+
+        });
+
+        $ee->add_listener('fooBar', $check);
+
+        $listeners = $ee->get_listeners('fooBar');
+        self::assertEquals(1, count($listeners));
+        self::assertEquals($check, $listeners['fooBar'][0]['listener']);
+    }
+
+    public function testTakesArrayOfArrayAndReturnArrayOfFn()
+    {
+        $fn1 = function () {
+        };
+        $fn2 = function () {
+        };
+        $fn3 = function () {
+        };
+
+        $ee = new Events();
+        $input = [
+            ['listener' => $fn1],
+            ['listener' => $fn2],
+            ['listener' => $fn3]
+        ];
+        $output = $ee->flatten_listeners($input);
+        self::assertEquals([$fn1, $fn2, $fn3], $output);
+    }
+
+    public function testGivenAnEmptyArrayAndAnEmptyArrayReturned()
+    {
+        $ee = new Events();
+        $output = $ee->flatten_listeners([]);
+        self::assertEquals([], $output);
+    }
+
+    public function testAddListenersToSpecifiedEvent()
+    {
+        $fn1 = function () {
+        };
+        $ee = new Events();
+        $ee->add_listener('foo', $fn1);
+        $listeners = $ee->get_listeners('foo');
+        $result = $ee->flatten_listeners($listeners['foo']);
+        self::assertEquals([$fn1], $result);
+    }
 }

@@ -83,7 +83,7 @@ class Events
             foreach ($events as $evt => $value) {
                 preg_match($event, $evt, $matches);
                 if (count($matches) > 0) {
-                    $response[$evt] = &$value;
+                    $response[$evt] = &$events[$evt];
                 }
             }
         } else if (array_key_exists($event, $events)) {
@@ -122,7 +122,7 @@ class Events
         $flat_listeners = [];
 
         foreach ($listeners as $listener) {
-            array_push($flat_listeners, $listener);
+            array_push($flat_listeners, $listener['listener']);
         }
 
         return $flat_listeners;
