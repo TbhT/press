@@ -22,7 +22,7 @@ class Events
     {
         $length = count($listeners);
         while ($length--) {
-            if ($listeners[$length]['listener'] === $listener) {
+            if (array_key_exists('listener', $listeners[$length]) && $listeners[$length]['listener'] === $listener) {
                 return $length;
             }
         }
@@ -102,11 +102,15 @@ class Events
     {
         $listeners = $this->get_listeners($evt);
         $response = [];
+        preg_match('/\/.*\//', $evt, $matches);
 
-        if (array_key_exists($evt, $listeners) === false) {
-            $response[$evt] = $listeners;
+        if (count($matches) > 0) {
+            $response[$evt] = [];
+            foreach ($listeners as $listener) {
+                array_push($response[$evt], $listener);
+            }
         } else {
-            $response = $listeners;
+            $response[$evt] = $listeners;
         }
 
         return $response;
@@ -147,7 +151,7 @@ class Events
 
         $listeners = $this->get_listeners_wrapper($evt);
         $events = &$this->events;
-
+        //todo: 这里需要重写，是针对每个event增加监听函数的
         foreach ($listeners as $event => $value) {
             if ($this->index_of_listener($value, $listener) === -1) {
                 if (is_array($listener) && array_key_exists('listener', $listener)) {
