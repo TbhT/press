@@ -64,7 +64,9 @@ class Events
     /**
      * Returns the listener array for the specified event.
      * Will initialise the event object and listener arrays if required.
-     * Will return an object if you use a regex search. The object contains keys for each matched event. So /ba[rz]/ might return an object containing bar and baz. But only if you have either defined them with defineEvent or added some listeners to them.
+     * Will return an object if you use a regex search. The object contains keys for each matched event.
+     * So /ba[rz]/ might return an object containing bar and baz. But only if you have either defined them with
+     * defineEvent or added some listeners to them.
      * Each property in the object response is an array of listener functions.
      * @param string $event
      * @return array|mixed
@@ -83,7 +85,7 @@ class Events
                 }
             }
         } else if (array_key_exists($event, $events)) {
-            $response[$event] = &$events[$event];
+            $response = &$events[$event];
         } else {
             $events[$event] = [];
             $response = &$events[$event];

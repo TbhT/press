@@ -7,6 +7,13 @@ use PHPUnit\Framework\TestCase;
 
 class EventsTest extends TestCase
 {
+    private function flattenCheck(array $check)
+    {
+        $sorted = $check;
+        sort($sorted);
+        return join(',', $sorted);
+    }
+
     public function testShouldInitialisesEventObjectAndAListenerArray()
     {
         $ee = new Events();
@@ -64,7 +71,7 @@ class EventsTest extends TestCase
 
         $listeners = $ee->get_listeners('fooBar');
         self::assertEquals(1, count($listeners));
-        self::assertEquals($check, $listeners['fooBar'][0]['listener']);
+        self::assertEquals($check, $listeners[0]['listener']);
     }
 
     public function testTakesArrayOfArrayAndReturnArrayOfFn()
@@ -100,7 +107,7 @@ class EventsTest extends TestCase
         $ee = new Events();
         $ee->add_listener('foo', $fn1);
         $listeners = $ee->get_listeners('foo');
-        $result = $ee->flatten_listeners($listeners['foo']);
+        $result = $ee->flatten_listeners($listeners);
         self::assertEquals([$fn1], $result);
     }
 
@@ -114,14 +121,32 @@ class EventsTest extends TestCase
         $ee = new Events();
         $ee->add_listener('bar', $fn1);
         $result = $ee->get_listeners('bar');
-        self::assertEquals([$fn1], $ee->flatten_listeners($result['bar']));
+        self::assertEquals([$fn1], $ee->flatten_listeners($result));
         $ee->add_listener('bar', $fn2);
         $result = $ee->get_listeners('bar');
-        self::assertEquals([$fn1, $fn2], $ee->flatten_listeners($result['bar']));
+        self::assertEquals([$fn1, $fn2], $ee->flatten_listeners($result));
         $ee->add_listener('bar', $fn1);
         $result = $ee->get_listeners('bar');
-        self::assertEquals([$fn1, $fn2], $ee->flatten_listeners($result['bar']));
+        self::assertEquals([$fn1, $fn2], $ee->flatten_listeners($result));
 
+    }
+
+    public function testAllowsToAddListenersByRegex()
+    {
+        $check = [];
+        $ee = new Events();
+
+        $ee->define_events(['bar', 'baz']);
+        $ee->add_listener('foo', function () use (&$check) {
+            array_push($check, 1);
+        });
+        $ee->add_listener('/ba[rz]/', function () use (&$check) {
+            array_push($check, 2);
+        });
+        $ee->emit_event('/ba[rz]/');
+
+        $result = $this->flattenCheck($check);
+        self::assertEquals('2,2', $result);
     }
 
 }
