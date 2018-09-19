@@ -103,4 +103,25 @@ class EventsTest extends TestCase
         $result = $ee->flatten_listeners($listeners['foo']);
         self::assertEquals([$fn1], $result);
     }
+
+    public function testNotAllowDuplicateListeners()
+    {
+
+        $fn1 = function () {
+        };
+        $fn2 = function () {
+        };
+        $ee = new Events();
+        $ee->add_listener('bar', $fn1);
+        $result = $ee->get_listeners('bar');
+        self::assertEquals([$fn1], $ee->flatten_listeners($result['bar']));
+        $ee->add_listener('bar', $fn2);
+        $result = $ee->get_listeners('bar');
+        self::assertEquals([$fn1, $fn2], $ee->flatten_listeners($result['bar']));
+        $ee->add_listener('bar', $fn1);
+        $result = $ee->get_listeners('bar');
+        self::assertEquals([$fn1, $fn2], $ee->flatten_listeners($result['bar']));
+
+    }
+
 }

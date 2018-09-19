@@ -103,6 +103,8 @@ class Events
 
         if (array_key_exists($evt, $listeners) === false) {
             $response[$evt] = $listeners;
+        } else {
+            $response = $listeners;
         }
 
         return $response;
