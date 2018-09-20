@@ -105,10 +105,7 @@ class Events
         preg_match('/\/.*\//', $evt, $matches);
 
         if (count($matches) > 0) {
-            foreach ($listeners as $event => $listener) {
-                $response[$event] = [];
-                array_push($response[$event], $listener);
-            }
+            $response = $listeners;
         } else {
             $response[$evt] = $listeners;
         }
@@ -347,14 +344,14 @@ class Events
 
         foreach ($listeners_wrap as $event => $listeners) {
             foreach ($listeners as $index => $listener) {
-                if ($listener[0]['once'] === true) {
-                    $this->remove_listener($evt, $listener[0]['listener']);
+                if ($listener['once'] === true) {
+                    $this->remove_listener($evt, $listener['listener']);
                 }
 
                 $response = call_user_func_array($events[$event][$index]['listener'], $args);
 
                 if ($response === $this->get_once_return_value()) {
-                    $this->remove_listener($evt, $listener[0]['listener']);
+                    $this->remove_listener($evt, $listener['listener']);
                 }
             }
         }
