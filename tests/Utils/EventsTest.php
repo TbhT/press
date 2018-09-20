@@ -167,4 +167,81 @@ class EventsTest extends TestCase
         self::assertEquals(1, $count);
     }
 
+    /**
+     * @expectedException TypeError
+     */
+    public function testThrowErrorWhenTryToAddNonFunctionOrRegexListenerWhenNull()
+    {
+        $ee = new Events();
+        $ee->add_listener('foo', null);
+    }
+
+    /**
+     * @expectedException TypeError
+     */
+    public function testThrowErrorWhenTryToAddNonFunctionOrRegexListenerWhenNone()
+    {
+        $ee = new Events();
+        $ee->add_listener('foo');
+    }
+
+    /**
+     * @expectedException TypeError
+     */
+    public function testThrowErrorWhenTryToAddNonFunctionOrRegexListenerWhenString()
+    {
+        $ee = new Events();
+        $ee->add_listener('foo', 'lol');
+    }
+
+    // add once listener
+    public function testOnceListenersCanBeAdded()
+    {
+        $ee = new Events();
+        $fn1 = function () {};
+        $ee->add_once_listener('foo', $fn1);
+        self::assertEquals([$fn1], $ee->flatten_listeners($ee->get_listeners('foo')));
+    }
+
+    public function testListenersAreOnlyExecOnce()
+    {
+        $ee = new Events();
+        $counter = 0;
+        $fn1 = function () use (&$counter) {
+            $counter++;
+        };
+
+        $ee->add_once_listener('foo', $fn1);
+        $ee->emit_event('foo');
+        $ee->emit_event('foo');
+        $ee->emit_event('foo');
+        self::assertEquals(1, $counter);
+    }
+
+    public function testListenersCanBeRemoved()
+    {
+        $ee = new Events();
+        $counter = 0;
+        $fn1 = function () use (&$counter) {
+            $counter++;
+        };
+
+        $ee->add_once_listener('foo', $fn1);
+        $ee->remove_listener('foo', $fn1);
+
+        self::assertEquals([], $ee->flatten_listeners($ee->get_listeners('foo')));
+    }
+
+    public function testCanNotCauseInfiniteRecursion()
+    {
+        $ee = new Events();
+        $counter = 0;
+
+        $ee->add_once_listener('foo', function () use (&$counter, &$ee) {
+            $counter++;
+            $ee->emit_event('foo');
+        });
+        $ee->trigger('foo');
+        self::assertEquals(1, $counter);
+    }
 }

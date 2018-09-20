@@ -140,7 +140,7 @@ class Events
      * @param $listener
      * @return Events
      */
-    public function add_listener(string $evt, callable $listener)
+    public function add_listener(string $evt, $listener)
     {
         if ($this->is_valid_listener($listener) === false) {
             throw new \TypeError('listener must be function');
