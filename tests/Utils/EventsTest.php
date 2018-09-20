@@ -149,4 +149,22 @@ class EventsTest extends TestCase
         self::assertEquals('2,2', $result);
     }
 
+    public function testPreventsYouFromAddingDuplicateListeners()
+    {
+        $count = 0;
+
+        $adder = function () use (&$count) {
+            $count += 1;
+        };
+
+        $ee = new Events();
+
+        $ee->add_listener('foo', $adder);
+        $ee->add_listener('foo', $adder);
+        $ee->add_listener('foo', $adder);
+        $ee->emit_event('foo');
+
+        self::assertEquals(1, $count);
+    }
+
 }
