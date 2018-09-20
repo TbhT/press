@@ -105,9 +105,9 @@ class Events
         preg_match('/\/.*\//', $evt, $matches);
 
         if (count($matches) > 0) {
-            $response[$evt] = [];
-            foreach ($listeners as $listener) {
-                array_push($response[$evt], $listener);
+            foreach ($listeners as $event => $listener) {
+                $response[$event] = [];
+                array_push($response[$event], $listener);
             }
         } else {
             $response[$evt] = $listeners;
@@ -151,7 +151,7 @@ class Events
 
         $listeners = $this->get_listeners_wrapper($evt);
         $events = &$this->events;
-        //todo: 这里需要重写，是针对每个event增加监听函数的
+
         foreach ($listeners as $event => $value) {
             if ($this->index_of_listener($value, $listener) === -1) {
                 if (is_array($listener) && array_key_exists('listener', $listener)) {
@@ -228,13 +228,14 @@ class Events
      */
     public function remove_listener(string $evt, callable $listener)
     {
-        $listeners = &$this->get_listeners($evt);
+        $listeners = $this->get_listeners_wrapper($evt);
+        $events = &$this->events;
 
-        foreach ($listeners as $l) {
-            $index = $this->index_of_listener($l, $listener);
+        foreach ($listeners as $event => $lst) {
+            $index = $this->index_of_listener($events[$evt], $listener);
 
             if ($index !== -1) {
-                array_splice($l, $index, 1);
+                array_splice($events[$evt], $index, 1);
             }
         }
 
@@ -341,20 +342,19 @@ class Events
      */
     public function emit_event(string $evt, array $args = [])
     {
-        $listeners_map = &$this->get_listeners($evt);
+        $listeners_wrap = $this->get_listeners_wrapper($evt);
+        $events = &$this->events;
 
-        foreach ($listeners_map as $lst) {
-            foreach ($lst as $listener) {
-                // If the listener returns true then it shall be removed from the event
-                // The function is executed either with a basic call or an apply if there is an args array
-                if ($listener['once'] === true) {
-                    $this->remove_listener($evt, $listener['listener']);
+        foreach ($listeners_wrap as $event => $listeners) {
+            foreach ($listeners as $index => $listener) {
+                if ($listener[0]['once'] === true) {
+                    $this->remove_listener($evt, $listener[0]['listener']);
                 }
 
-                $response = call_user_func_array([$this, $listener['listener']], $args);
+                $response = call_user_func_array($events[$event][$index]['listener'], $args);
 
                 if ($response === $this->get_once_return_value()) {
-                    $this->remove_listener($evt, $listener['listener']);
+                    $this->remove_listener($evt, $listener[0]['listener']);
                 }
             }
         }
