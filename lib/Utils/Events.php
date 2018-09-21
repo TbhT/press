@@ -18,11 +18,13 @@ class Events
      * @param $listener
      * @return int
      */
-    private function index_of_listener(array $listeners, callable $listener)
+    private function index_of_listener(array $listeners, $listener)
     {
         $length = count($listeners);
+
         while ($length--) {
-            if (array_key_exists('listener', $listeners[$length]) && $listeners[$length]['listener'] === $listener) {
+            // todo: 需要修复这一块问题
+            if (array_key_exists('listener', $listeners[$length]) && $listeners[$length] === $listener) {
                 return $length;
             }
         }
