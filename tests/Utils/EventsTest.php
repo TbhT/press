@@ -14,6 +14,7 @@ class EventsTest extends TestCase
         return join(',', $sorted);
     }
 
+    // get_listeners
     public function testShouldInitialisesEventObjectAndAListenerArray()
     {
         $ee = new Events();
@@ -74,6 +75,7 @@ class EventsTest extends TestCase
         self::assertEquals($check, $listeners[0]['listener']);
     }
 
+    // flatten_listeners
     public function testTakesArrayOfArrayAndReturnArrayOfFn()
     {
         $fn1 = function () {
@@ -100,6 +102,7 @@ class EventsTest extends TestCase
         self::assertEquals([], $output);
     }
 
+    // add_listener
     public function testAddListenersToSpecifiedEvent()
     {
         $fn1 = function () {
@@ -194,7 +197,7 @@ class EventsTest extends TestCase
         $ee->add_listener('foo', 'lol');
     }
 
-    // add once listener
+    // add_once_listener
     public function testOnceListenersCanBeAdded()
     {
         $ee = new Events();

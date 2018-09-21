@@ -23,8 +23,7 @@ class Events
         $length = count($listeners);
 
         while ($length--) {
-            // todo: 需要修复这一块问题
-            if (array_key_exists('listener', $listeners[$length]) && $listeners[$length] === $listener) {
+            if (array_key_exists('listener', $listeners[$length]) && $listeners[$length]['listener'] === $listener) {
                 return $length;
             }
         }
@@ -350,7 +349,7 @@ class Events
                     $this->remove_listener($evt, $listener['listener']);
                 }
 
-                $response = call_user_func_array($events[$event][$index]['listener'], $args);
+                $response = call_user_func_array($listener['listener'], $args);
 
                 if ($response === $this->get_once_return_value()) {
                     $this->remove_listener($evt, $listener['listener']);
