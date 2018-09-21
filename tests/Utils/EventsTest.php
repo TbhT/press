@@ -247,4 +247,27 @@ class EventsTest extends TestCase
         $ee->trigger('foo');
         self::assertEquals(1, $counter);
     }
+
+    // remove listener
+    public function testDoNothingWhenListenerNotFound()
+    {
+        $ee = new Events();
+        $orig = count($ee->get_listeners('foo'));
+
+        $fn1 = function () {};
+        $ee->remove_listener('foo', $fn1);
+        self::assertEquals($orig, count($ee->get_listeners('foo')));
+    }
+
+    //todo: 待填补
+    public function testCanHandleRemovingEventsThatHaveNotBeenAdded()
+    {
+        $ee = new Events();
+    }
+
+    public function testActuallyRemovesEvents()
+    {
+        $ee = new Events();
+        $ee->remove_event('foo');
+    }
 }
