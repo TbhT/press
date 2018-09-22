@@ -201,7 +201,8 @@ class EventsTest extends TestCase
     public function testOnceListenersCanBeAdded()
     {
         $ee = new Events();
-        $fn1 = function () {};
+        $fn1 = function () {
+        };
         $ee->add_once_listener('foo', $fn1);
         self::assertEquals([$fn1], $ee->flatten_listeners($ee->get_listeners('foo')));
     }
@@ -254,7 +255,8 @@ class EventsTest extends TestCase
         $ee = new Events();
         $orig = count($ee->get_listeners('foo'));
 
-        $fn1 = function () {};
+        $fn1 = function () {
+        };
         $ee->remove_listener('foo', $fn1);
         self::assertEquals($orig, count($ee->get_listeners('foo')));
     }
@@ -277,13 +279,17 @@ class EventsTest extends TestCase
     public function testRemoveListeners()
     {
         $ee = new Events();
-        $listeners = &$ee->get_listeners('bar');
 
-        $fn1 = function () {};
-        $fn2 = function () {};
-        $fn3 = function () {};
-        $fn4 = function () {};
-        $fnx = function () {};
+        $fn1 = function () {
+        };
+        $fn2 = function () {
+        };
+        $fn3 = function () {
+        };
+        $fn4 = function () {
+        };
+        $fnx = function () {
+        };
 
         $ee->add_listener('bar', $fn1);
         $ee->add_listener('bar', $fn2);
@@ -309,4 +315,94 @@ class EventsTest extends TestCase
         $ee->remove_listener('bar', $fn2);
         self::assertEquals([], $ee->flatten_listeners($ee->get_listeners('bar')));
     }
+
+    public function testRemovesWithRegex()
+    {
+        $ee = new Events();
+        $fn1 = function () {
+        };
+        $fn2 = function () {
+        };
+        $fn3 = function () {
+        };
+        $fn4 = function () {
+        };
+        $fn5 = function () {
+        };
+
+        $ee->add_listeners([
+            'foo' => [$fn1, $fn2, $fn3, $fn4, $fn5],
+            'bar' => [$fn1, $fn2, $fn3, $fn4, $fn5],
+            'baz' => [$fn1, $fn2, $fn3, $fn4, $fn5]
+        ]);
+
+        $ee->remove_listener('/ba[rz]/', $fn3);
+        self::assertEquals([$fn1, $fn2, $fn3, $fn4, $fn5], $ee->flatten_listeners($ee->get_listeners('foo')));
+        self::assertEquals([$fn1, $fn2, $fn4, $fn5], $ee->flatten_listeners($ee->get_listeners('bar')));
+        self::assertEquals([$fn1, $fn2, $fn4, $fn5], $ee->flatten_listeners($ee->get_listeners('baz')));
+    }
+
+    // get_listeners_wrapper
+    public function testReturnArrayForString()
+    {
+        $ee = new Events();
+        $ee->add_listener('bar', function () {
+        });
+        $ee->add_listener('baz', function () {
+        });
+
+        $listeners = $ee->get_listeners_wrapper('bar');
+        self::assertTrue(is_array($listeners));
+        self::assertEquals(1, count($listeners['bar']));
+    }
+
+    public function testReturnArrayForRegex()
+    {
+        $ee = new Events();
+        $ee->add_listener('bar', function () {
+        });
+        $ee->add_listener('baz', function () {
+        });
+
+        $listeners = $ee->get_listeners_wrapper('/ba[rz]/');
+        self::assertTrue(is_array($listeners));
+        self::assertEquals(1, count($listeners['bar']));
+        self::assertEquals(1, count($listeners['baz']));
+
+    }
+
+    // define_event
+    public function testDefinesEventWhenNothingElseInside()
+    {
+        $ee = new Events();
+        $ee->define_event('foo');
+        $listeners = $ee->get_listeners('foo');
+
+        self::assertTrue(is_array($listeners));
+        self::assertEquals(0, count($listeners));
+    }
+
+    public function testDefinesEventWhenOtherEventsAlready()
+    {
+        $ee = new Events();
+        $f = function () {};
+
+        $ee->add_listener('foo', $f);
+        $ee->define_event('bar');
+
+        self::assertEquals([$f], $ee->flatten_listeners($ee->get_listeners('foo')));
+        self::assertTrue(is_array($ee->get_listeners('bar')));
+    }
+
+    public function testNotOverwriteExistEvent()
+    {
+        $ee = new Events();
+        $f = function () {};
+
+        $ee->add_listener('foo', $f);
+        $ee->define_event('foo');
+        self::assertEquals([$f], $ee->flatten_listeners($ee->get_listeners('foo')));
+    }
+
+    
 }

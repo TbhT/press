@@ -99,7 +99,7 @@ class Events
      * @param string $evt
      * @return array
      */
-    private function get_listeners_wrapper(string $evt)
+    public function get_listeners_wrapper(string $evt)
     {
         $listeners = $this->get_listeners($evt);
         $response = [];
@@ -230,10 +230,10 @@ class Events
         $events = &$this->events;
 
         foreach ($listeners as $event => $lst) {
-            $index = $this->index_of_listener($events[$evt], $listener);
+            $index = $this->index_of_listener($events[$event], $listener);
 
             if ($index !== -1) {
-                array_splice($events[$evt], $index, 1);
+                array_splice($events[$event], $index, 1);
             }
         }
 
@@ -255,7 +255,7 @@ class Events
      * @param array $listeners
      * @return Events
      */
-    public function add_listeners($evt, array $listeners)
+    public function add_listeners($evt, array $listeners = [])
     {
         return $this->manipulate_listeners(false, $evt, $listeners);
     }
@@ -270,10 +270,13 @@ class Events
     {
         $single_fn = $remove ? 'remove_listener' : 'add_listener';
         $multiple_fn = $remove ? 'remove_listeners' : 'add_listeners';
+        $evt_flag = is_array($evt);
 
-        preg_match('/\/\w+\//i', $evt, $m);
+        if ($evt_flag === false) {
+            preg_match('/\/\w+\//i', $evt, $matches);
+        }
 
-        if (is_array($evt)) {
+        if ($evt_flag) {
             foreach ($evt as $event => $value) {
                 if (is_callable($value)) {
                     call_user_func([$this, $single_fn], $event, $value);
