@@ -750,4 +750,63 @@ class EventsTest extends TestCase
 
         self::assertEquals('1,1,2,3,4,4,5,5,6', self::flattenCheck($check));
     }
+
+    public function testExecAllListenersThatMatchARegularExpression()
+    {
+        $check = [];
+        $ee = new Events();
+
+        $ee->add_listener('foo', function () use (&$check) {
+            array_push($check, 1);
+        });
+        $ee->add_listener('bar', function () use (&$check) {
+            array_push($check, 2);
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 3);
+        });
+
+        $ee->emit_event('/ba[rz]/');
+        self::assertEquals('2,3', self::flattenCheck($check));
+    }
+
+    public function testGlobalObjectIsDefined()
+    {
+        $ee = new Events();
+        $ee->add_listener('foo', function () use (&$ee) {
+            $this->markTestSkipped(
+                'this is not same as JavaScript'
+            );
+//            self::assertEquals($this, $ee);
+        });
+
+        $ee->emit_event('foo');
+    }
+
+    public function testListenersAreExecedInTheOrderTheyAreAdded()
+    {
+        $check = [];
+        $ee = new Events();
+
+        $ee->add_listener('foo', function () use (&$check) {
+            array_push($check, 1);
+        });
+        $ee->add_listener('foo', function () use (&$check) {
+            array_push($check, 2);
+        });
+        $ee->add_listener('foo', function () use (&$check) {
+            array_push($check, 3);
+        });
+        $ee->add_listener('foo', function () use (&$check) {
+            array_push($check, 4);
+        });
+        $ee->add_listener('foo', function () use (&$check) {
+            array_push($check, 5);
+        });
+        $ee->emit_event('foo');
+        self::assertEquals([1, 2, 3, 4, 5], $check);
+    }
+
+    
+
 }
