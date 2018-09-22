@@ -259,15 +259,54 @@ class EventsTest extends TestCase
         self::assertEquals($orig, count($ee->get_listeners('foo')));
     }
 
-    //todo: 待填补
     public function testCanHandleRemovingEventsThatHaveNotBeenAdded()
     {
         $ee = new Events();
+        $reflector = new ReflectionClass('\Press\Utils\Events');
+        self::assertTrue($reflector->hasProperty('events'));
     }
 
     public function testActuallyRemovesEvents()
     {
         $ee = new Events();
         $ee->remove_event('foo');
+        $reflector = new ReflectionClass('\Press\Utils\Events');
+        self::assertEquals(true, $reflector->hasProperty('events'));
+    }
+
+    public function testRemoveListeners()
+    {
+        $ee = new Events();
+        $listeners = &$ee->get_listeners('bar');
+
+        $fn1 = function () {};
+        $fn2 = function () {};
+        $fn3 = function () {};
+        $fn4 = function () {};
+        $fnx = function () {};
+
+        $ee->add_listener('bar', $fn1);
+        $ee->add_listener('bar', $fn2);
+        $ee->add_listener('bar', $fn3);
+        // make sure doubling up does nothing
+        $ee->add_listener('bar', $fn3);
+        $ee->add_listener('bar', $fn4);
+
+        self::assertEquals([$fn1, $fn2, $fn3, $fn4], $ee->flatten_listeners($ee->get_listeners('bar')));
+
+        $ee->remove_listener('bar', $fn3);
+        self::assertEquals([$fn1, $fn2, $fn4], $ee->flatten_listeners($ee->get_listeners('bar')));
+
+        $ee->remove_listener('bar', $fnx);
+        self::assertEquals([$fn1, $fn2, $fn4], $ee->flatten_listeners($ee->get_listeners('bar')));
+
+        $ee->remove_listener('bar', $fn1);
+        self::assertEquals([$fn2, $fn4], $ee->flatten_listeners($ee->get_listeners('bar')));
+
+        $ee->remove_listener('bar', $fn4);
+        self::assertEquals([$fn2], $ee->flatten_listeners($ee->get_listeners('bar')));
+
+        $ee->remove_listener('bar', $fn2);
+        self::assertEquals([], $ee->flatten_listeners($ee->get_listeners('bar')));
     }
 }
