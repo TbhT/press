@@ -302,13 +302,13 @@ class Events
      * @param string $evt
      * @return $this
      */
-    public function remove_event(string $evt)
+    public function remove_event(string $evt = '')
     {
         $events = &$this->get_events();
         preg_match('/\/\w+\//i', $evt, $m);
 
         // Remove different things depending on the state of evt
-        if (is_string($evt)) {
+        if (is_string($evt) && empty($evt) === false) {
             // Remove all listeners for the specified event
             unset($events[$evt]);
         } else if (count($m) > 0) {
@@ -320,7 +320,6 @@ class Events
                 }
             }
         } else {
-            $events = &$this->get_events();
             $events = [];
         }
 
@@ -341,15 +340,20 @@ class Events
      * @param array $args
      * @return Events
      */
-    public function emit_event(string $evt, array $args = [])
+    public function emit_event(string $evt, $args = [])
     {
         $listeners_wrap = $this->get_listeners_wrapper($evt);
-        $events = &$this->events;
 
         foreach ($listeners_wrap as $event => $listeners) {
             foreach ($listeners as $index => $listener) {
                 if ($listener['once'] === true) {
                     $this->remove_listener($evt, $listener['listener']);
+                }
+
+                if (is_array($args) === false) {
+                    $args_ = func_get_args();
+                    array_splice($args_, 0, 1);
+                    $args = $args_;
                 }
 
                 $response = call_user_func_array($listener['listener'], $args);

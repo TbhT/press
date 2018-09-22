@@ -385,7 +385,8 @@ class EventsTest extends TestCase
     public function testDefinesEventWhenOtherEventsAlready()
     {
         $ee = new Events();
-        $f = function () {};
+        $f = function () {
+        };
 
         $ee->add_listener('foo', $f);
         $ee->define_event('bar');
@@ -397,12 +398,356 @@ class EventsTest extends TestCase
     public function testNotOverwriteExistEvent()
     {
         $ee = new Events();
-        $f = function () {};
+        $f = function () {
+        };
 
         $ee->add_listener('foo', $f);
         $ee->define_event('foo');
         self::assertEquals([$f], $ee->flatten_listeners($ee->get_listeners('foo')));
     }
 
-    
+    // define events
+    public function testDefinesMultipleEvents()
+    {
+        $ee = new Events();
+
+        $ee->define_events(['foo', 'bar']);
+        $foo_listeners = $ee->get_listeners('foo');
+        $bar_listeners = $ee->get_listeners('bar');
+
+        self::assertEquals(0, count($foo_listeners));
+        self::assertEquals(0, count($bar_listeners));
+    }
+
+    // remove event
+    public function testRemoveAllListenersForSpecificEvent()
+    {
+        $ee = new Events();
+        $fn1 = function () {
+        };
+        $fn2 = function () {
+        };
+        $fn3 = function () {
+        };
+        $fn4 = function () {
+        };
+        $fn5 = function () {
+        };
+
+        $ee->add_listener('foo', $fn1);
+        $ee->add_listener('foo', $fn2);
+        $ee->add_listener('bar', $fn3);
+        $ee->add_listener('bar', $fn4);
+        $ee->add_listener('baz', $fn5);
+
+        self::assertEquals([$fn1, $fn2], $ee->flatten_listeners($ee->get_listeners('foo')));
+        self::assertEquals([$fn3, $fn4], $ee->flatten_listeners($ee->get_listeners('bar')));
+        self::assertEquals([$fn5], $ee->flatten_listeners($ee->get_listeners('baz')));
+
+        $ee->remove_event('bar');
+        self::assertEquals([$fn1, $fn2], $ee->flatten_listeners($ee->get_listeners('foo')));
+        self::assertEquals([], $ee->flatten_listeners($ee->get_listeners('bar')));
+        self::assertEquals([$fn5], $ee->flatten_listeners($ee->get_listeners('baz')));
+
+        $ee->remove_event('baz');
+        self::assertEquals([$fn1, $fn2], $ee->flatten_listeners($ee->get_listeners('foo')));
+        self::assertEquals([], $ee->flatten_listeners($ee->get_listeners('bar')));
+        self::assertEquals([], $ee->flatten_listeners($ee->get_listeners('baz')));
+    }
+
+    public function testRemoveAllEventsWhenNoEventIsSpecified()
+    {
+        $ee = new Events();
+        $fn1 = function () {
+        };
+        $fn2 = function () {
+        };
+        $fn3 = function () {
+        };
+        $fn4 = function () {
+        };
+        $fn5 = function () {
+        };
+
+        $ee->add_listener('foo', $fn1);
+        $ee->add_listener('foo', $fn2);
+        $ee->add_listener('bar', $fn3);
+        $ee->add_listener('bar', $fn4);
+        $ee->add_listener('baz', $fn5);
+
+        self::assertEquals([$fn1, $fn2], $ee->flatten_listeners($ee->get_listeners('foo')));
+        self::assertEquals([$fn3, $fn4], $ee->flatten_listeners($ee->get_listeners('bar')));
+        self::assertEquals([$fn5], $ee->flatten_listeners($ee->get_listeners('baz')));
+
+        $ee->remove_event();
+        self::assertEquals([], $ee->flatten_listeners($ee->get_listeners('foo')));
+        self::assertEquals([], $ee->flatten_listeners($ee->get_listeners('bar')));
+        self::assertEquals([], $ee->flatten_listeners($ee->get_listeners('baz')));
+    }
+
+    public function testRemovesListenersWhenPassedARegex()
+    {
+        $ee = new Events();
+        $fn1 = function () {
+        };
+        $fn2 = function () {
+        };
+        $fn3 = function () {
+        };
+        $fn4 = function () {
+        };
+        $fn5 = function () {
+        };
+
+        $ee->add_listener('foo', $fn1);
+        $ee->add_listener('foo', $fn2);
+        $ee->add_listener('bar', $fn3);
+        $ee->add_listener('bar', $fn4);
+        $ee->add_listener('baz', $fn5);
+
+        self::assertEquals([$fn1, $fn2], $ee->flatten_listeners($ee->get_listeners('foo')));
+        self::assertEquals([$fn3, $fn4], $ee->flatten_listeners($ee->get_listeners('bar')));
+        self::assertEquals([$fn5], $ee->flatten_listeners($ee->get_listeners('baz')));
+
+        $check = [];
+        $ee->remove_event();
+
+        $ee->add_listener('foo', function () use (&$check) {
+            array_push($check, 1);
+            return 'foo';
+        });
+        $ee->add_listener('bar', function () use (&$check) {
+            array_push($check, 2);
+            return 'bar';
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 3);
+            return 'baz';
+        });
+
+        $ee->remove_event('/ba[rz]/');
+        $listeners = $ee->get_listeners('foo');
+        self::assertEquals(1, count($listeners));
+        self::assertEquals('foo', $listeners[0]['listener']());
+    }
+
+    public function testCanBeUsedThroughAliasRemoveAllListeners()
+    {
+        $ee = new Events();
+        $fn1 = function () {
+        };
+        $fn2 = function () {
+        };
+        $fn3 = function () {
+        };
+        $fn4 = function () {
+        };
+        $fn5 = function () {
+        };
+
+        $ee->add_listener('foo', $fn1);
+        $ee->add_listener('foo', $fn2);
+        $ee->add_listener('bar', $fn3);
+        $ee->add_listener('bar', $fn4);
+        $ee->add_listener('baz', $fn5);
+
+        self::assertEquals([$fn1, $fn2], $ee->flatten_listeners($ee->get_listeners('foo')));
+        self::assertEquals([$fn3, $fn4], $ee->flatten_listeners($ee->get_listeners('bar')));
+        self::assertEquals([$fn5], $ee->flatten_listeners($ee->get_listeners('baz')));
+
+        $ee->remove_all_listeners('bar');
+        self::assertEquals([$fn1, $fn2], $ee->flatten_listeners($ee->get_listeners('foo')));
+        self::assertEquals([], $ee->flatten_listeners($ee->get_listeners('bar')));
+        self::assertEquals([$fn5], $ee->flatten_listeners($ee->get_listeners('baz')));
+
+        $ee->remove_all_listeners('baz');
+        self::assertEquals([$fn1, $fn2], $ee->flatten_listeners($ee->get_listeners('foo')));
+        self::assertEquals([], $ee->flatten_listeners($ee->get_listeners('bar')));
+        self::assertEquals([], $ee->flatten_listeners($ee->get_listeners('baz')));
+    }
+
+    // emit event
+    public function testExecAttachedListeners()
+    {
+        $run = false;
+        $ee = new Events();
+
+        $ee->add_listener('foo', function () use (&$run) {
+            $run = true;
+        });
+        $ee->emit_event('foo');
+        self::assertTrue($run);
+    }
+
+    public function testExecAttachedWithASingleArgument()
+    {
+        $key = null;
+        $ee = new Events();
+
+        $ee->add_listener('bar', function ($a) use (&$key) {
+            $key = $a;
+        });
+        $ee->emit_event('bar', [50]);
+
+        self::assertEquals(50, $key);
+        $ee->emit_event('bar', 60);
+        self::assertEquals(60, $key);
+    }
+
+    public function testExecAttachedWithArguments()
+    {
+        $key = null;
+        $ee = new Events();
+
+        $ee->add_listener('bar2', function ($a, $b) use (&$key) {
+            $key = $a + $b;
+        });
+        $ee->emit_event('bar2', [40, 2]);
+
+        self::assertEquals(42, $key);
+    }
+
+    public function testExecMultipleListeners()
+    {
+        $check = [];
+        $ee = new Events();
+
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 1);
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 2);
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 3);
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 4);
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 5);
+        });
+
+        $ee->emit_event('baz');
+        self::assertEquals('1,2,3,4,5', self::flattenCheck($check));
+    }
+
+    public function testExecMultipleListenersAfterOneHaveBeenRemoved()
+    {
+        $check = [];
+        $toRemove = function () use (&$check) {
+            array_push($check, 'R');
+        };
+
+        $ee = new Events();
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 1);
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 2);
+        });
+        $ee->add_listener('baz', $toRemove);
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 3);
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 4);
+        });
+
+        $ee->remove_listener('baz', $toRemove);
+        $ee->emit_event('baz');
+
+        self::assertEquals('1,2,3,4', self::flattenCheck($check));
+
+    }
+
+    public function testCanRemoveAnotherListenerFromWithinListener()
+    {
+        $check = [];
+        $toRemove = function () use (&$check) {
+            array_push($check, '1');
+        };
+
+        $ee = new Events();
+        $ee->add_listener('baz', $toRemove);
+        $ee->add_listener('baz', function () use (&$check, &$toRemove, &$ee) {
+            array_push($check, 2);
+            $ee->remove_listener('baz', $toRemove);
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 3);
+        });
+
+        $ee->emit_event('baz');
+        $ee->emit_event('baz');
+
+        self::assertEquals('1,2,2,3,3', self::flattenCheck($check));
+    }
+
+    public function testExecMultipleListenersAndRemovesThoseThatReturnTrue()
+    {
+        $check = [];
+        $ee = new Events();
+
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 1);
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 2);
+            return true;
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 3);
+            return false;
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 4);
+            return 1;
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 5);
+            return true;
+        });
+
+        $ee->emit_event('baz');
+        $ee->emit_event('baz');
+
+        self::assertEquals('1,1,2,3,3,4,4,5', self::flattenCheck($check));
+    }
+
+    public function testCanRemoveListenersThatReturnTrueAndAlsoDefineAnotherListenerWithinThem()
+    {
+        $check = [];
+        $ee = new Events();
+
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 1);
+        });
+        $ee->add_listener('baz', function () use (&$check, &$ee) {
+            $ee->add_listener('baz', function () use (&$check) {
+                array_push($check, 2);
+            });
+
+            array_push($check, 3);
+            return true;
+        });
+
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 4);
+            return false;
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 5);
+            return 1;
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 6);
+            return true;
+        });
+
+        $ee->emit_event('baz');
+        $ee->emit_event('baz');
+
+        self::assertEquals('1,1,2,3,4,4,5,5,6', self::flattenCheck($check));
+    }
 }
