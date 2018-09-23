@@ -9,6 +9,7 @@ use Press\Helper\HttpHelper;
 use Press\Helper\ArrayHelper;
 use Press\Router\Route;
 use Press\Router\Layer;
+use Swoole\Timer;
 
 
 /**
@@ -79,7 +80,7 @@ class Router
     }
 
 
-    private function handle(& $req, & $res, & $out)
+    private function handle(&$req, &$res, &$out)
     {
         $index = 0;
         $protohost = self::getProtohost($req->url);
@@ -91,13 +92,13 @@ class Router
         $options = [];
 
 //        manage inter-route variables
-        $parentParams = $req->params;
-        $parentUrl = $req->baseUrl;
+        $parentParams = &$req->params;
+        $parentUrl = &$req->baseUrl;
         $done = self::restore($out, $req, 'baseUrl', 'next', 'params');
 
 //       for options requests, responds with a default if nothing else responds
         if (strtolower($req->method) === 'options') {
-            $done = self::wrap($done, function (& $old, $error) use (& $options, & $res) {
+            $done = self::wrap($done, function (& $old, $error) use (&$options, &$res) {
                 if ($error || count($options) === 0) {
                     return $old($error);
                 }
@@ -106,10 +107,14 @@ class Router
             });
         }
 
-        $next = function ($error) use (& $slashAdded, & $trim_prefix, & $next, & $index, & $req, & $removed, & $protohost, & $done, & $options) {
+        $next = function ($error) use (
+            &$slashAdded, &$trim_prefix, &$next, &$index, &$req,
+            &$removed, &$protohost, &$done, &$options, &$paramCalled, &$parentParams,
+            $layer
+        ) {
             $layerError = $error === 'route' ? null : $error;
 
-//             remove added slash
+//          remove added slash
             if ($slashAdded) {
                 $req->url = substr($req->url, 1);
                 $slashAdded = false;
@@ -127,13 +132,15 @@ class Router
 
 //            signal to exit router
             if ($layerError === 'router') {
-//                todo 这个地方需要使用 swoole 的eventloop
+                Timer::after(1, $done);
                 return;
             }
 
 //            no more matching layer
             if ($index >= $_stack_length) {
-//                todo  这个地方也需要使用 eventloop
+                Timer::after(1, function () use ($done, $layerError) {
+                    $done($layerError);
+                });
                 return;
             }
 
@@ -195,47 +202,49 @@ class Router
                 $req->route = $route;
             }
 
-//            $req->params = empty($this->mergeParams) ? self::mergeParams($layer->params, $parentParams) : $layer->params;
-//            $layerPath = $layer->path;
-//
-////            this should be done for the layer
-//            self::process_params($layer, $paramCalled, $req, $res, function ($error) {
-//                if ($error) {
-//                    return $next($layerError || $error);
-//                }
-//
-//                if ($route) {
-//                    return $layer->hanlde_request($req, $res, $next);
-//                }
-//
-////                trim prefix
-//
-//                if (strlen($layerPath) !== 0) {
-//                    $c = substr($path, strlen($layerPath));
-//                    if ($c && $c !== '/' && $c !== '.') return $next($layerError);
-//
-////                    trim off the part opf the url that matches the route
-////                    middleware (.use stuff) needs to have the path stripped
-//                    $removed = $layerPath;
-//                    $req->url = $protohost . substr($req->url, strlen($protohost) + strlen($removed));
-//
-////                    ensure leading slash
-//                    if (empty($protohost) && substr($req->url, 0, 1) !== '/') {
-//                        $req->url = "/{$req->url}";
-//                        $slashAdded = true;
-//                    }
-//
-////                    setup base URL (no trailing slash)
-//                    $_url = substr($removed, strlen($removed - 1)) === '/' ? substr($removed, 0, strlen($removed) - 1);
-//                    $req->baseUrl = $parentUrl . $_url;
-//                }
-//
-//                if ($layerError) {
-//                    $layer->handle_error($layerError, $req, $res, $next);
-//                } else {
-//                    $layer->handle_request($req, $res, $next);
-//                }
-//            });
+            $req->params = empty($this->mergeParams) ? self::mergeParams($layer->params, $parentParams) : $layer->params;
+            $layerPath = $layer->path;
+
+//            this should be done for the layer
+            self::process_params($layer, $paramCalled, $req, $res, function ($error) use (
+                $next, $layerError, $req, $res, $route, $layer
+            ) {
+                if ($error) {
+                    return $next($layerError || $error);
+                }
+
+                if ($route) {
+                    return $layer->hanlde_request($req, $res, $next);
+                }
+
+//                trim prefix
+
+                if (strlen($layerPath) !== 0) {
+                    $c = substr($path, strlen($layerPath));
+                    if ($c && $c !== '/' && $c !== '.') return $next($layerError);
+
+//                    trim off the part opf the url that matches the route
+//                    middleware (.use stuff) needs to have the path stripped
+                    $removed = $layerPath;
+                    $req->url = $protohost . substr($req->url, strlen($protohost) + strlen($removed));
+
+//                    ensure leading slash
+                    if (empty($protohost) && substr($req->url, 0, 1) !== '/') {
+                        $req->url = "/{$req->url}";
+                        $slashAdded = true;
+                    }
+
+//                    setup base URL (no trailing slash)
+                    $_url = substr($removed, strlen($removed - 1)) === '/' ? substr($removed, 0, strlen($removed) - 1);
+                    $req->baseUrl = $parentUrl . $_url;
+                }
+
+                if ($layerError) {
+                    $layer->handle_error($layerError, $req, $res, $next);
+                } else {
+                    $layer->handle_request($req, $res, $next);
+                }
+            });
 
             $next();
         };

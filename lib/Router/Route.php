@@ -7,6 +7,8 @@ namespace Press\Router;
 
 use Press\Helper\ArrayHelper;
 use Press\Helper\HttpHelper;
+use Press\Request;
+use Press\Response;
 use Press\Router\Layer;
 
 
@@ -47,8 +49,7 @@ class Route
         return array_keys($this->methods);
     }
 
-//todo  需要将$req, $res  写成对象的方式而不是数组形式，因为数组传递的时候是值传递而不是引用传递
-    public function dispatch($req, $res, callable $done)
+    private function dispatch(Request $req,Response $res, callable $done)
     {
         $index = 0;
 
@@ -56,11 +57,11 @@ class Route
             return $done();
         }
 
-        if ($req['method'] === 'head' && empty($this->methods['head'])) {
-            $req['method'] = 'get';
+        if ($req->method === 'head' && empty($this->methods['head'])) {
+            $req->method = 'get';
         }
 
-        $req['route'] = $this;
+        $req->route = $this;
 
         $next = function ($error = null) use ($done, & $index, $req, $res, & $next) {
 //          signal to exit route
@@ -81,7 +82,7 @@ class Route
             $layer = $this->stack[$index++];
 
 
-            if ($layer->method && $layer->method !== $req['method']) {
+            if ($layer->method && $layer->method !== $req->method) {
                 return $next($error);
             }
 
