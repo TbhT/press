@@ -261,20 +261,26 @@ class Events
     }
 
     /**
-     * @param bool $remove
-     * @param string $evt
+     * @param $evt
      * @param array $listeners
      * @return Events
      */
-    public function manipulate_listeners(bool $remove, $evt, array $listeners)
+    public function remove_listeners($evt, array $listeners = [])
+    {
+        return $this->manipulate_listeners(true, $evt, $listeners);
+    }
+
+    /**
+     * @param bool $remove
+     * @param $evt
+     * @param array $listeners
+     * @return Events
+     */
+    public function manipulate_listeners(bool $remove, $evt, array $listeners = [])
     {
         $single_fn = $remove ? 'remove_listener' : 'add_listener';
         $multiple_fn = $remove ? 'remove_listeners' : 'add_listeners';
         $evt_flag = is_array($evt);
-
-        if ($evt_flag === false) {
-            preg_match('/\/\w+\//i', $evt, $matches);
-        }
 
         if ($evt_flag) {
             foreach ($evt as $event => $value) {
