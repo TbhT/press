@@ -960,6 +960,17 @@ class EventsTest extends TestCase
                 array_push($check, 4);
             });
         });
+
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 5);
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 6);
+        });
+
+        $ee->emit_event('baz');
+
+        self::assertEquals('1,2,3,5,6', self::flattenCheck($check));
     }
 
 }
