@@ -868,11 +868,16 @@ class EventsTest extends TestCase
     public function testManipulateMultipleWithArray()
     {
         $ee = new Events();
-        $fn1 = function () {};
-        $fn2 = function () {};
-        $fn3 = function () {};
-        $fn4 = function () {};
-        $fn5 = function () {};
+        $fn1 = function () {
+        };
+        $fn2 = function () {
+        };
+        $fn3 = function () {
+        };
+        $fn4 = function () {
+        };
+        $fn5 = function () {
+        };
 
         $ee->manipulate_listeners(false, 'foo', [$fn1, $fn2, $fn3, $fn4, $fn5]);
         self::assertEquals([$fn5, $fn4, $fn3, $fn2, $fn1], $ee->flatten_listeners($ee->get_listeners('foo')));
@@ -884,10 +889,10 @@ class EventsTest extends TestCase
 
         $ee->manipulate_listeners(true, 'foo', [$fn3, $fn5]);
         $ee->manipulate_listeners(false, 'foo', [$fn4, $fn1]);
-        self::assertEquals([$fn1, $fn4], $ee->flatten_listeners($ee->get_listeners('foo')));
-        self::assertTrue(arrays_are_similar([$fn1, $fn4], $ee->flatten_listeners($ee->get_listeners('foo'))));
+        self::assertEquals([$fn4, $fn1], $ee->flatten_listeners($ee->get_listeners('foo')));
+        self::assertTrue(arrays_are_similar([$fn4, $fn1], $ee->flatten_listeners($ee->get_listeners('foo'))));
 
-        $ee->manipulate_listeners(true, 'foo', [$fn1, $fn4]);
+        $ee->manipulate_listeners(true, 'foo', [$fn4, $fn1]);
         self::assertEquals([], $ee->flatten_listeners($ee->get_listeners('foo')));
     }
 
@@ -971,6 +976,187 @@ class EventsTest extends TestCase
         $ee->emit_event('baz');
 
         self::assertEquals('1,2,3,5,6', self::flattenCheck($check));
+    }
+
+    // add_listeners
+    public function testAddsWithAnArray()
+    {
+        $ee = new Events();
+        $fn1 = function () {
+        };
+        $fn2 = function () {
+        };
+        $fn3 = function () {
+        };
+        $fn4 = function () {
+        };
+        $fn5 = function () {
+        };
+
+        $ee->add_listeners('foo', [$fn1, $fn2, $fn3]);
+        self::assertTrue(arrays_are_similar([$fn3, $fn2, $fn1], $ee->flatten_listeners($ee->get_listeners('foo'))));
+
+        $ee->add_listeners('foo', [$fn4, $fn5]);
+        self::assertTrue(arrays_are_similar([$fn3, $fn2, $fn1, $fn5, $fn4], $ee->flatten_listeners($ee->get_listeners('foo'))));
+    }
+
+    public function testAddsAnArray()
+    {
+        $ee = new Events();
+        $fn1 = function () {
+        };
+        $fn2 = function () {
+        };
+        $fn3 = function () {
+        };
+        $fn4 = function () {
+        };
+        $fn5 = function () {
+        };
+
+        $ee->add_listeners([
+            'foo' => $fn1,
+            'bar' => [$fn2, $fn3]
+        ]);
+        self::assertTrue(arrays_are_similar([$fn1], $ee->flatten_listeners($ee->get_listeners('foo'))));
+        self::assertTrue(arrays_are_similar([$fn3, $fn2], $ee->flatten_listeners($ee->get_listeners('bar'))));
+
+        $ee->add_listeners([
+            'foo' => [$fn4],
+            'bar' => $fn5
+        ]);
+        self::assertTrue(arrays_are_similar([$fn1, $fn4], $ee->flatten_listeners($ee->get_listeners('foo'))));
+        self::assertTrue(arrays_are_similar([$fn3, $fn2, $fn5], $ee->flatten_listeners($ee->get_listeners('bar'))));
+    }
+
+    public function testRemovesWithRegexInAddListeners()
+    {
+        $ee = new Events();
+        $fn1 = function () {
+        };
+        $fn2 = function () {
+        };
+        $fn3 = function () {
+        };
+        $fn4 = function () {
+        };
+        $fn5 = function () {
+        };
+
+        $ee->add_listeners([
+            'foo' => [$fn1, $fn2, $fn3, $fn4, $fn5],
+            'bar' => [$fn1, $fn2, $fn3, $fn4, $fn5],
+            'baz' => [$fn1, $fn2, $fn3, $fn4, $fn5]
+        ]);
+        $ee->remove_listeners('/ba[rz]/', [$fn3, $fn4]);
+
+        self::assertTrue(arrays_are_similar([$fn5, $fn4, $fn3, $fn2, $fn1], $ee->flatten_listeners($ee->get_listeners('foo'))));
+        self::assertTrue(arrays_are_similar([$fn5, $fn2, $fn1], $ee->flatten_listeners($ee->get_listeners('bar'))));
+        self::assertTrue(arrays_are_similar([$fn5, $fn2, $fn1], $ee->flatten_listeners($ee->get_listeners('baz'))));
+    }
+
+    // set_once_return_value
+    public function testWillRemoveIfLeftAsDefaultAndReturningTrue()
+    {
+        $check = [];
+        $ee = new Events();
+
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 1);
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 2);
+            return true;
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 3);
+            return false;
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 4);
+            return 1;
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 5);
+            return true;
+        });
+
+        $ee->emit_event('baz');
+        $ee->emit_event('baz');
+
+        self::assertEquals('1,1,2,3,3,4,4,5', self::flattenCheck($check));
+    }
+
+    public function testWillRemoveThoseThatReturnStringWhenSetToThatString()
+    {
+        $check = [];
+        $ee = new Events();
+
+        $ee->set_once_return_value('only-once');
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 1);
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 2);
+            return true;
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 3);
+            return 'only-once';
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 4);
+            return 1;
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 5);
+            return 'only-once';
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 6);
+            return true;
+        });
+
+        $ee->emit_event('baz');
+        $ee->emit_event('baz');
+
+        self::assertEquals('1,1,2,2,3,4,4,5,6,6', self::flattenCheck($check));
+    }
+
+    public function testWillNotRemoveThoseThatReturnADifferentStringToTheOneThatIsSet()
+    {
+        $check = [];
+        $ee = new Events();
+
+        $ee->set_once_return_value('only-once');
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 1);
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 2);
+            return true;
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 3);
+            return 'not-only-once';
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 4);
+            return 1;
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 5);
+            return 'only-once';
+        });
+        $ee->add_listener('baz', function () use (&$check) {
+            array_push($check, 6);
+            return true;
+        });
+
+        $ee->emit_event('baz');
+        $ee->emit_event('baz');
+
+        self::assertEquals('1,1,2,2,3,3,4,4,5,6,6', self::flattenCheck($check));
     }
 
 }
