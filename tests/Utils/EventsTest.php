@@ -5,6 +5,11 @@ use Press\Utils\Events;
 use PHPUnit\Framework\TestCase;
 
 
+/**
+ * @param $a
+ * @param $b
+ * @return bool
+ */
 function arrays_are_similar($a, $b)
 {
     foreach ($a as $k => $v) {

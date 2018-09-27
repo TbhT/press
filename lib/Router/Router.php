@@ -27,6 +27,10 @@ class Router
     private $stack = [];
 
 
+    /**
+     * Router constructor.
+     * @param array $option
+     */
     public function __construct($option = [])
     {
         $this->caseSensitive = $option['caseSensitive'];
@@ -35,6 +39,11 @@ class Router
     }
 
 
+    /**
+     * @param string $name
+     * @param callable $fn
+     * @return $this|void
+     */
     public function param(string $name, callable $fn)
     {
         if (is_callable($name)) {
@@ -107,10 +116,14 @@ class Router
             });
         }
 
+        /**
+         * @param $error
+         * @return mixed
+         */
         $next = function ($error) use (
             &$slashAdded, &$trim_prefix, &$next, &$index, &$req,
             &$removed, &$protohost, &$done, &$options, &$paramCalled, &$parentParams,
-            $layer
+            &$res
         ) {
             $layerError = $error === 'route' ? null : $error;
 
@@ -252,13 +265,22 @@ class Router
     }
 
 
-    private function mergeParams()
+    private function merge_params()
     {
 
     }
 
-
     private function process_params()
+    {
+
+    }
+
+    private function get_protohost()
+    {
+
+    }
+
+    private function get_pathname()
     {
 
     }

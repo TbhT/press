@@ -133,7 +133,7 @@ class AcceptsTest extends TestCase
     }
 
 
-    public function testEncodingWhenIdetityNotInclude()
+    public function testEncodingWhenIdentityNotInclude()
     {
         $req = self::createRequestEncoding();
         $accept = new Accepts($req);
