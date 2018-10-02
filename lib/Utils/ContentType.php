@@ -47,13 +47,45 @@ class ContentType
             throw new \TypeError('invalid type');
         }
 
+        $string = $type;
+
         // append parameters
         if (!empty($parameters) && gettype($parameters) === 'array') {
+            ksort($parameters);
+            foreach ($parameters as $key => $parameter) {
+                preg_match(TOKEN_REG_EXP, $key,$m);
 
+                if (count($m) === 0) {
+                    throw new \TypeError('invalid parameter name');
+                }
+
+                $qs_string = self::qsString($parameter);
+                $string .= "; {$key}={$qs_string}";
+            }
         }
+
+        return $string;
     }
 
-    public static function parse()
+    public static function parse($string)
+    {
+        $header = gettype($string) === 'array' ?
+            self::getContentType() : $string;
+
+        if (is_string($header)) {
+            throw new \TypeError('argument string is required to be a a string');
+        }
+
+
+    }
+
+    public static function getContentType()
+    {
+
+    }
+
+
+    public static function qsString()
     {
 
     }
