@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Press;
 
+use Press\Utils\Mime\MimeTypes;
 use Swoole\Http\Response as SResponse;
 
 
@@ -10,6 +11,8 @@ class Response extends SResponse
 {
     public $headers;
     private $status_code;
+    private $req;
+    private $app;
 
     public function __construct()
     {
@@ -76,6 +79,39 @@ class Response extends SResponse
 
         return $this->set('Link', $link_result);
     }
+
+    /**
+     * @param string $type
+     * @return Response
+     */
+    public function type(string $type)
+    {
+        $ct = MimeTypes::lookup($type);
+        return $this->set('Content-Type', $ct);
+    }
+
+    /**
+     * alias for type() method
+     * @param string $type
+     * @return Response
+     */
+    public function contentType(string $type)
+    {
+        return $this->type($type);
+    }
+
+    public function send($body)
+    {
+        //settings
+        $app = $this->app;
+
+    }
+
+    public function json()
+    {
+
+    }
+
 
     public function location()
     {
