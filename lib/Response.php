@@ -100,10 +100,25 @@ class Response extends SResponse
         return $this->type($type);
     }
 
+
+
     public function send($body)
     {
         //settings
         $app = $this->app;
+
+        switch (gettype($body)) {
+            case 'string':
+                if (!$this->type($body)) {
+                    $this->type('html');
+                }
+                break;
+            case 'array':
+                return $this->json($body);
+        }
+
+        //
+
 
     }
 
