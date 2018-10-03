@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Press\Utils;
 
+use phpDocumentor\Reflection\Types\Resource_;
 /**
  * RegExp to match *( ";" parameter ) in RFC 7231 sec 3.1.1.1
  *
@@ -72,11 +73,62 @@ class ContentType
         $header = gettype($string) === 'array' ?
             self::getContentType() : $string;
 
-        if (is_string($header)) {
+        if (!is_string($header)) {
             throw new \TypeError('argument string is required to be a a string');
         }
 
+        $index = strpos($header, ';');
+        $type = $index !== false ? trim(substr($header, 0, $index)) : trim($header);
 
+        preg_match(TYPE_REG_EXP, $type, $m);
+        if (count($m) === 0) {
+            throw new \TypeError('invalid media type');
+        }
+
+        $ar = self::arrayContentType($type);
+
+        if ($index !== false) {
+            preg_match_all(PARAM_REG_EXP, $header,$m, PREG_OFFSET_CAPTURE, $index);
+            if (count($m) === 0) {
+                return;
+            }
+
+            foreach ($m[0] as $k => $item) {
+                if ($item[1] !== $index) {
+                    throw new \TypeError('invalid parameter format');
+                }
+
+                $index += strlen($item[0]);
+                $key = strtolower($m[1][$k]);
+                $value = $m[2][$k];
+
+                if ($value[0] === '"') {
+                    // remove quotes and escapes
+                    $value = substr($value, strlen($value) - 2);
+                    str_replace(QESC_REG_EXP, '$1', $value);
+                }
+
+                return $ar['parameters'][$key] = $value;
+            }
+
+            if ($index !== strlen($header)) {
+                throw new \TypeError('invalid parameter format');
+            }
+        }
+
+        return $ar;
+    }
+
+    /**
+     * @param $type
+     * @return array
+     */
+    public static function arrayContentType($type)
+    {
+        return [
+            'parameters' => [],
+            'type' => $type
+        ];
     }
 
     public static function getContentType()
