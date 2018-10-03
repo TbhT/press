@@ -70,8 +70,8 @@ class ContentType
 
     public static function parse($string)
     {
-        $header = gettype($string) === 'array' ?
-            self::getContentType() : $string;
+        $header = gettype($string) === 'object ' ?
+            self::getContentType($string) : $string;
 
         if (!is_string($header)) {
             throw new \TypeError('argument string is required to be a a string');
@@ -131,15 +131,43 @@ class ContentType
         ];
     }
 
-    public static function getContentType()
+    /**
+     * @param {Request|Response} $string
+     * @return mixed
+     */
+    public static function getContentType($string)
     {
+        $header = $string->get('content-type');
 
+        if ($header === null) {
+            throw new \TypeError('content-type is missing from object');
+        }
+
+        return $header;
     }
 
 
-    public static function qsString()
+    /**
+     * @param string $val
+     * @return string
+     */
+    public static function qsString(string $val)
     {
+        //no need to quote tokens
+        preg_match(TOKEN_REG_EXP, $val, $m);
+        if (count($m) > 0) {
+            return $val;
+        }
 
+        if (strlen($val) > 0) {
+            preg_match(TEXT_REG_EXP, $val, $m);
+            if (count($m) === 0) {
+                throw new \TypeError('invalid parameter value');
+            }
+        }
+
+        $str = str_replace(QUOTE_REG_EXP, '\\$1', $val);
+        return "\"{$str}\"";
     }
 
 
