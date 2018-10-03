@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Press\Utils;
 
-use phpDocumentor\Reflection\Types\Resource_;
 /**
  * RegExp to match *( ";" parameter ) in RFC 7231 sec 3.1.1.1
  *
@@ -39,7 +38,7 @@ class ContentType
             'type' => ''
         ] : $t;
 
-        $parameters = $t['parameters'];
+        $parameters = array_key_exists('parameters', $t) ? $t['parameters'] : null;
         $type = $t['type'];
 
         preg_match(TYPE_REG_EXP, $type,$m);
@@ -166,7 +165,7 @@ class ContentType
             }
         }
 
-        $str = str_replace(QUOTE_REG_EXP, '\\$1', $val);
+        $str = preg_replace(QUOTE_REG_EXP, '\\\\$1', $val);
         return "\"{$str}\"";
     }
 
