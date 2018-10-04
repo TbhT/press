@@ -18,11 +18,11 @@ namespace Press\Utils;
  * quoted-pair   = "\" ( HTAB / SP / VCHAR / obs-text )
  */
 
-const PARAM_REG_EXP = '/; *([!#$%&\'*+.^_`|~0-9A-Za-z-]+) *= *("(?:[\x{000b}\x{0020}\x{0021}\x{0023}-\x{005b}\x{005d}-\x{007e}\x{0080}-\x{00ff}]|\\[\x{000b}\x{0020}-\x{00ff}])*"|[!#$%&\'*+.^_`|~0-9A-Za-z-]+) */u';
-const TEXT_REG_EXP = '/^[\x{000b}\x{0020}-\x{007e}\x{0080}-\x{00ff}]+$/u';
+const PARAM_REG_EXP = "/; *([!#$%&'*+.^_`|~0-9A-Za-z-]+) *= *(\"(?:[\x{000b}\x{0020}\x{0021}\x{0023}-\x{005b}\x{005d}-\x{007e}\x{0080}-\x{00ff}]|\\\\[\x{000b}\x{0020}-\x{00ff}])*\"|[!#$%&'*+.^_`|~0-9A-Za-z-]+) */u";
+const TEXT_REG_EXP = "/^[\x{000b}\x{0020}-\x{007e}\x{0080}-\x{00ff}]+$/u";
 const TOKEN_REG_EXP = '/^[!#$%&\'*+.^_`|~0-9A-Za-z-]+$/u';
 
-const QESC_REG_EXP = '/\\([\u000b\u0020-\u00ff])/';
+const QESC_REG_EXP = "/\\([\u000b\u0020-\u00ff])/";
 
 const QUOTE_REG_EXP = '/([\\"])/';
 
@@ -31,6 +31,10 @@ const TYPE_REG_EXP = '/^[!#$%&\'*+.^_`|~0-9A-Za-z-]+\/[!#$%&\'*+.^_`|~0-9A-Za-z-
 
 class ContentType
 {
+    /**
+     * @param array $t
+     * @return mixed|string
+     */
     public static function format(array $t)
     {
         $t = empty($t) ? [
@@ -67,6 +71,10 @@ class ContentType
         return $string;
     }
 
+    /**
+     * @param $string
+     * @return array|void
+     */
     public static function parse($string)
     {
         $header = gettype($string) === 'object ' ?
