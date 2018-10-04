@@ -128,13 +128,13 @@ class ContentTypeTest extends TestCase
             ]],
             ['IMAGE/SVG+XML', 'image/svg+xml'],
             ['text/html; Charset=UTF-8', 'text/html', [
-                'charset' => 'utf-8'
+                'charset' => 'UTF-8'
             ]],
             ['text/html; charset="UTF-8"', 'text/html', [
                 'charset' => 'UTF-8'
             ]],
-            ['text/html; charset = "UT\\F-\\\\\\"8\\""', 'text/html', [
-                'charset' => 'UTF-\\"8"'
+            ['text/html; charset = "UT\F-\\\"8\""', 'text/html', [
+                'charset' => 'UTF-\"8"'
             ]],
             ['text/html; param="charset=\\"utf-8\\"; foo=bar"; bar=foo', 'text/html', [
                 'param' => 'charset="utf-8"; foo=bar',

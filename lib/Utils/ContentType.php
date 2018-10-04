@@ -78,6 +78,7 @@ class ContentType
 
         $index = strpos($header, ';');
         $type = $index !== false ? trim(substr($header, 0, $index)) : trim($header);
+        $type = strtolower($type);
 
         preg_match(TYPE_REG_EXP, $type, $m);
         if (count($m) === 0) {
@@ -98,16 +99,16 @@ class ContentType
                 }
 
                 $index += strlen($item[0]);
-                $key = strtolower($m[1][$k]);
-                $value = $m[2][$k];
+                $key = strtolower($m[1][$k][0]);
+                $value = $m[2][$k][0];
 
                 if ($value[0] === '"') {
                     // remove quotes and escapes
-                    $value = substr($value, strlen($value) - 2);
+                    $value = substr($value, 1, strlen($value) - 2);
                     str_replace(QESC_REG_EXP, '$1', $value);
                 }
 
-                return $ar['parameters'][$key] = $value;
+                $ar['parameters'][$key] = $value;
             }
 
             if ($index !== strlen($header)) {
