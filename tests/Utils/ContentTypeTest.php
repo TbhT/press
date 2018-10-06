@@ -115,25 +115,24 @@ class ContentTypeTest extends TestCase
     public function parseData()
     {
         return [
-//            ['text/html', 'text/html'],
-//            ['image/svg+xml', 'image/svg+xml'],
-//            [' text/html ', 'text/html'],
-//            ['text/html; charset=utf-8; foo=bar', 'text/html', [
-//                'charset' => 'utf-8',
-//                'foo' => 'bar'
-//            ]],
-//            ['text/html ; charset=utf-8 ; foo=bar', 'text/html', [
-//                'charset' => 'utf-8',
-//                'foo' => 'bar'
-//            ]],
-//            ['IMAGE/SVG+XML', 'image/svg+xml'],
-//            ['text/html; Charset=UTF-8', 'text/html', [
-//                'charset' => 'UTF-8'
-//            ]],
-//            ['text/html; charset="UTF-8"', 'text/html', [
-//                'charset' => 'UTF-8'
-//            ]],
-// todo: this is a bug
+            ['text/html', 'text/html'],
+            ['image/svg+xml', 'image/svg+xml'],
+            [' text/html ', 'text/html'],
+            ['text/html; charset=utf-8; foo=bar', 'text/html', [
+                'charset' => 'utf-8',
+                'foo' => 'bar'
+            ]],
+            ['text/html ; charset=utf-8 ; foo=bar', 'text/html', [
+                'charset' => 'utf-8',
+                'foo' => 'bar'
+            ]],
+            ['IMAGE/SVG+XML', 'image/svg+xml'],
+            ['text/html; Charset=UTF-8', 'text/html', [
+                'charset' => 'UTF-8'
+            ]],
+            ['text/html; charset="UTF-8"', 'text/html', [
+                'charset' => 'UTF-8'
+            ]],
             ['text/html; charset = "UT\\F-\\\\\\"8\\""', 'text/html', [
                 'charset' => 'UTF-\\"8"'
             ]],

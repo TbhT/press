@@ -22,7 +22,7 @@ const PARAM_REG_EXP = "/; *([!#$%&'*+.^_`|~0-9A-Za-z-]+) *= *(\"(?:[\x{000b}\x{0
 const TEXT_REG_EXP = "/^[\x{000b}\x{0020}-\x{007e}\x{0080}-\x{00ff}]+$/u";
 const TOKEN_REG_EXP = '/^[!#$%&\'*+.^_`|~0-9A-Za-z-]+$/u';
 
-const QESC_REG_EXP = "/\\([\x{000b}\x{0020}-\x{00ff}])/u";
+const QESC_REG_EXP = "/\\\\([\x{000b}\x{0020}-\x{00ff}])/u";
 
 const QUOTE_REG_EXP = '/([\\"])/';
 
@@ -113,7 +113,7 @@ class ContentType
                 if ($value[0] === '"') {
                     // remove quotes and escapes
                     $value = substr($value, 1, strlen($value) - 2);
-                    str_replace(QESC_REG_EXP, '$1', $value);
+                    $value = preg_replace(QESC_REG_EXP, '$1', $value);
                 }
 
                 $ar['parameters'][$key] = $value;
