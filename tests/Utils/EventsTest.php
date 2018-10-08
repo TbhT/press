@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use Press\Utils\Events;
+use Press\Utils\Events\Events;
 use PHPUnit\Framework\TestCase;
 
 
@@ -289,7 +289,7 @@ class EventsTest extends TestCase
     public function testCanHandleRemovingEventsThatHaveNotBeenAdded()
     {
         $ee = new Events();
-        $reflector = new ReflectionClass('\Press\Utils\Events');
+        $reflector = new ReflectionClass('\Press\Utils\Events\Events');
         self::assertTrue($reflector->hasProperty('events'));
     }
 
@@ -297,7 +297,7 @@ class EventsTest extends TestCase
     {
         $ee = new Events();
         $ee->remove_event('foo');
-        $reflector = new ReflectionClass('\Press\Utils\Events');
+        $reflector = new ReflectionClass('\Press\Utils\Events\Events');
         self::assertEquals(true, $reflector->hasProperty('events'));
     }
 

@@ -1,13 +1,14 @@
 <?php
 declare(strict_types=1);
+
+namespace Press\Utils\Events;
+
+
 /**
- * @see https://github.com/Olical/EventEmitter/blob/master/EventEmitter.js
+ * Trait EventTrait
+ * @package Press\Utils\Events
  */
-
-namespace Press\Utils;
-
-
-class Events
+trait EventTrait
 {
     private $events = [];
     private $once_return_value = true;
@@ -137,9 +138,9 @@ class Events
      * If the listener returns true then it will be removed after it is called.
      * If you pass a regular expression as the event name then the listener will be added
      * to all events that match it.
-     * @param $evt
+     * @param string $evt
      * @param $listener
-     * @return Events
+     * @return EventTrait
      */
     public function add_listener(string $evt, $listener)
     {
@@ -166,7 +167,7 @@ class Events
     /**
      * @param string $evt
      * @param callable $listener
-     * @return Events
+     * @return EventTrait
      */
     public function on(string $evt, callable $listener)
     {
@@ -174,9 +175,9 @@ class Events
     }
 
     /**
-     * @param $evt
-     * @param $listener
-     * @return Events
+     * @param string $evt
+     * @param callable $listener
+     * @return EventTrait
      */
     public function add_once_listener(string $evt, callable $listener)
     {
@@ -187,9 +188,9 @@ class Events
     }
 
     /**
-     * @param $evt
-     * @param $listener
-     * @return Events
+     * @param string $evt
+     * @param callable $listener
+     * @return EventTrait
      */
     public function once(string $evt, callable $listener)
     {
@@ -198,7 +199,7 @@ class Events
 
     /**
      * @param string $event
-     * @return Events
+     * @return EventTrait
      */
     public function define_event(string $event)
     {
@@ -207,8 +208,8 @@ class Events
     }
 
     /**
-     * @param $evts
-     * @return Events
+     * @param array $evts
+     * @return EventTrait
      */
     public function define_events(array $evts)
     {
@@ -220,9 +221,9 @@ class Events
     }
 
     /**
-     * @param $evt
-     * @param $listener
-     * @return Events
+     * @param string $evt
+     * @param callable $listener
+     * @return EventTrait
      */
     public function remove_listener(string $evt, callable $listener)
     {
@@ -243,7 +244,7 @@ class Events
     /**
      * @param string $evt
      * @param callable $listener
-     * @return Events
+     * @return EventTrait
      */
     public function off(string $evt, callable $listener)
     {
@@ -253,7 +254,7 @@ class Events
     /**
      * @param $evt
      * @param array $listeners
-     * @return Events
+     * @return EventTrait
      */
     public function add_listeners($evt, array $listeners = [])
     {
@@ -263,7 +264,7 @@ class Events
     /**
      * @param $evt
      * @param array $listeners
-     * @return Events
+     * @return EventTrait
      */
     public function remove_listeners($evt, array $listeners = [])
     {
@@ -274,7 +275,7 @@ class Events
      * @param bool $remove
      * @param $evt
      * @param array $listeners
-     * @return Events
+     * @return EventTrait
      */
     public function manipulate_listeners(bool $remove, $evt, array $listeners = [])
     {
@@ -334,7 +335,7 @@ class Events
 
     /**
      * @param string $evt
-     * @return Events
+     * @return EventTrait
      */
     public function remove_all_listeners(string $evt)
     {
@@ -344,7 +345,7 @@ class Events
     /**
      * @param string $evt
      * @param array $args
-     * @return Events
+     * @return EventTrait
      */
     public function emit_event(string $evt, $args = [])
     {
@@ -376,7 +377,7 @@ class Events
     /**
      * @param string $evt
      * @param array $args
-     * @return Events
+     * @return EventTrait
      */
     public function trigger(string $evt, array $args = [])
     {
@@ -385,7 +386,7 @@ class Events
 
     /**
      * @param string $evt
-     * @return Events
+     * @return EventTrait
      */
     public function emit(string $evt)
     {
@@ -402,6 +403,5 @@ class Events
         $this->once_return_value = $value;
         return $this;
     }
-
 
 }

@@ -8,6 +8,11 @@ use Press\Utils\Mime\MimeTypes;
 use Swoole\Http\Response as SResponse;
 
 
+/**
+ * @param $type
+ * @param $charset
+ * @return mixed|string
+ */
 function set_charset($type, $charset)
 {
     if (!$type || !$charset) {
@@ -25,12 +30,16 @@ function set_charset($type, $charset)
 }
 
 
+/**
+ * Class Response
+ * @package Press
+ */
 class Response extends SResponse
 {
     public $headers;
     private $status_code;
-    private $req;
-    private $app;
+    private $req = null;
+    private $app = null;
 
     public function __construct()
     {
@@ -71,12 +80,14 @@ class Response extends SResponse
 
     /**
      * set http status code
-     * @param $code
+     * @param {string|number} $code
+     * @return Response
      */
     public function status($code)
     {
         parent::status($code);
         $this->status_code = $code;
+        return $this;
     }
 
     /**
@@ -119,6 +130,10 @@ class Response extends SResponse
     }
 
 
+    /**
+     * @param string $body
+     * @return $this
+     */
     public function send($body = '')
     {
         //settings
@@ -147,19 +162,24 @@ class Response extends SResponse
         }
 
         // determine if ETag should be generated
-        $etag_fn = $app->get('etag fn');
+        if ($app) {
+            $etag_fn = $app->get('etag fn');
+        } else {
+            $etag_fn = null;
+        }
+
         $generate_etag = !$this->get('ETag') && is_callable($etag_fn);
 
         $this->set('Content-Length', strlen($body));
 
         // populate ETag
-        if ($generate_etag) {
+        if ($generate_etag && is_callable($etag_fn)) {
             $etag = $etag_fn($body, $encoding);
             $this->set('Content-Length', $etag);
         }
 
         // freshness
-        if ($req->fresh) {
+        if ($req && $req->fresh) {
             $this->status_code = 304;
         }
 
@@ -172,7 +192,7 @@ class Response extends SResponse
             $chunk = '';
         }
 
-        if ($req->method === 'HEAD') {
+        if ($req && $req->method === 'HEAD') {
             // skip body for HEAD
             $this->end();
         } else {
@@ -197,9 +217,22 @@ class Response extends SResponse
         return $this->send($body);
     }
 
+    /**
+     * @param $status_code
+     */
     public function send_status($status_code)
     {
         //TODO: need to send status code
+    }
+
+    /**
+     * @param $path
+     * @return $this
+     */
+    public function send_file($path)
+    {
+        parent::sendfile($path);
+        return $this;
     }
 
 

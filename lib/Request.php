@@ -12,6 +12,10 @@ use Press\Utils\Fresh;
 use Press\Utils\ProxyAddr;
 
 
+/**
+ * Class Request
+ * @package Press
+ */
 class Request extends SRequest
 {
     public $headers;
@@ -258,6 +262,9 @@ class Request extends SRequest
         return ProxyAddr::proxyaddr($this, $trust);
     }
 
+    /**
+     * @return mixed
+     */
     private function get_ips()
     {
         $trust = $this->app->get('trust proxy fn');
@@ -266,6 +273,9 @@ class Request extends SRequest
         return array_pop(array_reverse($addrs));
     }
 
+    /**
+     * @return array
+     */
     private function get_subdomains()
     {
         if (!array_key_exists('host', $this->headers)) {
@@ -307,6 +317,9 @@ class Request extends SRequest
         }
     }
 
+    /**
+     * @return bool
+     */
     private function get_fresh()
     {
         $method = $this->server['request_method'];
@@ -327,11 +340,17 @@ class Request extends SRequest
         return false;
     }
 
+    /**
+     * @return bool
+     */
     private function get_stale()
     {
         return !$this->get_fresh();
     }
 
+    /**
+     * @return bool
+     */
     private function get_xhr()
     {
         $val = $this->get('X-Requested-With');
