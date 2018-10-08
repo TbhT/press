@@ -3,8 +3,26 @@ declare(strict_types=1);
 
 namespace Press;
 
+use Press\Utils\ContentType;
 use Press\Utils\Mime\MimeTypes;
 use Swoole\Http\Response as SResponse;
+
+
+function set_charset($type, $charset)
+{
+    if (!$type || !$charset) {
+        return $type;
+    }
+
+    // parse type
+    $parsed = ContentType::parse($type);
+
+    // set charset
+    $parsed['parameters']['charset'] = $charset;
+
+    // format type
+    return ContentType::format($parsed);
+}
 
 
 class Response extends SResponse
@@ -95,17 +113,17 @@ class Response extends SResponse
      * @param string $type
      * @return Response
      */
-    public function contentType(string $type)
+    public function content_type(string $type)
     {
         return $this->type($type);
     }
 
 
-
-    public function send($body)
+    public function send($body = '')
     {
         //settings
         $app = $this->app;
+        $req = $this->req;
 
         switch (gettype($body)) {
             case 'string':
@@ -114,17 +132,74 @@ class Response extends SResponse
                 }
                 break;
             case 'array':
+            case 'object':
                 return $this->json($body);
+            default:
+                throw new \TypeError('invalid body type to send');
         }
 
-        //
+        // write strings in utf-8
+        $encoding = 'utf8';
+        $type = $this->get('Content-Type');
 
+        if (is_string($type)) {
+            $this->set('Content-Type', set_charset($type, 'utf-8'));
+        }
 
+        // determine if ETag should be generated
+        $etag_fn = $app->get('etag fn');
+        $generate_etag = !$this->get('ETag') && is_callable($etag_fn);
+
+        $this->set('Content-Length', strlen($body));
+
+        // populate ETag
+        if ($generate_etag) {
+            $etag = $etag_fn($body, $encoding);
+            $this->set('Content-Length', $etag);
+        }
+
+        // freshness
+        if ($req->fresh) {
+            $this->status_code = 304;
+        }
+
+        // strip irrelevant headers
+        if (204 === $this->status_code || 304 === $this->status_code) {
+            //todo: remove header
+            $this->set('Content-Type', '');
+            $this->set('Content-Length', '');
+            $this->set('Transfer-Encoding', '');
+            $chunk = '';
+        }
+
+        if ($req->method === 'HEAD') {
+            // skip body for HEAD
+            $this->end();
+        } else {
+            $this->end($chunk);
+        }
+
+        return $this;
     }
 
-    public function json()
+    /**
+     * @param $body
+     * @return Response
+     */
+    public function json($body)
     {
+        $body = json_encode($body);
 
+        if (!$this->get('Content-Type')) {
+            $this->set('Content-Type', 'application/json');
+        }
+
+        return $this->send($body);
+    }
+
+    public function send_status($status_code)
+    {
+        //TODO: need to send status code
     }
 
 
