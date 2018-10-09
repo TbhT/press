@@ -162,11 +162,7 @@ class Response extends SResponse
         }
 
         // determine if ETag should be generated
-        if ($app) {
-            $etag_fn = $app->get('etag fn');
-        } else {
-            $etag_fn = null;
-        }
+        $etag_fn = $app ? $app->get('etag fn') : null;
 
         $generate_etag = !$this->get('ETag') && is_callable($etag_fn);
 
