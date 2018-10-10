@@ -19,6 +19,10 @@ class Route
     private $methods = [];
 
 
+    /**
+     * Route constructor.
+     * @param $path
+     */
     public function __construct($path)
     {
         $this->path = $path;
@@ -26,7 +30,11 @@ class Route
     }
 
 
-    private function handles_method(string $method)
+    /**
+     * @param string $method
+     * @return bool
+     */
+    public function handles_method(string $method)
     {
         if ($this->methods['all'] === true) {
             return true;
@@ -40,6 +48,9 @@ class Route
     }
 
 
+    /**
+     * @return array
+     */
     private function options()
     {
         if ($this->methods['get'] && empty($this->methods['head'])) {
@@ -49,7 +60,13 @@ class Route
         return array_keys($this->methods);
     }
 
-    private function dispatch(Request $req,Response $res, callable $done)
+    /**
+     * @param Request $req
+     * @param Response $res
+     * @param callable $done
+     * @return mixed
+     */
+    private function dispatch(Request $req, Response $res, callable $done)
     {
         $index = 0;
 
@@ -97,6 +114,9 @@ class Route
     }
 
 
+    /**
+     * @return Route
+     */
     public function all(): Route
     {
         $handles = func_get_args();
@@ -121,6 +141,11 @@ class Route
     }
 
 
+    /**
+     * @param $name
+     * @param $arguments
+     * @return mixed
+     */
     function __call($name, $arguments)
     {
         if (isset($this->$name)) {

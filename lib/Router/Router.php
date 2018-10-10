@@ -7,6 +7,8 @@ namespace Press\Router;
 
 use Press\Helper\HttpHelper;
 use Press\Helper\ArrayHelper;
+use Press\Request;
+use Press\Response;
 use Press\Router\Route;
 use Press\Router\Layer;
 use Swoole\Timer;
@@ -42,23 +44,24 @@ class Router
     /**
      * @param string $name
      * @param callable $fn
-     * @return $this|void
+     * @return Router
      */
     public function param(string $name, callable $fn)
     {
         if (is_callable($name)) {
             array_push($this->_params, $name);
-            return;
+            return $this;
         }
 
-        $_name = substr($name, 0, 1);
-        if ($_name === ':') {
-            $name = $_name;
+        $sub_name = substr($name, 0, 1);
+        if ($sub_name === ':') {
+            $name = $sub_name;
         }
 
 //        用来自定义 router.param 方法, 只返回一个函数作为param的handle
-        foreach ($this->_params as $key => $customFn) {
-            if ($ret = $fn($name, $customFn)) {
+        foreach ($this->_params as $key => $custom_fn) {
+            $ret = $fn($name, $custom_fn);
+            if ($ret) {
                 $fn = $ret;
             }
         }
@@ -89,10 +92,10 @@ class Router
     }
 
 
-    private function handle(&$req, &$res, &$out)
+    private function handle(Request $req,Response $res, &$out)
     {
         $index = 0;
-        $protohost = self::getProtohost($req->url);
+//        $protohost = self::getProtohost($req->url);
         $removed = '';
         $slashAdded = false;
         $paramCalled = [];
@@ -102,46 +105,21 @@ class Router
 
 //        manage inter-route variables
         $parentParams = &$req->params;
-        $parentUrl = &$req->baseUrl;
-        $done = self::restore($out, $req, 'baseUrl', 'next', 'params');
-
-//       for options requests, responds with a default if nothing else responds
-        if (strtolower($req->method) === 'options') {
-            $done = self::wrap($done, function (& $old, $error) use (&$options, &$res) {
-                if ($error || count($options) === 0) {
-                    return $old($error);
-                }
-
-                self::sendOptionsResponse($res, $options, $old);
-            });
-        }
+//        $parentUrl = &$req->baseUrl;
+//        $done = self::restore($out, $req, 'baseUrl', 'next', 'params');
+        $done = $out;
+//        $req->next = $next;
 
         /**
          * @param $error
          * @return mixed
          */
-        $next = function ($error) use (
+        $next = function ($error = '') use (
             &$slashAdded, &$trim_prefix, &$next, &$index, &$req,
             &$removed, &$protohost, &$done, &$options, &$paramCalled, &$parentParams,
             &$res
         ) {
             $layerError = $error === 'route' ? null : $error;
-
-//          remove added slash
-            if ($slashAdded) {
-                $req->url = substr($req->url, 1);
-                $slashAdded = false;
-            }
-
-//            restore altered $req->url
-            if (count($removed) !== 0) {
-                $req->baseUrl = 0;
-                $_url = substr($req->url, strlen($protohost));
-                $req->url = "{$protohost}{$removed}{$_url}";
-                $removed = '';
-            }
-
-            $_stack_length = count($this->stack);
 
 //            signal to exit router
             if ($layerError === 'router') {
@@ -149,17 +127,20 @@ class Router
                 return;
             }
 
+            $stack_length = count($this->stack);
+
 //            no more matching layer
-            if ($index >= $_stack_length) {
+            if ($index >= $stack_length) {
                 Timer::after(1, function () use ($done, $layerError) {
                     $done($layerError);
                 });
                 return;
             }
 
-            $path = self::getPathName($req);
+            // get pathname of request
+            $path = self::get_path_name($req);
 
-            if ($path === null) {
+            if (empty($path)) {
                 return $done($layerError);
             }
 
@@ -167,9 +148,9 @@ class Router
             $match = false;
             $route = null;
 
-            while ($match !== true && $index < $_stack_length) {
+            while ($match !== true && $index < $stack_length) {
                 $layer = $this->stack[$index++];
-                $match = self::matchLayer($layer, $path);
+                $match = self::match_layer($layer, $path);
                 $route = $layer->route;
 
                 if (is_bool($match)) {
@@ -194,11 +175,11 @@ class Router
                 $has_method = $route->handles_method($method);
 
 //                build up automatic options response
-                if (!$has_method && $method === 'options') {
-                    self::appendMethods($options, $route->options());
-                }
+//                if (!$has_method && $method === 'options') {
+//                    self::appendMethods($options, $route->options());
+//                }
 
-//                dont even bother matching route
+//                don't even bother matching route
                 if (!$has_method && $method !== 'head') {
                     $match = false;
                     continue;
@@ -215,53 +196,16 @@ class Router
                 $req->route = $route;
             }
 
-            $req->params = empty($this->mergeParams) ? self::mergeParams($layer->params, $parentParams) : $layer->params;
-            $layerPath = $layer->path;
+            if ($layerError) {
+                $layer->handle_error($layerError, $req, $res, $next);
+            } else {
+                $layer->handle_request($req, $res, $next);
+            }
 
-//            this should be done for the layer
-            self::process_params($layer, $paramCalled, $req, $res, function ($error) use (
-                $next, $layerError, $req, $res, $route, $layer
-            ) {
-                if ($error) {
-                    return $next($layerError || $error);
-                }
-
-                if ($route) {
-                    return $layer->hanlde_request($req, $res, $next);
-                }
-
-//                trim prefix
-
-                if (strlen($layerPath) !== 0) {
-                    $c = substr($path, strlen($layerPath));
-                    if ($c && $c !== '/' && $c !== '.') return $next($layerError);
-
-//                    trim off the part opf the url that matches the route
-//                    middleware (.use stuff) needs to have the path stripped
-                    $removed = $layerPath;
-                    $req->url = $protohost . substr($req->url, strlen($protohost) + strlen($removed));
-
-//                    ensure leading slash
-                    if (empty($protohost) && substr($req->url, 0, 1) !== '/') {
-                        $req->url = "/{$req->url}";
-                        $slashAdded = true;
-                    }
-
-//                    setup base URL (no trailing slash)
-                    $_url = substr($removed, strlen($removed - 1)) === '/' ? substr($removed, 0, strlen($removed) - 1);
-                    $req->baseUrl = $parentUrl . $_url;
-                }
-
-                if ($layerError) {
-                    $layer->handle_error($layerError, $req, $res, $next);
-                } else {
-                    $layer->handle_request($req, $res, $next);
-                }
-            });
-
-            $next();
+            $next($layerError);
         };
 
+        $next();
     }
 
 
@@ -280,8 +224,22 @@ class Router
 
     }
 
-    private function get_pathname()
+    /**
+     * @param Request $req
+     * @return string
+     */
+    private function get_path_name(Request $req)
     {
+        return $req->server['path_info'];
+    }
 
+    /**
+     * @param \Press\Router\Layer $layer
+     * @param string $path
+     * @return bool
+     */
+    private function match_layer(Layer $layer, string $path)
+    {
+        return $layer->match($path);
     }
 }
