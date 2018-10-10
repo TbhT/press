@@ -23,6 +23,10 @@ class Layer
     private $path;
     private $regexp;
     private $keys = [];
+    /**
+     * @var array
+     */
+    private $options;
 
 
     /**
@@ -34,7 +38,7 @@ class Layer
     {
         $this->handle = $fn;
 //        $this->name = null;   function name
-        if (empty($options['end'])) {
+        if (array_key_exists('end', $options) === false) {
             $options['end'] = false;
         }
         $this->regexp = UrlHelper::pathToRegExp($path, $this->keys, $options);
@@ -62,7 +66,7 @@ class Layer
     public function handle_error($error, $req, $res, callable $next)
     {
         try {
-            $this->handle($error, $req, $res, $next);
+            ($this->handle)($error, $req, $res, $next);
         } catch (Throwable $error) {
             $next($error);
         }
@@ -77,7 +81,7 @@ class Layer
     public function handle_request($req, $res, callable $next)
     {
         try {
-            $this->handle($req, $res, $next);
+            ($this->handle)($req, $res, $next);
         } catch (Throwable $error) {
             $next($error);
         }
@@ -120,6 +124,10 @@ class Layer
     }
 
 
+    /**
+     * @param $val
+     * @return string
+     */
     static private function decode_params($val)
     {
         return urldecode($val);

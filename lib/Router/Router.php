@@ -35,9 +35,10 @@ class Router
      */
     public function __construct($option = [])
     {
-        $this->caseSensitive = $option['caseSensitive'];
-        $this->strict = $option['strict'];
-        $this->mergeParams = $option['mergeParams'];
+        $this->caseSensitive = array_key_exists('caseSensitive', $option) ? $option['caseSensitive'] : false;
+        $this->strict = array_key_exists('strict', $option) ? $option['strict'] : false;
+        $this->mergeParams = array_key_exists('mergeParams', $option) ? $option['mergeParams'] : false;
+        $this->VERDSInit();
     }
 
 
@@ -92,7 +93,12 @@ class Router
     }
 
 
-    private function handle(Request $req,Response $res, &$out)
+    /**
+     * @param Request $req
+     * @param Response $res
+     * @param $out
+     */
+    public function handle(Request $req, Response $res,callable $out)
     {
         $index = 0;
 //        $protohost = self::getProtohost($req->url);
@@ -242,4 +248,34 @@ class Router
     {
         return $layer->match($path);
     }
+
+    private function VERDSInit()
+    {
+        $methods = HttpHelper::methods();
+
+        array_map(function ($method) {
+            $this->$method = function () use ($method) {
+                $handles = func_get_args();
+
+                array_map(function ($handle) use ($method) {
+                    if (is_callable($handle) === false) {
+                        $type = gettype($handle);
+                        throw new \TypeError("Route.{$method} requires a callback function but get a {$type}");
+                    }
+
+                    $layer = new Layer('/', [], $handle);
+
+//                  Layer 动态添加属性
+                    $layer->method = $method;
+
+                    $this->methods[$method] = true;
+                    array_push($this->stack, $layer);
+                }, $handles);
+
+//                链式调用方法
+                return $this;
+            };
+        }, $methods);
+    }
+
 }

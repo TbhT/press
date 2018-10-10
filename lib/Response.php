@@ -50,9 +50,10 @@ class Response extends SResponse
      * set http header info
      * @param $key
      * @param $value
+     * @param null $ucwords
      * @return Response
      */
-    public function header($key, $value)
+    public function header($key, $value, $ucwords = null)
     {
         parent::header($key, $value);
         return $this;
@@ -236,11 +237,11 @@ class Response extends SResponse
     {
 
     }
-
-    public function redirect()
-    {
-
-    }
+//  swoole  有这个方法，但是不兼容
+//    public function redirect()
+//    {
+//
+//    }
 
     public function vary()
     {
