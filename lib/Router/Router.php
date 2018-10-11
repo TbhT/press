@@ -9,8 +9,6 @@ use Press\Helper\HttpHelper;
 use Press\Helper\ArrayHelper;
 use Press\Request;
 use Press\Response;
-use Press\Router\Route;
-use Press\Router\Layer;
 use Swoole\Timer;
 
 
@@ -89,16 +87,54 @@ class Router
     }
 
 
-    public function use(callable $fn)
+    public function use()
     {
-        
+        $offset = 0;
+        $path = '/';
+
+        $args = func_get_args();
+        if (count($args) > 1) {
+            $offset = 1;
+            $path = $args[0];
+        }
+
+        array_splice($args, $offset);
+        $callbacks = ArrayHelper::flattenArray($args);
+
+        if (count($callbacks) === 0) {
+            throw new \TypeError('Router->use() requires a middleware function');
+        }
+
+        foreach ($callbacks as $callback) {
+            if (is_callable($callback) === false) {
+                $type = gettype($callback);
+                throw new \TypeError("Router->use() requires a middleware function but got a {$type}");
+            }
+
+            $layer = new Layer($path, [
+                'sensitive' => $this->caseSensitive,
+                'strict' => false,
+                'end' => false
+            ], $callback);
+
+            $layer->route = null;
+
+            array_push($this->stack, $layer);
+        }
+
+        return $this;
     }
 
 
+    /**
+     * @param string $path
+     * @return \Press\Router\Route
+     */
     public function route(string $path)
     {
-        $route = new Route();
-        $callable = $route->dispach_wrap();
+        $route = new Route($path);
+        $callable = $route->dispatch_wrap();
+
         $layer = new Layer($path, [
             'sensitive' => $this->caseSensitive,
             'strict' => $this->strict,
