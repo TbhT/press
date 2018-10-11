@@ -41,6 +41,14 @@ class Router
         $this->VERDSInit();
     }
 
+    public function __call($name, $arg) 
+    {
+        if (isset($this->$name)) {
+            return call_user_func_array($this->$name, $arguments);
+        } else {
+            throw new \TypeError("{$name} is not supported");
+        }
+    }
 
     /**
      * @param string $name

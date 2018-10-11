@@ -149,6 +149,7 @@ class Route
     function __call($name, $arguments)
     {
         if (isset($this->$name)) {
+            // $callable = $this->$name
             return call_user_func_array($this->$name, $arguments);
         } else {
             throw new \TypeError("{$name} is not supported");
