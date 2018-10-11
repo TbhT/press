@@ -23,9 +23,6 @@ class Layer
     private $path;
     private $regexp;
     private $keys = [];
-    /**
-     * @var array
-     */
     private $options;
 
 

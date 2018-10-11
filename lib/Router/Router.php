@@ -89,15 +89,24 @@ class Router
     }
 
 
-    public function use()
+    public function use(callable $fn)
     {
-
+        
     }
 
 
-    public function route()
+    public function route(string $path)
     {
+        $route = new Route();
+        $callable = $route->dispach_wrap();
+        $layer = new Layer($path, [
+            'sensitive' => $this->caseSensitive,
+            'strict' => $this->strict,
+            'end' => true
+        ], $callable);
 
+        $layer->route = $route;
+        return $route;
     }
 
 

@@ -27,7 +27,7 @@ class Route
     {
         $this->path = $path;
         $this->VERDSInit();
-    }
+    } 
 
 
     /**
@@ -113,6 +113,13 @@ class Route
         $next();
     }
 
+    public function dispatch_wrap()
+    {
+        return function (Request $req, Response $res, callable $next) {
+            $this->dispatch($req, $res, $next);
+        };
+    }
+
 
     /**
      * @return Route
@@ -149,7 +156,6 @@ class Route
     function __call($name, $arguments)
     {
         if (isset($this->$name)) {
-            // $callable = $this->$name
             return call_user_func_array($this->$name, $arguments);
         } else {
             throw new \TypeError("{$name} is not supported");
