@@ -5,7 +5,7 @@ namespace Press\Utils\Status;
 
 class Code
 {
-    public $code = [
+    const CODE = [
         '100' => 'Continue',
         '101' => 'Switching Protocols',
         '102' => 'Processing',
@@ -54,6 +54,45 @@ class Code
         '425' => 'Unordered Collection',
         '426' => 'Upgrade Required',
         '428' => 'Precondition Required',
-        '429' => ''
+        '429' => 'Too Many Requests',
+        '431' => 'Request Header Fields Too Large',
+        '451' => 'Unavailable For Legal Reasons',
+        '500' => 'Internal Server Error',
+        '501' => 'Not Implemented',
+        '502' => 'Bad Gateway',
+        '503' => 'Service Unavailable',
+        '504' => 'Gateway Timeout',
+        '505' => 'HTTP Version Not Supported',
+        '506' => 'Variant Also Negotiates',
+        '507' => 'Insufficient Storage',
+        '508' => 'Loop Detected',
+        '509' => 'Bandwidth Limit Exceeded',
+        '510' => 'Not Extended',
+        '511' => 'Network Authentication Required'
+    ];
+
+    // status for redirects
+    const REDIRECT = [
+        300 => true,
+        301 => true,
+        302 => true,
+        303 => true,
+        305 => true,
+        307 => true,
+        308 => true
+    ];
+
+    // status for empty bodies
+    const EMPTY = [
+        204 => true,
+        205 => true,
+        304 => true
+    ];
+
+    // status code for when you should retry the request
+    const RETRY = [
+        502 => true,
+        503 => true,
+        504 => true
     ];
 }
