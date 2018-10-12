@@ -96,11 +96,20 @@ class Vary
         return $list;
     }
 
+
+    /**
+     * @param Response $res
+     * @param $field
+     */
     public function vary(Response $res, $field)
     {
         // get existing header
         $val = (string)$res->get('Vary');
-        $header = is_array($val);
+        $header = is_array($val) ? join($val, ', ') : (string)$val;
+
+        if ($val = self::append($header, $field)) {
+            $res->set('Vary', $val);
+        }
     }
 
 
