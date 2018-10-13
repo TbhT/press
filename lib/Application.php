@@ -14,11 +14,8 @@ trait Application
     use Events\EventTrait;
 
     private $router;
-
-    public function __construct()
-    {
-        $this->VERDSInit();
-    }
+    public $request;
+    public $response;
 
     private function init()
     {
@@ -90,7 +87,7 @@ trait Application
 
     }
 
-    private function VERDSInit()
+    public function VERDSInit()
     {
         $methods = HttpHelper::methods();
 
@@ -129,8 +126,11 @@ trait Application
         $args = func_get_args();
         $host = array_key_exists('host', $args) ? $args['host'] : '0.0.0.0';
         $port = array_key_exists('port', $args) ? $args['port'] : 8888;
+        $callback = array_key_exists('callback', $args) ? $args['callback'] : function () {
+        };
         $server = new \swoole_http_server($host, $port, SWOOLE_BASE);
         $server->listen($host, $port, SWOOLE_SOCK_TCP);
+        $server->on('request', $callback);
 
         return $this;
     }
