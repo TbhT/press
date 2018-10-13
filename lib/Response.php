@@ -299,7 +299,7 @@ class Response extends SResponse
      * @param $location
      * @param $http_code
      */
-    public function redirect($location, $http_code)
+    public function redirect($location, $http_code = null)
     {
         parent::redirect($location, $http_code);
     }

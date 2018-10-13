@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Press;
 
+use Press\Helper\HttpHelper;
 use Press\Response;
 use Press\Request;
 use Press\Utils\Events;
@@ -124,13 +125,17 @@ trait Application
     public function listen()
     {
         $args = func_get_args();
-        $host = array_key_exists('host', $args) ? $args['host'] : '0.0.0.0';
-        $port = array_key_exists('port', $args) ? $args['port'] : 8888;
-        $callback = array_key_exists('callback', $args) ? $args['callback'] : function () {
-        };
+        $host = array_key_exists('host', $args) ? $args[0] : '0.0.0.0';
+        $port = array_key_exists('port', $args) ? $args[1] : 8080;
+
+        if (is_callable($args[0])) {
+            $callback = $args[0];
+        } else {
+            $callback = array_key_exists('callback', $args) ? $args['callback'] : $args[2];
+        }
         $server = new \swoole_http_server($host, $port, SWOOLE_BASE);
-        $server->listen($host, $port, SWOOLE_SOCK_TCP);
         $server->on('request', $callback);
+        $server->start();
 
         return $this;
     }
