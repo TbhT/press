@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Press\Utils;
 
@@ -101,7 +102,7 @@ class Vary
      * @param Response $res
      * @param $field
      */
-    public function vary(Response $res, $field)
+    public static function vary(Response $res, $field)
     {
         // get existing header
         $val = (string)$res->get('Vary');

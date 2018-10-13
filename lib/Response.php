@@ -5,7 +5,12 @@ namespace Press;
 
 use Press\Utils\ContentType;
 use Press\Utils\Mime\MimeTypes;
+use Press\Utils\Status;
+use Press\Utils\Vary;
 use Swoole\Http\Response as SResponse;
+
+
+const CHARSET_REGEXP = '/;\s*charset\s*=/';
 
 
 /**
@@ -216,10 +221,16 @@ class Response extends SResponse
 
     /**
      * @param $status_code
+     * @return Response
      */
     public function send_status($status_code)
     {
-        //TODO: need to send status code
+        $body = Status\Status::status($status_code);
+
+        $this->status_code = $status_code;
+        $this->type('txt');
+
+        return $this->send($body);
     }
 
     /**
@@ -232,20 +243,70 @@ class Response extends SResponse
         return $this;
     }
 
+    /**
+     * Append additional header `field` with value `val`.
+     *
+     * Example:
+     *    res.append('Set-Cookie', 'foo=bar; Path=/; HttpOnly');
+     *    res.append('Warning', '199 Miscellaneous warning');
+     * @param $field
+     * @param $val
+     * @return Response
+     */
+    public function append($field, $val)
+    {
+        $prev = $this->get($field);
+        $value = $prev;
 
-    public function location()
+        if ($prev) {
+            $value = "{$prev}{$val}";
+        }
+
+        $this->set($field, $value);
+        return $this;
+    }
+
+
+    /**
+     * @param string $url
+     * @return Response
+     */
+    public function location(string $url)
+    {
+        $loc = $url;
+
+        if ($url === 'back') {
+            $loc = $this->req->get('Referrer');
+            $loc = !$loc ? '/' : $loc;
+        }
+
+        return $this->set('Location', urlencode($loc));
+    }
+
+    public function clear_cookie()
     {
 
     }
-//  swoole  有这个方法，但是不兼容
-//    public function redirect()
-//    {
-//
-//    }
 
-    public function vary()
+    /**
+     * @param $location
+     * @param $http_code
+     */
+    public function redirect($location, $http_code)
     {
+        parent::redirect($location, $http_code);
+    }
 
+    /**
+     * Add `field` to Vary. If already present in the Vary set, then
+     * this call is simply ignored.
+     * @param $field
+     * @return Response
+     */
+    public function vary($field)
+    {
+        Vary::vary($this, $field);
+        return $this;
     }
 
     public function render()
