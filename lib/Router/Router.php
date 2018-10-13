@@ -39,10 +39,15 @@ class Router
         $this->VERDSInit();
     }
 
-    public function __call($name, $arg) 
+    /**
+     * @param $name
+     * @param $arg
+     * @return mixed
+     */
+    public function __call($name, $arg)
     {
         if (isset($this->$name)) {
-            return call_user_func_array($this->$name, $arguments);
+            return call_user_func_array($this->$name, $arg);
         } else {
             throw new \TypeError("{$name} is not supported");
         }
@@ -98,7 +103,7 @@ class Router
             $path = $args[0];
         }
 
-        array_splice($args, $offset);
+        $args = array_slice($args, $offset);
         $callbacks = ArrayHelper::flattenArray($args);
 
         if (count($callbacks) === 0) {

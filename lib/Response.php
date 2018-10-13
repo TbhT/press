@@ -43,8 +43,8 @@ class Response extends SResponse
 {
     public $headers;
     private $status_code;
-    private $req = null;
-    private $app = null;
+    public $req = null;
+    public $app = null;
 
     public function __construct()
     {
@@ -168,6 +168,9 @@ class Response extends SResponse
         }
 
         // determine if ETag should be generated
+        if (!$this->app instanceof Application) {
+            throw new \Error('$this->app property must be a instance of class Press\Application');
+        }
         $etag_fn = $app ? $app->get('etag fn') : null;
 
         $generate_etag = !$this->get('ETag') && is_callable($etag_fn);
@@ -180,8 +183,12 @@ class Response extends SResponse
             $this->set('Content-Length', $etag);
         }
 
+        if (!($this->req instanceof Request)) {
+            throw new \Error('$this->req must be a instance of class Press\Request');
+        }
+
         // freshness
-        if ($req && $req->fresh) {
+        if ($req->fresh) {
             $this->status_code = 304;
         }
 
@@ -194,7 +201,7 @@ class Response extends SResponse
             $chunk = '';
         }
 
-        if ($req && $req->method === 'HEAD') {
+        if ($req->method === 'HEAD') {
             // skip body for HEAD
             $this->end();
         } else {
