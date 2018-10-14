@@ -6,7 +6,11 @@ namespace Press;
 use Press\Helper\HttpHelper;
 use Press\Response;
 use Press\Request;
+use Press\Router;
+use Press\View;
+use Press\Middleware;
 use Press\Utils\Events;
+use Press\Utils\Utils;
 
 
 trait Application
@@ -14,28 +18,85 @@ trait Application
     // implement multi extends
     use Events\EventTrait;
 
-    private $router;
+    private $router = null;
+    private $cache = [];
+    private $engines = [];
+    private $settings = [];
+    private $locals = [];
+    private $mountpath = '/';
+
+    public $views_path;
     public $request;
     public $response;
 
-    private function init()
+    public function __construct($views_path = '')
     {
-
+        $this->views_path = $views_path;
+        $this->default_configuration();
     }
 
     private function default_configuration()
     {
+        $env = defined('PRESS_DEBUG') ? PRESS_DEBUG : 'development';
+
+        // default setting
+        $this->enable('x-power-by');
+        $this->set('etag', 'weak');
+        $this->set('env', $env);
+        $this->set('query parser', 'extended');
+        $this->set('subdomain', 2);
+        $this->set('trust proxy', false);
+
+        $this->on('mount', function () {
+
+        });
+
+        // default locals
+        $this->locals['settings'] = $this->settings;
+
+        // default configuration
+        $this->set('view');
+        $this->set('views', $this->views_path);
+
+        if ($env === 'production') {
+            $this->enable('view cache');
+        }
+
 
     }
 
     private function lazy_router()
     {
+        if (!$this->router) {
+            $this->router = new Router\Router([
+                'caseSensitive' => $this->enabled('case sensitive routing'),
+                'strict' => $this->enabled('strict routing')
+            ]);
 
+            //todo: query fn
+            $this->router->use(Middleware::query($this->get('query parser fn')));
+            $this->router->use(Middleware::init($this));
+        }
     }
 
-    private function handle()
+    /**
+     * @param \Press\Request $req
+     * @param \Press\Response $res
+     * @param callable $callback
+     */
+    public function handle(Request $req, Response $res, callable $callback)
     {
+        //final handler todo: need to change
+        $done = Middleware::final_handler($req, $res, [
+            'env' => $this->get('env')
+        ]);
 
+        if (!$this->router) {
+            $done();
+            return;
+        }
+
+        $this->router->handle($req, $res, $done);
     }
 
     public function use()
@@ -58,34 +119,75 @@ trait Application
 
     }
 
-    public function set()
+    /**
+     * @param string $setting
+     * @param $val
+     * @return null|Application
+     */
+    public function set(string $setting, $val = '')
     {
+        $args = func_get_args();
+        if (count($args) === 1) {
+            return array_key_exists($setting, $this->settings) ? $this->settings[$setting] : null;
+        }
 
+        // set value
+        $this->settings[$setting] = $val;
+
+        switch ($setting) {
+            case 'etag':
+                $this->set('etag fn', Utils::compile_etag($val));
+                break;
+            case 'query parser':
+                $this->set('query parser fn', Utils::compile_query_parser($val));
+                break;
+            case 'trust proxy':
+                $this->set('trust proxy fn', Utils::compile_trust($val));
+                break;
+        }
+
+        return $this;
     }
 
     private function path()
     {
-
+        return isset($this->parent) ? $this->parent->path() . $this->mountpath : '';
     }
 
-    public function enabled()
+    /**
+     * @param string $setting
+     * @return bool
+     */
+    public function enabled(string $setting)
     {
-
+        return boolval($this->set($setting));
     }
 
-    public function disabled()
+    /**
+     * @param string $setting
+     * @return bool
+     */
+    public function disabled(string $setting)
     {
-
+        return !$this->set($setting);
     }
 
-    public function enable()
+    /**
+     * @param string $setting
+     * @return Application
+     */
+    public function enable(string $setting)
     {
-
+        return $this->set($setting, true);
     }
 
-    public function disable()
+    /**
+     * @param string $setting
+     * @return Application
+     */
+    public function disable(string $setting)
     {
-
+        return $this->set($setting, false);
     }
 
     public function VERDSInit()
@@ -109,9 +211,22 @@ trait Application
         }, $methods);
     }
 
-    public function all()
+    /**
+     * @param $path
+     * @return $this
+     */
+    public function all($path)
     {
+        $this->lazy_router();
+        $route = $this->router->route($path);
+        $args = array_slice(func_get_args(), 1);
 
+        $methods = HttpHelper::methods();
+        foreach ($methods as $method) {
+            call_user_func_array([$route, $method], $args);
+        }
+
+        return $this;
     }
 
     public function render()
@@ -120,7 +235,7 @@ trait Application
     }
 
     /**
-     * @return Application
+     * @return \swoole_http_server
      */
     public function listen()
     {
@@ -137,7 +252,7 @@ trait Application
         $server->on('request', $callback);
         $server->start();
 
-        return $this;
+        return $server;
     }
 
 
