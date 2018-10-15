@@ -8,10 +8,10 @@ use Press\Helper\FunctionHelper;
 
 class View
 {
-    private $defaultEngine;
     private $ext;
     private $name;
     private $root;
+    private $path;
 
     /**
      * View constructor.
@@ -20,24 +20,26 @@ class View
      */
     public function __construct(string $name, array $options = [])
     {
-        $this->defaultEngine = array_key_exists('defaultEngine', $options) ? $options['defaultEngine'] : null;
         $this->ext = FunctionHelper::extname($name);
         $this->name = $name;
         $this->root = array_key_exists('root', $options) ? $options['root'] : null;
 
-        if (!$this->root || !$this->defaultEngine) {
-            throw new \TypeError('root or defaultEngine must not be empty');
+        $file_name = $name;
+        if (!$this->ext) {
+            $file_name = "{$name}.php";
         }
 
-
+        $this->path = $this->lookup($file_name);
     }
 
     /**
      * @param string $name
+     * @return string
      */
-    public function lookup(string $name)
+    private function lookup(string $name)
     {
         $roots = array_merge([], $this->root);
+        $path = '';
 
         foreach ($roots as $root) {
             $location = stream_resolve_include_path("{$root}/{$name}");
@@ -50,31 +52,55 @@ class View
         return $path;
     }
 
-    public function render(array $options,callable $callback)
+    /**
+     * @param string $name
+     * @param array $options
+     * @return false|string
+     * @throws \Throwable
+     */
+    public function render(string $name, array $options = [])
     {
-        $this->engine($this->path, $options, $callback);
-    }
-
-    public function resolve(string $dir,string $file)
-    {
-        $path = join('.', [$dir, $file]);
-        $stat =  self::try_stat($path);
-
-        if (!empty($stat) && $stat['']) {
-            //TODO: 
+        $ob_init_level = ob_get_level();
+        ob_start();
+        ob_implicit_flush(false);
+        extract($options, EXTR_OVERWRITE);
+        try {
+            require $name;
+            return ob_get_clean();
+        } catch (\Exception $e) {
+            while (ob_get_level() > $ob_init_level) {
+                if (!@ob_end_clean()) {
+                    ob_clean();
+                }
+            }
+            throw $e;
+        } catch (\Throwable $e) {
+            while (ob_get_level() > $ob_init_level) {
+                if (!@ob_end_clean()) {
+                    ob_clean();
+                }
+            }
+            throw $e;
         }
     }
 
     /**
-     * @param $path
-     * @return array|null
+     * @param string $dir
+     * @param string $file
+     * @return string
      */
-    private static function try_stat($path)
+    private function resolve(string $dir, string $file)
     {
-        try {
-            return stat($path);
-        } catch (\Throwable $e) {
-            return null;
+        $path = join('.', [$dir, $file]);
+        $ext = $this->ext;
+
+        if (is_file($path)) {
+            return $path;
+        }
+
+        $path = join([$dir, basename($file, $ext), "index{$ext}"]);
+        if (is_file($path)) {
+            return $path;
         }
     }
 }

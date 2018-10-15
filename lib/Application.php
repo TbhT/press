@@ -109,11 +109,6 @@ trait Application
 
     }
 
-    public function engine()
-    {
-
-    }
-
     public function param()
     {
 
@@ -229,9 +224,13 @@ trait Application
         return $this;
     }
 
-    public function render()
+    public function render(string $name, array $options = [])
     {
+        $view = new View($name, [
+            'root' => $this->get('views')
+        ]);
 
+        return $view->render($name, $options);
     }
 
     /**
