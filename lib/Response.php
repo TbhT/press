@@ -37,13 +37,13 @@ function set_charset($type, $charset)
 
 /**
  * Class Response
+ * @property Request req
  * @package Press
  */
 class Response extends SResponse
 {
     public $headers;
     private $status_code;
-    public $req = null;
     public $app = null;
 
     public function __construct()

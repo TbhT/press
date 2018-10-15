@@ -14,6 +14,8 @@ use Press\Utils\ProxyAddr;
 
 /**
  * Class Request
+ * @property Response res
+ * @property callable next
  * @package Press
  */
 class Request extends SRequest

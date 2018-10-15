@@ -13,7 +13,13 @@ class Press
         $this->VERDSInit();
         $this->request = new Request();
         $this->response = new Response();
-        $this->init();
+    }
+
+    public function press()
+    {
+        return function (Request $req, Response $res, $next = null) {
+            $this->handle($req, $res, $next);
+        };
     }
 
 }

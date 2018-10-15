@@ -31,7 +31,7 @@ class Router
      * Router constructor.
      * @param array $option
      */
-    public function __construct($option = [])
+    public function __construct(array $option)
     {
         $this->caseSensitive = array_key_exists('caseSensitive', $option) ? $option['caseSensitive'] : false;
         $this->strict = array_key_exists('strict', $option) ? $option['strict'] : false;
