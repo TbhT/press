@@ -5,7 +5,15 @@ require_once './vendor/autoload.php';
 
 use Press\Press;
 
-$app = new Press();
-$app->listen(function ($req, $res) {
-    echo '-------------------';
-});
+try {
+    $app = new Press();
+//$app->listen(function ($req, $res) {
+//    echo '-------------------';
+//});
+
+    $output = $app->render('hello.php');
+
+    echo $output;
+} catch (Throwable $e) {
+    var_dump($e);
+}

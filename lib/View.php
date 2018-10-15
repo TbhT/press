@@ -53,19 +53,18 @@ class View
     }
 
     /**
-     * @param string $name
      * @param array $options
      * @return false|string
      * @throws \Throwable
      */
-    public function render(string $name, array $options = [])
+    public function render(array $options = [])
     {
         $ob_init_level = ob_get_level();
         ob_start();
         ob_implicit_flush(false);
         extract($options, EXTR_OVERWRITE);
         try {
-            require $name;
+            require $this->path;
             return ob_get_clean();
         } catch (\Exception $e) {
             while (ob_get_level() > $ob_init_level) {

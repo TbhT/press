@@ -35,6 +35,15 @@ trait Application
         $this->default_configuration();
     }
 
+    public function __call($name, $arguments)
+    {
+        if (isset($this->$name)) {
+            return call_user_func_array($this->$name, $arguments);
+        } else {
+            throw new \TypeError("{$name} is not supported");
+        }
+    }
+
     private function default_configuration()
     {
         $env = defined('PRESS_DEBUG') ? PRESS_DEBUG : 'development';
@@ -230,7 +239,7 @@ trait Application
             'root' => $this->get('views')
         ]);
 
-        return $view->render($name, $options);
+        return $view->render($options);
     }
 
     /**
