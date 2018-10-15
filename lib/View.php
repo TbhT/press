@@ -8,21 +8,34 @@ use Press\Helper\FunctionHelper;
 
 class View
 {
-    public function __construct(string $name,array $options = [])
+    private $defaultEngine;
+    private $ext;
+    private $name;
+    private $root;
+
+    /**
+     * View constructor.
+     * @param string $name
+     * @param array $options
+     */
+    public function __construct(string $name, array $options = [])
     {
-        $this->default_engine = array_key_exists('defaultEngine', $options) ? $options['defaultEngine'] : null;
+        $this->defaultEngine = array_key_exists('defaultEngine', $options) ? $options['defaultEngine'] : null;
         $this->ext = FunctionHelper::extname($name);
         $this->name = $name;
         $this->root = array_key_exists('root', $options) ? $options['root'] : null;
 
-        if (!$this->root || !$this->default_engine) {
+        if (!$this->root || !$this->defaultEngine) {
             throw new \TypeError('root or defaultEngine must not be empty');
         }
 
 
     }
 
-    public function loopup(string $name)
+    /**
+     * @param string $name
+     */
+    public function lookup(string $name)
     {
         $roots = array_merge([], $this->root);
 
@@ -52,11 +65,15 @@ class View
         }
     }
 
+    /**
+     * @param $path
+     * @return array|null
+     */
     private static function try_stat($path)
     {
         try {
             return stat($path);
-        } catch (Throwable $e) {
+        } catch (\Throwable $e) {
             return null;
         }
     }
