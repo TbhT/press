@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Press;
 
+use Press\Helper\ArrayHelper;
 use Press\Helper\HttpHelper;
 use Press\Response;
 use Press\Request;
@@ -29,7 +30,7 @@ trait Application
     public $request;
     public $response;
 
-    public function __construct($views_path = '')
+    public function  __construct($views_path = '')
     {
         $this->views_path = $views_path;
         $this->default_configuration();
@@ -99,8 +100,25 @@ trait Application
         $this->router->handle($req, $res, $done);
     }
 
-    public function use()
+    public function use($fn)
     {
+        $offset = 0;
+        $path = '/';
+
+        $args = func_get_args();
+        if (count($args) > 1) {
+            $offset = 1;
+            $path = $args[0];
+        }
+
+        $args = array_slice($args, $offset);
+        $callbacks = ArrayHelper::flattenArray($args);
+
+        if (count($callbacks) === 0) {
+            throw new \TypeError('Router->use() requires a middleware function');
+        }
+
+
 
     }
 
