@@ -22,7 +22,7 @@ const FILED_NAME_REGEXP = '/^[!#$%&\'*+\-.^_`|~0-9A-Za-z]+$]/';
 class Vary
 {
 
-    private function append(string $header, $field)
+    private static function append(string $header, $field)
     {
         $fields = !is_array($field) ? self::parse($field) : $field;
 
@@ -107,8 +107,9 @@ class Vary
         // get existing header
         $val = (string)$res->get('Vary');
         $header = is_array($val) ? join($val, ', ') : (string)$val;
+        $val = self::append($header, $field);
 
-        if ($val = self::append($header, $field)) {
+        if ($val) {
             $res->set('Vary', $val);
         }
     }
