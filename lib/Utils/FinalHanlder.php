@@ -5,6 +5,7 @@ namespace Press\Utils;
 
 use Press\Request;
 use Press\Response;
+use Swoole\Timer;
 
 class FinalHanlder
 {
@@ -33,7 +34,7 @@ class FinalHanlder
         $env = array_key_exists('env', $options) ? $options['env'] : 'development';
         $onError = $options['onerror'];
 
-        return function ($error) use ($req, $res, &$options) {
+        return function ($error) use ($req, $res, &$options, $onError) {
             if (!$error && $res->headers) {
                 return;
             }
@@ -49,11 +50,15 @@ class FinalHanlder
                 $msg = $error->getMessage();
             } else {
                 $status = 404;
-                $url = $req->headers['pathname'];
+                $url = urlencode($req->headers['pathname']);
                 $msg = "can not {$req->method} ";
             }
 
-
+            if ($error && $onError) {
+                Timer::after(1, function () use ($onError, $error, $req, $res) {
+                    $onError($req, $res, $error);
+                });
+            }
         };
     }
 }
