@@ -3,6 +3,8 @@
 namespace Press;
 
 
+use Press\Utils\FinalHanlder;
+
 class Middleware
 {
     /**
@@ -42,7 +44,7 @@ class Middleware
     public static function final_handler(Request $req, Response $res, array $option)
     {
         return function () use ($req, $res, $option) {
-
+            FinalHanlder::final_handler($req, $res, $option);
         };
     }
 }

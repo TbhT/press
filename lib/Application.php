@@ -85,12 +85,16 @@ trait Application
      * @param \Press\Response $res
      * @param callable $callback
      */
-    public function handle(Request $req, Response $res, callable $callback)
+    public function handle(Request $req, Response $res, $callback = null)
     {
         //final handler todo: need to change
-        $done = Middleware::final_handler($req, $res, [
-            'env' => $this->get('env')
-        ]);
+        if (!$callback) {
+            $done = Middleware::final_handler($req, $res, [
+                'env' => $this->get('env')
+            ]);
+        } else {
+            $done = $callback;
+        }
 
         if (!$this->router) {
             $done();
