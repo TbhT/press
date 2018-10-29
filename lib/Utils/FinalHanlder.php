@@ -5,6 +5,7 @@ namespace Press\Utils;
 
 use Press\Request;
 use Press\Response;
+use Press\Utils\Status\Status;
 use Swoole\Timer;
 
 class FinalHanlder
@@ -45,20 +46,46 @@ class FinalHanlder
                 $status = $error->getCode();
 
                 $statusCode = $res->statusCode;
-                $statusCode = !$statusCode ? 500 : $statusCode;
+                $status = !!$status ? 500 : $statusCode;
 
                 $msg = $error->getMessage();
             } else {
                 $status = 404;
                 $url = urlencode($req->headers['pathname']);
-                $msg = "can not {$req->method} ";
+                $msg = "can not {$req->method} {$url}";
             }
 
             if ($error && $onError) {
                 Timer::after(1, function () use ($onError, $error, $req, $res) {
                     $onError($req, $res, $error);
                 });
+                return;
             }
+
+            self::send($req, $res, $status, [], $msg);
         };
+    }
+
+    private static function send(Request $req, Response $res, $status, array $headers, $message)
+    {
+        $body = self::create_html_document($message);
+        $res->statusCode = $status;
+        $res->statusMessage = Status::status($status);
+
+        foreach ($headers as $key => $header) {
+            $res->set($key, $header);
+        }
+
+        $res->set('Content-Security-Policy', "default-src 'self'");
+        $res->set('X-Content-Type-Options', 'nosniff');
+
+        $res->set('Content-Type', 'text/html; charset=utf-8');
+        $res->set('Content-Length', strlen($body));
+
+        if ($req->method === 'HEAD') {
+            return $res->end();
+        }
+
+        $res->end($body);
     }
 }

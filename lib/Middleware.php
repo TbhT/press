@@ -41,7 +41,7 @@ class Middleware
      */
     public static function final_handler(Request $req, Response $res, array $option)
     {
-        return function () {
+        return function () use ($req, $res, $option) {
 
         };
     }
