@@ -8,8 +8,13 @@ use Press\Response;
 use Press\Utils\Status\Status;
 use Swoole\Timer;
 
+
 class FinalHanlder
 {
+    /**
+     * @param string $message
+     * @return string
+     */
     public static function create_html_document(string $message)
     {
         $message = htmlspecialchars($message);
