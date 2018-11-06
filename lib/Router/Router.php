@@ -168,6 +168,7 @@ class Router
         $options = [];
 
 //        manage inter-route variables
+        /** @var Request $req */
         $parentParams = &$req->params;
 //        $parentUrl = &$req->baseUrl;
 //        $done = self::restore($out, $req, 'baseUrl', 'next', 'params');
@@ -235,7 +236,9 @@ class Router
                     continue;
                 }
 
+                /** @var Request $req */
                 $method = $req->method;
+                /** @var Route $route */
                 $has_method = $route->handles_method($method);
 
 //                build up automatic options response
@@ -257,12 +260,15 @@ class Router
 
 //            store route for dispatch on change
             if ($route) {
+                /** @var Request $req */
                 $req->route = $route;
             }
 
             if ($layerError) {
+                /** @var Layer $layer */
                 $layer->handle_error($layerError, $req, $res, $next);
             } else {
+                /** @var Layer $layer */
                 $layer->handle_request($req, $res, $next);
             }
 

@@ -16,6 +16,7 @@ use Press\Utils\ProxyAddr;
  * Class Request
  * @property Response res
  * @property callable next
+ * @property Application app
  * @package Press
  */
 class Request extends SRequest
@@ -24,7 +25,6 @@ class Request extends SRequest
     public $params = [];
     public $query = [];
     public $body = [];
-    public $app = null;
     private $property_array = [
         'protocol', 'secure', 'ip', 'ips', 'subdomains', 'path',
         'hostname', 'fresh', 'stale', 'xhr'
