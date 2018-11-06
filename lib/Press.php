@@ -2,6 +2,8 @@
 declare(strict_types=1);
 
 namespace Press;
+use Swoole\Http\Request as Req;
+use Swoole\Http\Response as Res;
 
 
 class Press
@@ -17,7 +19,7 @@ class Press
 
     public function press()
     {
-        return function (Request $req, Response $res, $next = null) {
+        return function (Req $req, Res $res, $next = null) {
             $this->handle($req, $res, $next);
         };
     }
