@@ -5,18 +5,40 @@ namespace Press\Utils;
 
 class Utils
 {
+    /**
+     * @param $val
+     * @return string
+     */
     public static function compile_etag($val)
     {
-
+        return md5($val);
     }
 
-    public static function compile_query_parser()
+    /**
+     * @param $val
+     * @return \Closure
+     */
+    public static function compile_query_parser($val)
     {
+        if (is_callable($val)) {
+            return $val;
+        }
 
+        return function ($str) {
+            parse_url($str);
+        };
     }
 
-    public static function compile_trust()
+    /**
+     * @param $val
+     * @return \Closure
+     */
+    public static function compile_trust($val)
     {
+        if (is_callable($val)) {
+            return $val;
+        }
 
+        return ProxyAddr::compile($val);
     }
 }
