@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Press\Utils;
 
 
-use Press\Request;
+use Swoole\Http\Request;
 
 class Forwarded
 {
@@ -50,7 +50,7 @@ class Forwarded
 
     public static function forwarded(Request $req)
     {
-        $header = array_key_exists('x-forwarded-for', $req->headers) ? $req->headers['x-forwarded-for'] : '';
+        $header = array_key_exists('x-forwarded-for', $req->header) ? $req->header['x-forwarded-for'] : '';
         $proxy_addr = self::parse($header);
         $socket_addr = $req->server['remote_addr'];
 
