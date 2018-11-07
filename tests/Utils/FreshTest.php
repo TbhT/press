@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-use Press\Request;
-use Press\Response;
+use Swoole\Http\Request;
+use Swoole\Http\Response;
 use Press\Utils\Fresh;
 use PHPUnit\Framework\TestCase;
 
@@ -13,10 +13,10 @@ class FreshTest extends TestCase
     {
         $req = new Request();
         $res = new Response();
-        $req->headers = [];
-        $res->headers = [];
+        $req->header = [];
+        $res->header = [];
 
-        self::assertEquals(false, Fresh::fresh($req->headers, $res->headers));
+        self::assertEquals(false, Fresh::fresh($req->header, $res->header));
     }
 
 
