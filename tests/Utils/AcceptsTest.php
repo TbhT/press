@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 use Press\Utils\Accepts;
-use Press\Request;
+use Swoole\Http\Request;
 use PHPUnit\Framework\TestCase;
 
 
@@ -11,7 +11,7 @@ class AcceptsTest extends TestCase
     private static function createRequestCharset($charset = null)
     {
         $req = new Request();
-        $req->headers = [
+        $req->header = [
             'accept-charset' => $charset
         ];
 
@@ -21,7 +21,7 @@ class AcceptsTest extends TestCase
     private static function createRequestEncoding($encoding = null)
     {
         $req = new Request();
-        $req->headers = [
+        $req->header = [
             'accept-encoding' => $encoding
         ];
 
@@ -31,7 +31,7 @@ class AcceptsTest extends TestCase
     private static function createRequestLanguage($language = null)
     {
         $req = new Request();
-        $req->headers = [
+        $req->header = [
             'accept-language' => $language
         ];
 
@@ -41,7 +41,7 @@ class AcceptsTest extends TestCase
     private static function createRequestType($type = null)
     {
         $req = new Request();
-        $req->headers = [
+        $req->header = [
             'accept' => $type
         ];
 
