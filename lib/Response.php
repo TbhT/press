@@ -7,7 +7,6 @@ use Press\Utils\ContentType;
 use Press\Utils\Mime\MimeTypes;
 use Press\Utils\Status;
 use Press\Utils\Vary;
-use Swoole\Http\Response as SResponse;
 
 
 const CHARSET_REGEXP = '/;\s*charset\s*=/';
@@ -38,216 +37,214 @@ function set_charset($type, $charset)
 /**
  * Class Response
  * @property Request req
+ * @property Application app
  * @package Press
  */
-class Response extends SResponse
+class Response
 {
-    public $headers;
     private $status_code;
-    public $app = null;
+    private $headers;
+    private $res;
 
-    public function __construct()
+    public function __construct(\Swoole\Http\Response $res)
     {
-        $this->headers = $this->header;
+        $this->res = $res;
     }
 
     /**
-     * set http header info
-     * @param $key
-     * @param $value
-     * @param null $ucwords
-     * @return Response
+     * @return \Closure
      */
-    public function header($key, $value, $ucwords = null)
+    public function get()
     {
-        parent::header($key, $value);
-        return $this;
+        return function ($field) {
+//        TODO: 需要确认一下是否有这个响应头选项
+            return array_key_exists($field, $this->headers) ? $this->headers[$field] : null;
+        };
     }
 
     /**
-     * @param $field
-     * @return mixed
+     * @return \Closure
      */
-    public function get($field)
+    public function set()
     {
-        return array_key_exists($field, $this->headers) ? $this->headers[$field] : null;
-    }
-
-    /**
-     * @param $key
-     * @param $value
-     * @return Response
-     */
-    public function set($key, $value)
-    {
-        $this->header($key, $value);
-        return $this;
+        return function ($key, $value) {
+            $this->res->header($key, $value);
+            return $this;
+        };
     }
 
     /**
      * set http status code
-     * @param {string|number} $code
-     * @return Response
+     * @return \Closure
      */
-    public function status($code)
+    public function status_code()
     {
-        parent::status($code);
-        $this->status_code = $code;
-        return $this;
+        return function ($code) {
+            $this->res->status($code);
+            $this->status_code = $code;
+            return $this;
+        };
     }
 
     /**
-     * @param array $links
-     * @return Response
+     * @return \Closure
      */
-    public function links(array $links)
+    public function links()
     {
-        $link = $this->get('Link');
-        $link = !empty($link) ? $link . ', ' : '';
-        $link_result = '';
+        return function (array $links) {
+            $link = $this->get('Link');
+            $link = !empty($link) ? $link . ', ' : '';
+            $link_result = '';
 
-        foreach ($links as $rel => $link) {
-            $link_result .= "<{$link}>; rel=\"{$rel}\", ";
-        }
+            foreach ($links as $rel => $link) {
+                $link_result .= "<{$link}>; rel=\"{$rel}\", ";
+            }
 
-        $link_result = $link . $link_result;
+            $link_result = $link . $link_result;
 
-        return $this->set('Link', $link_result);
+            return $this->set('Link', $link_result);
+        };
     }
 
     /**
-     * @param string $type
-     * @return Response
+     * @return \Closure
      */
-    public function type(string $type)
+    public function type()
     {
-        $ct = MimeTypes::lookup($type);
-        return $this->set('Content-Type', $ct);
+        return function (string $type) {
+            $ct = MimeTypes::lookup($type);
+            return $this->set('Content-Type', $ct);
+        };
     }
 
     /**
      * alias for type() method
-     * @param string $type
-     * @return Response
+     * @return \Closure
      */
-    public function content_type(string $type)
+    public function content_type()
     {
-        return $this->type($type);
+        return function (string $type) {
+            return $this->type($type);
+        };
     }
 
 
     /**
-     * @param string $body
-     * @return $this
+     * @return \Closure
      */
-    public function send($body = '')
+    public function send()
     {
-        //settings
-        $app = $this->app;
-        $req = $this->req;
+        return function ($body = '') {
+            //settings
+            $app = $this->app;
+            $req = $this->req;
 
-        switch (gettype($body)) {
-            case 'string':
-                if (!$this->type($body)) {
-                    $this->type('html');
-                }
-                break;
-            case 'array':
-            case 'object':
-                return $this->json($body);
-            default:
-                throw new \TypeError('invalid body type to send');
-        }
+            switch (gettype($body)) {
+                case 'string':
+                    if (!$this->type($body)) {
+                        $this->type('html');
+                    }
+                    break;
+                case 'array':
+                case 'object':
+                    return $this->json($body);
+                default:
+                    throw new \TypeError('invalid body type to send');
+            }
 
-        // write strings in utf-8
-        $encoding = 'utf8';
-        $type = $this->get('Content-Type');
+            // write strings in utf-8
+            $encoding = 'utf8';
+            $type = $this->get('Content-Type');
 
-        if (is_string($type)) {
-            $this->set('Content-Type', set_charset($type, 'utf-8'));
-        }
+            if (is_string($type)) {
+                $this->set('Content-Type', set_charset($type, 'utf-8'));
+            }
 
-        // determine if ETag should be generated
-        if (!$this->app instanceof Application) {
-            throw new \Error('$this->app property must be a instance of class Press\Application');
-        }
-        $etag_fn = $app ? $app->get('etag fn') : null;
+            // determine if ETag should be generated
+            if (!$this->app instanceof Application) {
+                throw new \Error('$this->app property must be a instance of class Press\Application');
+            }
+            $etag_fn = $app ? $app->get('etag fn') : null;
 
-        $generate_etag = !$this->get('ETag') && is_callable($etag_fn);
+            $generate_etag = !$this->get('ETag') && is_callable($etag_fn);
 
-        $this->set('Content-Length', strlen($body));
+            $this->set('Content-Length', strlen($body));
 
-        // populate ETag
-        if ($generate_etag && is_callable($etag_fn)) {
-            $etag = $etag_fn($body, $encoding);
-            $this->set('Content-Length', $etag);
-        }
+            // populate ETag
+            if ($generate_etag && is_callable($etag_fn)) {
+                $etag = $etag_fn($body, $encoding);
+                $this->set('Content-Length', $etag);
+            }
 
-        if (!($this->req instanceof Request)) {
-            throw new \Error('$this->req must be a instance of class Press\Request');
-        }
+            if (!($this->req instanceof Request)) {
+                throw new \Error('$this->req must be a instance of class Press\Request');
+            }
 
-        // freshness
-        if ($req->fresh) {
-            $this->status_code = 304;
-        }
+            // freshness
+            if ($req->fresh) {
+                $this->status_code = 304;
+            }
 
-        // strip irrelevant headers
-        if (204 === $this->status_code || 304 === $this->status_code) {
-            //todo: remove header
-            $this->set('Content-Type', '');
-            $this->set('Content-Length', '');
-            $this->set('Transfer-Encoding', '');
-            $chunk = '';
-        }
+            // strip irrelevant headers
+            if (204 === $this->status_code || 304 === $this->status_code) {
+                //todo: remove header
+                $this->set('Content-Type', '');
+                $this->set('Content-Length', '');
+                $this->set('Transfer-Encoding', '');
+                $chunk = '';
+            }
 
-        if ($req->method === 'HEAD') {
-            // skip body for HEAD
-            $this->end();
-        } else {
-            $this->end($chunk);
-        }
+            if ($req->method === 'HEAD') {
+                // skip body for HEAD
+                $this->end();
+            } else {
+                $this->end($chunk);
+            }
 
-        return $this;
+            return $this;
+        };
     }
 
     /**
-     * @param $body
-     * @return Response
+     * @return \Closure
      */
-    public function json($body)
+    public function json()
     {
-        $body = json_encode($body);
+        return function ($body) {
+            $body = json_encode($body);
 
-        if (!$this->get('Content-Type')) {
-            $this->set('Content-Type', 'application/json');
-        }
+            if (!$this->get('Content-Type')) {
+                $this->set('Content-Type', 'application/json');
+            }
 
-        return $this->send($body);
+            return $this->send($body);
+        };
     }
 
     /**
-     * @param $status_code
-     * @return Response
+     * @return \Closure
      */
-    public function send_status($status_code)
+    public function send_status()
     {
-        $body = Status\Status::status($status_code);
+        return function ($status_code) {
+            $body = Status\Status::status($status_code);
 
-        $this->status_code = $status_code;
-        $this->type('txt');
+            $this->status_code = $status_code;
+            $this->type('txt');
 
-        return $this->send($body);
+            return $this->send($body);
+        };
     }
 
     /**
-     * @param $path
-     * @return $this
+     * @return \Closure
      */
-    public function send_file($path)
+    public function send_file()
     {
-        parent::sendfile($path);
-        return $this;
+        return function ($path) {
+            $this->res->sendfile($path);
+            return $this;
+        };
     }
 
     /**
@@ -256,38 +253,39 @@ class Response extends SResponse
      * Example:
      *    res.append('Set-Cookie', 'foo=bar; Path=/; HttpOnly');
      *    res.append('Warning', '199 Miscellaneous warning');
-     * @param $field
-     * @param $val
-     * @return Response
+     * @return \Closure
      */
-    public function append($field, $val)
+    public function append()
     {
-        $prev = $this->get($field);
-        $value = $prev;
+        return function ($field, $val) {
+            $prev = $this->get($field);
+            $value = $prev;
 
-        if ($prev) {
-            $value = "{$prev}{$val}";
-        }
+            if ($prev) {
+                $value = "{$prev}{$val}";
+            }
 
-        $this->set($field, $value);
-        return $this;
+            $this->set($field, $value);
+            return $this;
+        };
     }
 
 
     /**
-     * @param string $url
-     * @return Response
+     * @return \Closure
      */
-    public function location(string $url)
+    public function location()
     {
-        $loc = $url;
+        return function (string $url) {
+            $loc = $url;
 
-        if ($url === 'back') {
-            $loc = $this->req->get('Referrer');
-            $loc = !$loc ? '/' : $loc;
-        }
+            if ($url === 'back') {
+                $loc = $this->req->get('Referrer');
+                $loc = !$loc ? '/' : $loc;
+            }
 
-        return $this->set('Location', urlencode($loc));
+            return $this->set('Location', urlencode($loc));
+        };
     }
 
     public function clear_cookie()
@@ -295,25 +293,26 @@ class Response extends SResponse
 
     }
 
-    /**
-     * @param $location
-     * @param $http_code
-     */
-    public function redirect($location, $http_code = null)
-    {
-        parent::redirect($location, $http_code);
-    }
+//    /**
+//     * @param $location
+//     * @param $http_code
+//     */
+//    public function redirect($location, $http_code = null)
+//    {
+//        parent::redirect($location, $http_code);
+//    }
 
     /**
      * Add `field` to Vary. If already present in the Vary set, then
      * this call is simply ignored.
-     * @param $field
-     * @return Response
+     * @return \Closure
      */
-    public function vary($field)
+    public function vary()
     {
-        Vary::vary($this, $field);
-        return $this;
+        return function ($field) {
+            Vary::vary($this, $field);
+            return $this;
+        };
     }
 
     public function render()

@@ -5,7 +5,6 @@ namespace Press;
 
 
 use Press\Utils\RangeParser;
-use Swoole\Http\Request as SRequest;
 use Press\Utils\Accepts;
 use Press\Utils\TypeIs;
 use Press\Utils\Fresh;
@@ -19,9 +18,8 @@ use Press\Utils\ProxyAddr;
  * @property Application app
  * @package Press
  */
-class Request extends SRequest
+class Request
 {
-    public $headers;
     public $params = [];
     public $query = [];
     public $body = [];
@@ -31,12 +29,15 @@ class Request extends SRequest
     ];
     private $protocol;
     private $secure;
-    private $path;
-    private $host;
+    private $req;
 
-    public function __construct()
+    /**
+     * Request constructor.
+     * @param \Swoole\Http\Request $req
+     */
+    public function __construct(\Swoole\Http\Request $req)
     {
-        $this->headers = $this->header;
+        $this->req = $req;
     }
 
     /**
@@ -50,141 +51,153 @@ class Request extends SRequest
         }
 
         $lc = strtolower($name);
+        $header = $this->req->header;
 
         switch ($lc) {
             case 'referer':
             case 'referrer':
-                $er = array_key_exists('referer', $this->headers);
-                $rer = array_key_exists('referrer', $this->headers);
-                $result = $er ? $this->headers['referer'] : $rer ? $this->headers['referer'] : null;
+                $er = array_key_exists('referer', $header);
+                $rer = array_key_exists('referrer', $header);
+                $result = $er ? $header['referer'] : $rer ? $header['referer'] : null;
                 return $result;
             default:
-                return array_key_exists($lc, $this->headers) ? $this->headers[$lc] : null;
+                return array_key_exists($lc, $header) ? $header[$lc] : null;
         }
     }
 
     /**
      * return Request header
      *
-     * @param string $name
-     * @return bool
+     * @return \Closure
      */
-    public function header(string $name)
+    public function header()
     {
-        return $this->get_head($name);
+        return function (string $name) {
+            return $this->get_head($name);
+        };
     }
 
 
     /**
      * alias for header()
-     * @param string $name
-     * @return bool
+     * @return \Closure
      */
-    public function get(string $name)
+    public function get()
     {
-        return $this->get_head($name);
+        return function (string $name) {
+            return $this->get_head($name);
+        };
     }
 
     /**
      * check if the given type(s) is acceptable
-     * @return array|bool|mixed
+     * @return \Closure
      */
     public function accepts()
     {
-        $args = func_get_args();
-        $accepts = new Accepts($this);
-        return $accepts->types($args);
+        return function () {
+            $args = func_get_args();
+            $accepts = new Accepts($this);
+            return $accepts->types($args);
+        };
     }
 
     /**
      * Check if the given `encoding`s are accepted
-     * @return array|bool
+     * @return \Closure
      */
     public function accepts_encodings()
     {
-        $args = func_get_args();
-        $accepts = new Accepts($this);
-        return $accepts->encodings($args);
+        return function () {
+            $args = func_get_args();
+            $accepts = new Accepts($this);
+            return $accepts->encodings($args);
+        };
     }
 
     /**
      * Check if the given `charset`s are acceptable
-     * @return array|bool
+     * @return \Closure
      */
     public function accepts_charsets()
     {
-        $args = func_get_args();
-        $accepts = new Accepts($this);
-        return $accepts->charsets($args);
+        return function () {
+            $args = func_get_args();
+            $accepts = new Accepts($this);
+            return $accepts->charsets($args);
+        };
     }
 
     /**
      * Check if the given `lang`s are acceptable
-     * @return array|bool
+     * @return \Closure
      */
     public function accepts_languages()
     {
-        $args = func_get_args();
-        $accepts = new Accepts($this);
-        return $accepts->languages($args);
+        return function () {
+            $args = func_get_args();
+            $accepts = new Accepts($this);
+            return $accepts->languages($args);
+        };
     }
 
     /**
      * Parse Range header field, capping to the given `size`
-     * @param $size
-     * @param $options
-     * @return array|int
+     * @return \Closure
      */
-    public function range($size, $options)
+    public function range()
     {
-        $range = $this->get('Range');
-        if ($range) {
-            return RangeParser::rangeParser($size, $range, $options);
-        }
+        return function ($size, $options) {
+            $range = $this->get('Range');
+            if ($range) {
+                return RangeParser::rangeParser($size, $range, $options);
+            }
+        };
     }
 
 
     /**
      * Return the value of param `name` when present or `defaultValue`
-     * @param $name
-     * @param $default_value
-     * @return mixed
+     * @return \Closure
      */
-    public function param($name, $default_value)
+    public function param()
     {
-        $params = $this->params;
-        $body = $this->body;
-        $query = $this->query;
+        return function ($name, $default_value) {
+            $params = $this->params;
+            $body = $this->body;
+            $query = $this->query;
 
-        if (array_key_exists($name, $params)) {
-            return $params[$name];
-        }
+            if (array_key_exists($name, $params)) {
+                return $params[$name];
+            }
 
-        if (array_key_exists($name, $body)) {
-            return $body[$name];
-        }
+            if (array_key_exists($name, $body)) {
+                return $body[$name];
+            }
 
-        if (array_key_exists($name, $query)) {
-            return $query[$name];
-        }
+            if (array_key_exists($name, $query)) {
+                return $query[$name];
+            }
 
-        return $default_value;
+            return $default_value;
+        };
     }
 
     /**
      * Check if the incoming request contains the "Content-Type"
      * header field, and it contains the give mime `type`
-     * @param $types
-     * @return null
+     * @return \Closure
      */
-    public function is($types)
+    public function is()
     {
-        // support flatten arguments
-        if (is_array($types) === false) {
-            $types = func_get_args();
-        }
+        return function ($types) {
+            // support flatten arguments
+            if (is_array($types) === false) {
+                $types = func_get_args();
+            }
 
-        return TypeIs::typeOfRequest($this, $types);
+            return TypeIs::typeOfRequest($this, $types);
+        };
     }
 
     /**
@@ -245,6 +258,7 @@ class Request extends SRequest
         $sp_array = explode('/', $server_protocol);
 
         $this->protocol = strtolower($sp_array[0]) === 'https' ? 'https' : 'http';
+        return $this->protocol;
     }
 
     /**
@@ -253,6 +267,7 @@ class Request extends SRequest
     private function get_secure()
     {
         $this->secure = $this->protocol === 'https';
+        return $this->secure;
     }
 
     /**
@@ -280,12 +295,12 @@ class Request extends SRequest
      */
     private function get_subdomains()
     {
-        if (!array_key_exists('host', $this->headers)) {
+        if (!array_key_exists('host', $this->req->header)) {
             return [];
         }
 
         $offset = $this->app->get('subdomain offset');
-        $host = $this->headers['host'];
+        $host = $this->req->header['host'];
 
         $subdomains = !filter_var($host, FILTER_VALIDATE_IP) ?
             array_reverse(explode('.', $host)) : [$host];
@@ -298,8 +313,8 @@ class Request extends SRequest
      */
     private function get_path()
     {
-        if (array_key_exists('path_info', $this->server)) {
-            return $this->server['path_info'];
+        if (array_key_exists('path_info', $this->req->server)) {
+            return $this->req->server['path_info'];
         }
 
         return null;
@@ -310,12 +325,12 @@ class Request extends SRequest
         $host = $this->get('X-Forwarded-Host');
         $trust = $this->app->get('trust proxy fn');
 
-        if (!$host || !$trust($this->server['remote_addr'], 0)) {
+        if (!$host || !$trust($this->req->server['remote_addr'], 0)) {
             $host = $this->get('Host');
         }
 
         if (!$host) {
-            return;
+            return '';
         }
     }
 
@@ -324,7 +339,7 @@ class Request extends SRequest
      */
     private function get_fresh()
     {
-        $method = $this->server['request_method'];
+        $method = $this->req->server['request_method'];
         $res = $this->res;
         $status = http_response_code();
 
@@ -333,7 +348,7 @@ class Request extends SRequest
         }
 
         if (($status >= 200 && $status < 300) || 304 === $status) {
-            return Fresh::fresh($this->headers, [
+            return Fresh::fresh($this->req->header, [
                 'etag' => $res->get('ETag'),
                 'last-modified' => $res->get('Last-Modified')
             ]);
