@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use Press\Request;
+use Swoole\Http\Request;
 use Press\Utils\TypeIs;
 use PHPUnit\Framework\TestCase;
 
@@ -12,8 +12,8 @@ class TypeIsTest extends TestCase
     {
         $req = new Request();
         $type = !$type ? '' : $type;
-        $req->headers['content-type'] = $type;
-        $req->headers['transfer-encoding'] = 'chunked';
+        $req->header['content-type'] = $type;
+        $req->header['transfer-encoding'] = 'chunked';
         return $req;
     }
 
@@ -49,7 +49,7 @@ class TypeIsTest extends TestCase
     public function testNoBodyTypeIs()
     {
         $req = new Request();
-        $req->headers = [];
+        $req->header = [];
 
         self::assertEquals(null, TypeIs::typeOfRequest($req));
         self::assertEquals(null, TypeIs::typeOfRequest($req, ['image/*']));
@@ -163,7 +163,7 @@ class TypeIsTest extends TestCase
     public function testNoMatchBodyLess()
     {
         $req = new Request();
-        $req->headers = ['content-type' => 'text/html'];
+        $req->header = ['content-type' => 'text/html'];
 
         $result = TypeIs::typeOfRequest($req, '*/*');
         self::assertEquals(false, $result);
@@ -203,21 +203,21 @@ class TypeIsTest extends TestCase
     {
         $req = new Request();
 
-        $req->headers = ['content-length' => '1'];
+        $req->header = ['content-length' => '1'];
         self::assertEquals(true, TypeIs::hasBody($req));
 
-        $req->headers = ['content-length' => '0'];
+        $req->header = ['content-length' => '0'];
         self::assertEquals(true, TypeIs::hasBody($req));
 
         // todo 这块地方的逻辑不太对
-        $req->headers = ['content-length' => 'bogus'];
+        $req->header = ['content-length' => 'bogus'];
         self::assertEquals(false, TypeIs::hasBody($req));
     }
 
     public function testHasBodyTransferEncoding()
     {
         $req = new Request();
-        $req->headers = ['transfer-encoding' => 'chunked'];
+        $req->header = ['transfer-encoding' => 'chunked'];
 
         self::assertEquals(true, TypeIs::hasBody($req));
     }
