@@ -404,7 +404,7 @@ class LanguageTest extends TestCase
      * @param $language
      * @param $expected
      */
-//    todo 这个地方需要修改
+//    FIXME: it need to be improved
     public function testLanguagesArray($accept_language, $language, $expected)
     {
         $request = self::createRequest(['Accept-Language' => $accept_language]);
