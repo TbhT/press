@@ -38,7 +38,7 @@ class AcceptsTest extends TestCase
         return $req;
     }
 
-    private static function createRequestType($type = null)
+    private static function createRequestType($type = '')
     {
         $req = new Request();
         $req->header = [
@@ -242,6 +242,7 @@ class AcceptsTest extends TestCase
         $accept = new Accepts($req);
         self::assertEquals(false, $accept->types('image/png', 'image/tiff'));
 
+//      FIXME: this part need to be improved
         $req1 = self::createRequestType();
         $accept1 = new Accepts($req1);
         self::assertEquals('text/html', $accept1->types('text/html', 'text/plain', 'image/jpeg', 'application/*'));

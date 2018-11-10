@@ -57,8 +57,7 @@ class Response
     public function get()
     {
         return function ($field) {
-//        TODO: 需要确认一下是否有这个响应头选项
-            return array_key_exists($field, $this->headers) ? $this->headers[$field] : null;
+            return array_key_exists($field, $this->res->header) ? $this->res->header[$field] : null;
         };
     }
 
@@ -92,7 +91,7 @@ class Response
     public function links()
     {
         return function (array $links) {
-            $link = $this->get('Link');
+            $link = $this->res->get('Link');
             $link = !empty($link) ? $link . ', ' : '';
             $link_result = '';
 
@@ -102,7 +101,7 @@ class Response
 
             $link_result = $link . $link_result;
 
-            return $this->set('Link', $link_result);
+            return $this->res->set('Link', $link_result);
         };
     }
 
@@ -113,7 +112,7 @@ class Response
     {
         return function (string $type) {
             $ct = MimeTypes::lookup($type);
-            return $this->set('Content-Type', $ct);
+            return $this->res->set('Content-Type', $ct);
         };
     }
 
@@ -124,7 +123,7 @@ class Response
     public function content_type()
     {
         return function (string $type) {
-            return $this->type($type);
+            return $this->res->type($type);
         };
     }
 
@@ -141,23 +140,23 @@ class Response
 
             switch (gettype($body)) {
                 case 'string':
-                    if (!$this->type($body)) {
-                        $this->type('html');
+                    if (!$this->res->type($body)) {
+                        $this->res->type('html');
                     }
                     break;
                 case 'array':
                 case 'object':
-                    return $this->json($body);
+                    return $this->res->json($body);
                 default:
                     throw new \TypeError('invalid body type to send');
             }
 
             // write strings in utf-8
             $encoding = 'utf8';
-            $type = $this->get('Content-Type');
+            $type = $this->res->get('Content-Type');
 
             if (is_string($type)) {
-                $this->set('Content-Type', set_charset($type, 'utf-8'));
+                $this->res->set('Content-Type', set_charset($type, 'utf-8'));
             }
 
             // determine if ETag should be generated
@@ -166,14 +165,14 @@ class Response
             }
             $etag_fn = $app ? $app->get('etag fn') : null;
 
-            $generate_etag = !$this->get('ETag') && is_callable($etag_fn);
+            $generate_etag = !$this->res->get('ETag') && is_callable($etag_fn);
 
-            $this->set('Content-Length', strlen($body));
+            $this->res->set('Content-Length', strlen($body));
 
             // populate ETag
             if ($generate_etag && is_callable($etag_fn)) {
                 $etag = $etag_fn($body, $encoding);
-                $this->set('Content-Length', $etag);
+                $this->res->set('Content-Length', $etag);
             }
 
             if (!($this->req instanceof Request)) {
@@ -188,20 +187,18 @@ class Response
             // strip irrelevant headers
             if (204 === $this->status_code || 304 === $this->status_code) {
                 //todo: remove header
-                $this->set('Content-Type', '');
-                $this->set('Content-Length', '');
-                $this->set('Transfer-Encoding', '');
+                $this->res->set('Content-Type', '');
+                $this->res->set('Content-Length', '');
+                $this->res->set('Transfer-Encoding', '');
                 $chunk = '';
             }
 
             if ($req->method === 'HEAD') {
                 // skip body for HEAD
-                $this->end();
+                $this->res->end();
             } else {
-                $this->end($chunk);
+                $this->res->end($chunk);
             }
-
-            return $this;
         };
     }
 
@@ -213,11 +210,11 @@ class Response
         return function ($body) {
             $body = json_encode($body);
 
-            if (!$this->get('Content-Type')) {
-                $this->set('Content-Type', 'application/json');
+            if (!$this->res->get('Content-Type')) {
+                $this->res->set('Content-Type', 'application/json');
             }
 
-            return $this->send($body);
+            return $this->res->send($body);
         };
     }
 
@@ -230,9 +227,9 @@ class Response
             $body = Status\Status::status($status_code);
 
             $this->status_code = $status_code;
-            $this->type('txt');
+            $this->res->type('txt');
 
-            return $this->send($body);
+            return $this->res->send($body);
         };
     }
 
@@ -243,7 +240,6 @@ class Response
     {
         return function ($path) {
             $this->res->sendfile($path);
-            return $this;
         };
     }
 
@@ -258,15 +254,15 @@ class Response
     public function append()
     {
         return function ($field, $val) {
-            $prev = $this->get($field);
+            $prev = $this->res->get($field);
             $value = $prev;
 
             if ($prev) {
                 $value = "{$prev}{$val}";
             }
 
-            $this->set($field, $value);
-            return $this;
+            $this->res->set($field, $value);
+            return $this->res;
         };
     }
 
@@ -284,7 +280,7 @@ class Response
                 $loc = !$loc ? '/' : $loc;
             }
 
-            return $this->set('Location', urlencode($loc));
+            return $this->res->set('Location', urlencode($loc));
         };
     }
 

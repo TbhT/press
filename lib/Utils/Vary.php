@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Press\Utils;
 
 
-use Press\Response;
+use Swoole\Http\Response;
 
 /**
  * RegExp to match field-name in RFC 7230 sec 3.2
