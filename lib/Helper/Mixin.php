@@ -4,6 +4,7 @@ namespace Press\Helper;
 
 
 use Press\Request;
+use Press\Response;
 
 /**
  * Class Mixin
@@ -38,7 +39,27 @@ class Mixin
 
         // init req properties
         ($req->init_properties)();
+    }
 
-        var_dump($req);
+    /**
+     * @param \Swoole\Http\Response $res
+     * @throws \ReflectionException
+     */
+    public static function response(\Swoole\Http\Response $res)
+    {
+        $reflector = new \ReflectionClass('Press\Response');
+        $methods = $reflector->getMethods(\ReflectionMethod::IS_PUBLIC);
+        $request = new Response($res);
+
+        foreach ($methods as $method) {
+            if ($method->name === '__construct') {
+                continue;
+            }
+
+            $reflectionMethod = new \ReflectionMethod('Press\Response', $method->name);
+            $methodName = $method->name;
+            $res->$methodName = $reflectionMethod->invoke($request);
+        }
+
     }
 }

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 namespace Press;
+use Press\Helper\Mixin;
 use Swoole\Http\Request as Req;
 use Swoole\Http\Response as Res;
 
@@ -40,6 +41,9 @@ class Press
             $res->app = $this;
             $this->request = $req;
             $this->response = $res;
+
+            Mixin::request($req);
+            Mixin::response($res);
 
             $this->handle($req, $res, $next);
         };

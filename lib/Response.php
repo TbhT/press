@@ -43,7 +43,6 @@ function set_charset($type, $charset)
 class Response
 {
     private $status_code;
-    private $headers;
     private $res;
 
     public function __construct(\Swoole\Http\Response $res)
