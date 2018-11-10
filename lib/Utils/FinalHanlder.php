@@ -3,8 +3,8 @@
 namespace Press\Utils;
 
 
-use Press\Request;
-use Press\Response;
+use Swoole\Http\Request;
+use Swoole\Http\Response;
 use Press\Utils\Status\Status;
 use Swoole\Timer;
 
@@ -21,24 +21,22 @@ class FinalHanlder
         preg_replace('/\n/', '<br>', $message);
         preg_replace('/\x20{2}/', ' &nbsp;', $message);
 
-        return <<<TAG
-        <!DOCTYPE html>\n
-        <html lang="en">\n
-        <head>\n
-        <meta charset="utf-8">\n
-        <title>Error</title>\n
-        </head>\n
-        <body>\n
-        <pre>' + {$message} + '</pre>\n'
-        </body>\n
-        </html>\n
-        TAG;
+        return "        <!DOCTYPE html>\\n
+        <html lang=\"en\">\\n
+        <head>\\n
+        <meta charset=\"utf-8\">\\n
+        <title>Error</title>\\n
+        </head>\\n
+        <body>\\n
+        <pre>' + {$message} + '</pre>\\n'
+        </body>\\n
+        </html>\\n";
     }
 
     public static function final_handler(Request $req, Response $res, array $options = [])
     {
         $env = array_key_exists('env', $options) ? $options['env'] : 'development';
-        $onError = $options['onerror'];
+        $onError = array_key_exists('onerror', $options) ? $options['onerror'] : null;
 
         return function ($error) use ($req, $res, &$options, $onError) {
             if (!$error && $res->headers) {
@@ -56,7 +54,7 @@ class FinalHanlder
                 $msg = $error->getMessage();
             } else {
                 $status = 404;
-                $url = urlencode($req->headers['pathname']);
+                $url = urlencode($req->header['pathname']);
                 $msg = "can not {$req->method} {$url}";
             }
 

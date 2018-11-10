@@ -255,6 +255,9 @@ class Request
         $this->req->ips = array_pop($addrs);
     }
 
+    /**
+     * @return array
+     */
     private function get_subdomains()
     {
         if (!array_key_exists('host', $this->req->header)) {
@@ -272,11 +275,7 @@ class Request
 
     private function get_path()
     {
-        if (array_key_exists('path_info', $this->req->server)) {
-            $this->req->path = $this->req->server['path_info'];
-        } else {
-            $this->req->path = '';
-        }
+        $this->req->path = array_key_exists('path_info', $this->req->server) ? $this->req->server['path_info'] : '';
     }
 
     private function get_hostname()
@@ -291,13 +290,16 @@ class Request
         }
     }
 
+    /**
+     * @return bool
+     */
     private function get_fresh()
     {
         if (empty($this->req->server)) {
             return $this->req->fresh = false;
         }
         $method = $this->req->server['request_method'];
-        $res = $this->res;
+        $res = $this->req->res;
         $status = http_response_code();
 
         if ($method !== 'GET' && $method !== 'HEAD') {

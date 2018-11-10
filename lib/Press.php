@@ -2,11 +2,14 @@
 declare(strict_types=1);
 
 namespace Press;
-use Press\Helper\Mixin;
-use Swoole\Http\Request as Req;
-use Swoole\Http\Response as Res;
+use Swoole\Http\Request;
+use Swoole\Http\Response;
 
 
+/**
+ * Class Press
+ * @package Press
+ */
 class Press
 {
     use Application;
@@ -14,7 +17,7 @@ class Press
     public function __construct()
     {
         $this->app_init();
-        $this->VERDSInit();
+        $this->verds_init();
     }
 
     /**
@@ -36,14 +39,10 @@ class Press
      */
     public function press()
     {
-        return function (Req $req, Res $res, $next = null) {
-            $req->app = $this;
-            $res->app = $this;
+        return function (Request $req, Response $res, $next = null) {
+            $req->app = $res->app = $this;
             $this->request = $req;
             $this->response = $res;
-
-            Mixin::request($req);
-            Mixin::response($res);
 
             $this->handle($req, $res, $next);
         };

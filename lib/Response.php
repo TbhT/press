@@ -45,6 +45,10 @@ class Response
     private $status_code;
     private $res;
 
+    /**
+     * Response constructor.
+     * @param \Swoole\Http\Response $res
+     */
     public function __construct(\Swoole\Http\Response $res)
     {
         $this->res = $res;
