@@ -39,6 +39,8 @@ class Utils
             return $val;
         }
 
+        $val = empty($val) ? [] : $val;
+
         return ProxyAddr::compile($val);
     }
 }

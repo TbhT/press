@@ -51,8 +51,9 @@ class Forwarded
     public static function forwarded(Request $req)
     {
         $header = array_key_exists('x-forwarded-for', $req->header) ? $req->header['x-forwarded-for'] : '';
+        $header = empty($header) ? '' : $header;
         $proxy_addr = self::parse($header);
-        $socket_addr = $req->server['remote_addr'];
+        $socket_addr = array_key_exists('remote_addr', $req->server) ? $req->server['remote_addr'] : '';
 
         return array_merge([$socket_addr], $proxy_addr);
     }

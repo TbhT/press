@@ -5,9 +5,9 @@ namespace Press;
 
 use Press\Helper\ArrayHelper;
 use Press\Helper\HttpHelper;
-use Press\Response;
-use Press\Request;
 use Press\Router;
+use Swoole\Http\Request;
+use Swoole\Http\Response;
 use Press\View;
 use Press\Middleware;
 use Press\Utils\Events;
@@ -30,7 +30,7 @@ trait Application
     public $request;
     public $response;
 
-    public function  __construct($views_path = '')
+    public function  app_init($views_path = '')
     {
         $this->views_path = $views_path;
         $this->default_configuration();
@@ -80,8 +80,8 @@ trait Application
     }
 
     /**
-     * @param \Press\Request $req
-     * @param \Press\Response $res
+     * @param Request $req
+     * @param Response $res
      * @param callable $callback
      */
     public function handle(Request $req, Response $res, $callback = null)
@@ -268,6 +268,7 @@ trait Application
         } else {
             $callback = array_key_exists('callback', $args) ? $args['callback'] : $args[2];
         }
+
         $server = new \swoole_http_server($host, $port, SWOOLE_BASE);
         $server->on('request', $callback);
         $server->start();

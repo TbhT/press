@@ -15,7 +15,19 @@ use Press\Utils\ProxyAddr;
  * Class Request
  * @property Response res
  * @property callable next
- * @property Application app
+ * @property Press app
+ * @property \Swoole\Http\Request req
+ * @property string protocol
+ * @property bool secure
+ * @property mixed ip
+ * @property mixed ips
+ * @property array subdomains
+ * @property null path
+ * @property string hostname
+ * @property string host
+ * @property bool fresh
+ * @property bool stale
+ * @property bool xhr
  * @package Press
  */
 class Request
@@ -23,13 +35,6 @@ class Request
     public $params = [];
     public $query = [];
     public $body = [];
-    private $property_array = [
-        'protocol', 'secure', 'ip', 'ips', 'subdomains', 'path',
-        'hostname', 'fresh', 'stale', 'xhr'
-    ];
-    private $protocol;
-    private $secure;
-    private $req;
 
     /**
      * Request constructor.
@@ -38,22 +43,27 @@ class Request
     public function __construct(\Swoole\Http\Request $req)
     {
         $this->req = $req;
-        $this->init_properties();
+        $this->req->header = empty($req->header) ? [] : $req->header;
+        $this->req->server = empty($req->server) ? [] : $req->server;
     }
 
-    private function init_properties()
+    /**
+     * @return \Closure
+     */
+    public function init_properties()
     {
-        $this->protocol = $this->get_protocol();
-        $this->secure = $this->get_secure();
-        $this->ip = $this->get_ip();
-        $this->ips = $this->get_ips();
-        $this->subdomains = $this->get_subdomains();
-        $this->path = $this->get_path();
-        $this->hostname = $this->get_hostname();
-        $this->host = $this->hostname;
-        $this->fresh = $this->get_fresh();
-        $this->stale = $this->get_stale();
-        $this->xhr = $this->get_xhr();
+        return function () {
+            $this->get_protocol();
+            $this->get_secure();
+            $this->get_ip();
+            $this->get_ips();
+            $this->get_subdomains();
+            $this->get_path();
+            $this->get_hostname();
+            $this->get_fresh();
+            $this->get_stale();
+            $this->get_xhr();
+        };
     }
 
     /**
@@ -113,7 +123,7 @@ class Request
     {
         return function () {
             $args = func_get_args();
-            $accepts = new Accepts($this);
+            $accepts = new Accepts($this->req);
             return $accepts->types($args);
         };
     }
@@ -126,7 +136,7 @@ class Request
     {
         return function () {
             $args = func_get_args();
-            $accepts = new Accepts($this);
+            $accepts = new Accepts($this->req);
             return $accepts->encodings($args);
         };
     }
@@ -139,7 +149,7 @@ class Request
     {
         return function () {
             $args = func_get_args();
-            $accepts = new Accepts($this);
+            $accepts = new Accepts($this->req);
             return $accepts->charsets($args);
         };
     }
@@ -152,7 +162,7 @@ class Request
     {
         return function () {
             $args = func_get_args();
-            $accepts = new Accepts($this);
+            $accepts = new Accepts($this->req);
             return $accepts->languages($args);
         };
     }
@@ -164,7 +174,7 @@ class Request
     public function range()
     {
         return function ($size, $options) {
-            $range = $this->get('Range');
+            $range = ($this->req->get)('Range');
             if ($range) {
                 return RangeParser::rangeParser($size, $range, $options);
             }
@@ -212,14 +222,10 @@ class Request
                 $types = func_get_args();
             }
 
-            return TypeIs::typeOfRequest($this, $types);
+            return TypeIs::typeOfRequest($this->req, $types);
         };
     }
 
-
-    /**
-     * set the protocol property
-     */
     private function get_protocol()
     {
         $server_protocol = empty($this->req->server) ? '' :
@@ -227,123 +233,97 @@ class Request
                 $this->req->server['server_protocol'] : '';
 
         $sp_array = explode('/', $server_protocol);
-
-        $this->protocol = strtolower($sp_array[0]) === 'https' ? 'https' : 'http';
-        return $this->protocol;
+        $this->req->protocol = strtolower($sp_array[0]) === 'https' ? 'https' : 'http';
     }
 
-    /**
-     * set the secure property
-     */
     private function get_secure()
     {
-        $this->secure = $this->protocol === 'https';
-        return $this->secure;
+        $this->req->secure = $this->req->protocol === 'https';
     }
 
-    /**
-     * set the ip property
-     */
     private function get_ip()
     {
-        $trust = $this->app->get('trust proxy fn');
-        return ProxyAddr::proxyaddr($this, $trust);
+        $trust = $this->req->app->get('trust proxy fn');
+        $this->req->ip = ProxyAddr::proxyaddr($this->req, $trust);
     }
 
-    /**
-     * @return mixed
-     */
     private function get_ips()
     {
-        $trust = $this->app->get('trust proxy fn');
-
-        $addrs = ProxyAddr::all($this, $trust);
-        return array_pop(array_reverse($addrs));
+        $trust = $this->req->app->get('trust proxy fn');
+        $addrs = ProxyAddr::all($this->req, $trust);
+        $addrs = array_reverse($addrs);
+        $this->req->ips = array_pop($addrs);
     }
 
-    /**
-     * @return array
-     */
     private function get_subdomains()
     {
         if (!array_key_exists('host', $this->req->header)) {
-            return [];
+            return $this->req->subdomains = [];
         }
 
-        $offset = $this->app->get('subdomain offset');
+        $offset = $this->req->app->get('subdomain offset');
         $host = $this->req->header['host'];
 
         $subdomains = !filter_var($host, FILTER_VALIDATE_IP) ?
             array_reverse(explode('.', $host)) : [$host];
 
-        return array_slice($subdomains, $offset);
+        $this->req->subdomains = array_slice($subdomains, $offset);
     }
 
-    /**
-     *
-     */
     private function get_path()
     {
         if (array_key_exists('path_info', $this->req->server)) {
-            return $this->req->server['path_info'];
+            $this->req->path = $this->req->server['path_info'];
+        } else {
+            $this->req->path = '';
         }
-
-        return null;
     }
 
     private function get_hostname()
     {
-        $host = $this->get('X-Forwarded-Host');
-        $trust = $this->app->get('trust proxy fn');
+        $host = ($this->req->get)('X-Forwarded-Host');
+        $trust = $this->req->app->get('trust proxy fn');
 
         if (!$host || !$trust($this->req->server['remote_addr'], 0)) {
-            $host = $this->get('Host');
-        }
-
-        if (!$host) {
-            return '';
+            $this->req->hostname = ($this->req->get)('Host');
+        } else {
+            $this->req->hostname = '';
         }
     }
 
-    /**
-     * @return bool
-     */
     private function get_fresh()
     {
+        if (empty($this->req->server)) {
+            return $this->req->fresh = false;
+        }
         $method = $this->req->server['request_method'];
         $res = $this->res;
         $status = http_response_code();
 
         if ($method !== 'GET' && $method !== 'HEAD') {
-            return false;
+            $this->req->fresh = false;
         }
 
         if (($status >= 200 && $status < 300) || 304 === $status) {
-            return Fresh::fresh($this->req->header, [
+            $this->req->fresh = Fresh::fresh($this->req->header, [
                 'etag' => $res->get('ETag'),
                 'last-modified' => $res->get('Last-Modified')
             ]);
         }
 
-        return false;
+        $this->req->fresh = false;
     }
 
-    /**
-     * @return bool
-     */
     private function get_stale()
     {
-        return !$this->get_fresh();
+        $this->req->stale = !$this->req->fresh;
     }
 
-    /**
-     * @return bool
-     */
     private function get_xhr()
     {
-        $val = $this->get('X-Requested-With');
+        $val = ($this->req->get)('X-Requested-With');
         $val = $val === null ? '' : $val;
 
-        return strtolower($val) === 'xmlhttprequest';
+        $this->req->xhr = strtolower($val) === 'xmlhttprequest';
     }
 }
