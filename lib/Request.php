@@ -38,6 +38,22 @@ class Request
     public function __construct(\Swoole\Http\Request $req)
     {
         $this->req = $req;
+        $this->init_properties();
+    }
+
+    private function init_properties()
+    {
+        $this->protocol = $this->get_protocol();
+        $this->secure = $this->get_secure();
+        $this->ip = $this->get_ip();
+        $this->ips = $this->get_ips();
+        $this->subdomains = $this->get_subdomains();
+        $this->path = $this->get_path();
+        $this->hostname = $this->get_hostname();
+        $this->host = $this->hostname;
+        $this->fresh = $this->get_fresh();
+        $this->stale = $this->get_stale();
+        $this->xhr = $this->get_xhr();
     }
 
     /**
@@ -200,61 +216,16 @@ class Request
         };
     }
 
-    /**
-     * for @property_array
-     * @param $name
-     * @return mixed
-     */
-    public function __get($name)
-    {
-        $pos = array_search($this->property_array, $name);
-
-        if ($pos !== false) {
-            $val = null;
-            switch ($name) {
-                case 'protocol':
-                    $val = $this->get_protocol();
-                    break;
-                case 'secure':
-                    $val = $this->get_secure();
-                    break;
-                case 'ip':
-                    $val = $this->get_ip();
-                    break;
-                case 'ips':
-                    $val = $this->get_ips();
-                    break;
-                case 'subdomains':
-                    $val = $this->get_subdomains();
-                    break;
-                case 'path':
-                    $val = $this->get_path();
-                    break;
-                case 'hostname':
-                case 'host':
-                    $val = $this->get_hostname();
-                    break;
-                case 'fresh':
-                    $val = $this->get_fresh();
-                    break;
-                case 'stale':
-                    $val = $this->get_stale();
-                    break;
-                case 'xhr':
-                    $val = $this->get_xhr();
-                    break;
-            }
-
-            return $val;
-        }
-    }
 
     /**
      * set the protocol property
      */
     private function get_protocol()
     {
-        $server_protocol = $this->server['server_protocol'];
+        $server_protocol = empty($this->req->server) ? '' :
+            array_key_exists('server_protocol', $this->req->server) ?
+                $this->req->server['server_protocol'] : '';
+
         $sp_array = explode('/', $server_protocol);
 
         $this->protocol = strtolower($sp_array[0]) === 'https' ? 'https' : 'http';

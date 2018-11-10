@@ -74,7 +74,6 @@ trait Application
                 'strict' => $this->enabled('strict routing')
             ]);
 
-            //todo: query fn
             $this->router->use(Middleware::query($this->get('query parser fn')));
             $this->router->use(Middleware::init($this));
         }

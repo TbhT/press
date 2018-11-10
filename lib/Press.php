@@ -13,8 +13,6 @@ class Press
     public function __construct()
     {
         $this->VERDSInit();
-        $this->request = new Request();
-        $this->response = new Response();
     }
 
     public function press()

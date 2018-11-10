@@ -4,6 +4,8 @@ namespace Press;
 
 
 use Press\Utils\FinalHanlder;
+use Swoole\Http\Response;
+use Swoole\Http\Request;
 
 class Middleware
 {
