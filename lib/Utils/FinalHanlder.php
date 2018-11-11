@@ -38,8 +38,8 @@ class FinalHanlder
         $env = array_key_exists('env', $options) ? $options['env'] : 'development';
         $onError = array_key_exists('onerror', $options) ? $options['onerror'] : null;
 
-        return function ($error) use ($req, $res, &$options, $onError) {
-            if (!$error && $res->headers) {
+        return function ($error = null) use ($req, $res, &$options, $onError) {
+            if (!$error && headers_sent()) {
                 return;
             }
 
@@ -54,8 +54,10 @@ class FinalHanlder
                 $msg = $error->getMessage();
             } else {
                 $status = 404;
-                $url = urlencode($req->header['pathname']);
-                $msg = "can not {$req->method} {$url}";
+                $pathname = array_key_exists('pathname', $req->header) ?
+                    $req->header['pathname'] : '';
+                $url = urlencode($pathname);
+                $msg = "can not {$req->server['request_method']} {$url}";
             }
 
             if ($error && $onError) {
@@ -69,6 +71,13 @@ class FinalHanlder
         };
     }
 
+    /**
+     * @param Request $req
+     * @param Response $res
+     * @param $status
+     * @param array $headers
+     * @param $message
+     */
     private static function send(Request $req, Response $res, $status, array $headers, $message)
     {
         $body = self::create_html_document($message);
@@ -76,17 +85,18 @@ class FinalHanlder
         $res->statusMessage = Status::status($status);
 
         foreach ($headers as $key => $header) {
-            $res->set($key, $header);
+            ($res->set)($key, $header);
         }
 
-        $res->set('Content-Security-Policy', "default-src 'self'");
-        $res->set('X-Content-Type-Options', 'nosniff');
+        ($res->set)('Content-Security-Policy', "default-src 'self'");
+        ($res->set)('X-Content-Type-Options', 'nosniff');
 
-        $res->set('Content-Type', 'text/html; charset=utf-8');
-        $res->set('Content-Length', strlen($body));
+        ($res->set)('Content-Type', 'text/html; charset=utf-8');
+        ($res->set)('Content-Length', strlen($body));
 
         if ($req->method === 'HEAD') {
-            return $res->end();
+            $res->end();
+            return;
         }
 
         $res->end($body);

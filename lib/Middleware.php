@@ -36,7 +36,7 @@ class Middleware
 
             Mixin::request($req);
             Mixin::response($res);
-
+            var_dump($res);
             $res->locals = empty($res->locals) ? [] : $res->locals;
 
             $next();
@@ -61,8 +61,6 @@ class Middleware
      */
     public static function final_handler(Request $req, Response $res, array $option)
     {
-        return function () use ($req, $res, $option) {
-            FinalHanlder::final_handler($req, $res, $option);
-        };
+        return FinalHanlder::final_handler($req, $res, $option);
     }
 }

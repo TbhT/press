@@ -61,5 +61,6 @@ class Mixin
             $res->$methodName = $reflectionMethod->invoke($request);
         }
 
+        var_dump($res);
     }
 }

@@ -73,7 +73,7 @@ trait Application
                 'caseSensitive' => $this->enabled('case sensitive routing'),
                 'strict' => $this->enabled('strict routing')
             ]);
-            echo "----------------------------------";
+
             $this->router->use(Middleware::query($this->get('query parser fn')));
             $this->router->use(Middleware::init($this));
         }
@@ -261,7 +261,7 @@ trait Application
     {
         $args = func_get_args();
         $host = array_key_exists('host', $args) ? $args[0] : '0.0.0.0';
-        $port = array_key_exists('port', $args) ? $args[1] : 4444;
+        $port = array_key_exists('port', $args) ? $args[1] : 8080;
 
         if (is_callable($args[0])) {
             $callback = $args[0];
