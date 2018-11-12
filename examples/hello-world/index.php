@@ -7,8 +7,9 @@ use Press\Press;
 
 $app = new Press();
 
-$app->listen($app->press());
-
 $app->get('/', function ($req, $res) {
     $res->send('Hello World');
 });
+
+$app->listen($app->press());
+

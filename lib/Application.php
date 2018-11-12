@@ -69,6 +69,7 @@ trait Application
     private function lazy_router()
     {
         if (!$this->router) {
+            echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>";
             $this->router = new Router\Router([
                 'caseSensitive' => $this->enabled('case sensitive routing'),
                 'strict' => $this->enabled('strict routing')
@@ -94,6 +95,8 @@ trait Application
         } else {
             $done = $callback;
         }
+
+        var_dump($this->router);
 
         if (!$this->router) {
             $done();

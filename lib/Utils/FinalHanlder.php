@@ -21,7 +21,7 @@ class FinalHanlder
         preg_replace('/\n/', '<br>', $message);
         preg_replace('/\x20{2}/', ' &nbsp;', $message);
 
-        return "        <!DOCTYPE html>\\n
+        return "<!DOCTYPE html>\\n
         <html lang=\"en\">\\n
         <head>\\n
         <meta charset=\"utf-8\">\\n

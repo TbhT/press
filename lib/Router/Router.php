@@ -7,8 +7,8 @@ namespace Press\Router;
 
 use Press\Helper\HttpHelper;
 use Press\Helper\ArrayHelper;
-use Press\Request;
-use Press\Response;
+use Swoole\Http\Request;
+use Swoole\Http\Response;
 use Swoole\Timer;
 
 
