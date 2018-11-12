@@ -36,7 +36,7 @@ class Middleware
 
             Mixin::request($req);
             Mixin::response($res);
-            var_dump($res);
+            echo ">>>>>>>>>>>>>>>>>>>>>>>>>>\n";
             $res->locals = empty($res->locals) ? [] : $res->locals;
 
             $next();

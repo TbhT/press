@@ -156,7 +156,7 @@ class Router
      * @param Response $res
      * @param $out
      */
-    public function handle(Request $req, Response $res,callable $out)
+    public function handle(Request $req, Response $res, callable $out)
     {
         $index = 0;
 //        $protohost = self::getProtohost($req->url);
@@ -174,7 +174,7 @@ class Router
 //        $done = self::restore($out, $req, 'baseUrl', 'next', 'params');
         $done = $out;
 //        $req->next = $next;
-
+        echo "-------------------------1";
         /**
          * @param $error
          * @return mixed
@@ -185,22 +185,22 @@ class Router
             &$res
         ) {
             $layerError = $error === 'route' ? null : $error;
-
+            echo "=======================2\n";
 //            signal to exit router
             if ($layerError === 'router') {
-                Timer::after(1, $done);
-                return;
+                return Timer::after(1, $done);
             }
 
             $stack_length = count($this->stack);
+            echo "=======================3\n";
 
 //            no more matching layer
             if ($index >= $stack_length) {
-                Timer::after(1, function () use ($done, $layerError) {
+                return Timer::after(1, function () use ($done, $layerError) {
                     $done($layerError);
                 });
-                return;
             }
+            echo "=======================4\n";
 
             // get pathname of request
             $path = self::get_path_name($req);

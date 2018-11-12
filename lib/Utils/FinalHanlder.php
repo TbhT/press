@@ -48,7 +48,7 @@ class FinalHanlder
                 // respect status code from error
                 $status = $error->getCode();
 
-                $statusCode = $res->statusCode;
+                $statusCode = $res->status_code;
                 $status = !!$status ? 500 : $statusCode;
 
                 $msg = $error->getMessage();
