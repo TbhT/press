@@ -29,6 +29,7 @@ class Middleware
             if ($app->enabled('x-power-by')) {
                 $res->set('X-Power-By', 'Press');
             }
+            echo "init----------------\n";
 
             $req->res = $res;
             $res->req = $req;
@@ -36,7 +37,7 @@ class Middleware
 
             Mixin::request($req);
             Mixin::response($res);
-            echo ">>>>>>>>>>>>>>>>>>>>>>>>>>\n";
+
             $res->locals = empty($res->locals) ? [] : $res->locals;
 
             $next();
@@ -49,7 +50,7 @@ class Middleware
     public static function query()
     {
         return function () {
-
+            echo "query-------------------\n";
         };
     }
 

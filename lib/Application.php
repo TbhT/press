@@ -212,7 +212,6 @@ trait Application
         array_map(function ($method) {
             $this->$method = function ($path) use ($method) {
                 $handles = func_get_args();
-
                 if ($method === 'get' && count($handles) === 1) {
                     return $this->set($path);
                 }

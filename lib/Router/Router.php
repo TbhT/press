@@ -174,7 +174,6 @@ class Router
 //        $done = self::restore($out, $req, 'baseUrl', 'next', 'params');
         $done = $out;
 //        $req->next = $next;
-        echo "-------------------------1";
         /**
          * @param $error
          * @return mixed
@@ -185,14 +184,12 @@ class Router
             &$res
         ) {
             $layerError = $error === 'route' ? null : $error;
-            echo "=======================2\n";
 //            signal to exit router
             if ($layerError === 'router') {
                 return Timer::after(1, $done);
             }
 
             $stack_length = count($this->stack);
-            echo "=======================3\n";
 
 //            no more matching layer
             if ($index >= $stack_length) {
@@ -200,7 +197,6 @@ class Router
                     $done($layerError);
                 });
             }
-            echo "=======================4\n";
 
             // get pathname of request
             $path = self::get_path_name($req);
@@ -215,6 +211,7 @@ class Router
 
             while ($match !== true && $index < $stack_length) {
                 $layer = $this->stack[$index++];
+                echo "1-----------------\n";
                 $match = self::match_layer($layer, $path);
                 $route = $layer->route;
 

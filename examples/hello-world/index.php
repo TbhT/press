@@ -8,6 +8,7 @@ use Press\Press;
 $app = new Press();
 
 $app->get('/', function ($req, $res) {
+    echo ">>>>>>>>>>>>>这是index.php";
     $res->send('Hello World');
 });
 
