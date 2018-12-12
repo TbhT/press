@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 use Press\Utils\Accepts;
-use Press\Request;
+use Swoole\Http\Request;
 use PHPUnit\Framework\TestCase;
 
 
@@ -11,7 +11,7 @@ class AcceptsTest extends TestCase
     private static function createRequestCharset($charset = null)
     {
         $req = new Request();
-        $req->headers = [
+        $req->header = [
             'accept-charset' => $charset
         ];
 
@@ -21,7 +21,7 @@ class AcceptsTest extends TestCase
     private static function createRequestEncoding($encoding = null)
     {
         $req = new Request();
-        $req->headers = [
+        $req->header = [
             'accept-encoding' => $encoding
         ];
 
@@ -31,17 +31,17 @@ class AcceptsTest extends TestCase
     private static function createRequestLanguage($language = null)
     {
         $req = new Request();
-        $req->headers = [
+        $req->header = [
             'accept-language' => $language
         ];
 
         return $req;
     }
 
-    private static function createRequestType($type = null)
+    private static function createRequestType($type = '')
     {
         $req = new Request();
-        $req->headers = [
+        $req->header = [
             'accept' => $type
         ];
 
@@ -242,6 +242,7 @@ class AcceptsTest extends TestCase
         $accept = new Accepts($req);
         self::assertEquals(false, $accept->types('image/png', 'image/tiff'));
 
+//      FIXME: this part need to be improved
         $req1 = self::createRequestType();
         $accept1 = new Accepts($req1);
         self::assertEquals('text/html', $accept1->types('text/html', 'text/plain', 'image/jpeg', 'application/*'));

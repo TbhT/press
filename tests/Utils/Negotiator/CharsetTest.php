@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
 use Press\Utils\Negotiator;
-use Press\Request;
+use Swoole\Http\Request;
 
 
 class CharsetTest extends TestCase
@@ -146,30 +146,30 @@ class CharsetTest extends TestCase
             [
                 '', []
             ],
-//            [
-//                null, ['*']
-//            ],
-//            [
-//                '*', ['*']
-//            ],
-//            [
-//                '*, UTF-8', ['*', 'UTF-8']
-//            ],
-//            [
-//                '*, UTF-8;q=0', ['*']
-//            ],
-//            [
-//                'UTF-8;q=0', []
-//            ],
-//            [
-//                'ISO-8859-1', ['ISO-8859-1']
-//            ],
-//            [
-//                'UTF-8, ISO-8859-1', ['UTF-8', 'ISO-8859-1']
-//            ],
-//            [
-//                'UTF-8;q=0.8, ISO-8859-1', ['ISO-8859-1', 'UTF-8']
-//            ],
+            [
+                null, ['*']
+            ],
+            [
+                '*', ['*']
+            ],
+            [
+                '*, UTF-8', ['*', 'UTF-8']
+            ],
+            [
+                '*, UTF-8;q=0', ['*']
+            ],
+            [
+                'UTF-8;q=0', []
+            ],
+            [
+                'ISO-8859-1', ['ISO-8859-1']
+            ],
+            [
+                'UTF-8, ISO-8859-1', ['UTF-8', 'ISO-8859-1']
+            ],
+            [
+                'UTF-8;q=0.8, ISO-8859-1', ['ISO-8859-1', 'UTF-8']
+            ],
 //  it should be added but now skipped
 //            [
 //                'UTF-8;q=0.9, ISO-8859-1;q=0.8, UTF-8;q=0.7', ['UTF-8', 'ISO-8859-1']
@@ -275,11 +275,11 @@ class CharsetTest extends TestCase
     private static function createRequest($headers)
     {
         $request = new Request();
-        $request->headers = [];
+        $request->header = [];
 
         if ($headers) {
             foreach ($headers as $key => $header) {
-                $request->headers[strtolower($key)] = $header;
+                $request->header[strtolower($key)] = $header;
             }
         }
 

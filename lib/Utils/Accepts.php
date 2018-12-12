@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Press\Utils;
 
-use Press\Request;
+use Swoole\Http\Request;
 use Press\Utils\Negotiator;
 use Press\Utils\Negotiator\Tool;
 
@@ -15,7 +15,7 @@ class Accepts
 
     public function __construct(Request $req)
     {
-        $this->headers = $req->headers;
+        $this->headers = $req->header;
         $this->negotiator = new Negotiator\Negotiator($req);
     }
 

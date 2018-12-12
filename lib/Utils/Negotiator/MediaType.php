@@ -186,7 +186,7 @@ class MediaType
     public static function preferredMediaTypes($accept = null, $provided = null)
     {
         // RFC 2616 sec 14.2: no header = */*
-        $accept = $accept === null ? '*/*' : $accept;
+        $accept = empty($accept) ? '*/*' : $accept;
         $accepts = self::parseAccept($accept);
 
         if (!$provided && is_array($provided) === false) {

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use Press\Request;
+use Swoole\Http\Request;
 use Press\Utils\Negotiator;
 use PHPUnit\Framework\TestCase;
 
@@ -370,11 +370,11 @@ class EncodingTest extends TestCase
     private function createRequest($headers)
     {
         $request = new Request();
-        $request->headers = [];
+        $request->header = [];
 
         if ($headers) {
             foreach ($headers as $key => $header) {
-                $request->headers[strtolower($key)] = $header;
+                $request->header[strtolower($key)] = $header;
             }
         }
 

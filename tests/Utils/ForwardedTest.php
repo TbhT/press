@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 use Press\Utils\Forwarded;
-use Press\Request;
+use Swoole\Http\Request;
 use PHPUnit\Framework\TestCase;
 
 
@@ -16,7 +16,7 @@ class ForwardedTest extends TestCase
 
         $req = new Request();
         $req->server['remote_addr'] = $socket_addr;
-        $req->headers = $headers;
+        $req->header = $headers;
 
         return $req;
     }

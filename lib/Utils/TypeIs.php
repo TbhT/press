@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Press\Utils;
 
-use Press\Request;
+use Swoole\Http\Request;
 use Press\Utils\Mime\MimeTypes;
-use Press\Utils\MediaTyper;
 
 
 class TypeIs
@@ -90,7 +89,7 @@ class TypeIs
         }
 
         // request content type
-        $value = $req->headers['content-type'];
+        $value = $req->header['content-type'];
 
         return self::typeIs($value, $types_);
     }
@@ -102,7 +101,7 @@ class TypeIs
      */
     public static function hasBody(Request $req)
     {
-        return array_key_exists('transfer-encoding', $req->headers) || array_key_exists('content-length', $req->headers);
+        return array_key_exists('transfer-encoding', $req->header) || array_key_exists('content-length', $req->header);
     }
 
     /**

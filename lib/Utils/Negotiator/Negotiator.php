@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Press\Utils\Negotiator;
 
-use Press\Request;
+use Swoole\Http\Request;
 
 
 class Negotiator
@@ -20,8 +20,8 @@ class Negotiator
 
     public function charsets($available = null)
     {
-        $accept_charset = array_key_exists('accept-charset', $this->request->headers) ?
-            $this->request->headers['accept-charset'] : '';
+        $accept_charset = array_key_exists('accept-charset', $this->request->header) ?
+            $this->request->header['accept-charset'] : '';
         $accept_charset = $accept_charset === '' ? '' : $accept_charset;
         return Charset::preferredCharsets($accept_charset, $available);
     }
@@ -43,8 +43,8 @@ class Negotiator
 
     public function encodings($available = null)
     {
-        $accept_encoding = array_key_exists('accept-encoding', $this->request->headers) ?
-            $this->request->headers['accept-encoding'] : '';
+        $accept_encoding = array_key_exists('accept-encoding', $this->request->header) ?
+            $this->request->header['accept-encoding'] : '';
         $accept_encoding = $accept_encoding === '' ? '' : $accept_encoding;
         return Encoding::preferredEncodings($accept_encoding, $available);
     }
@@ -59,8 +59,8 @@ class Negotiator
 
     public function languages($available = null)
     {
-        $accept_language = array_key_exists('accept-language', $this->request->headers) ?
-            $this->request->headers['accept-language'] : '';
+        $accept_language = array_key_exists('accept-language', $this->request->header) ?
+            $this->request->header['accept-language'] : '';
         $accept_language = $accept_language === '' ? '' : $accept_language;
         return Language::preferredLanguage($accept_language, $available);
     }
@@ -75,8 +75,8 @@ class Negotiator
 
     public function mediaTypes($available = null)
     {
-        $accept_media_type = array_key_exists('accept', $this->request->headers) ?
-            $this->request->headers['accept'] : '';
+        $accept_media_type = array_key_exists('accept', $this->request->header) ?
+            $this->request->header['accept'] : '';
         $accept_media_type = $accept_media_type === '' ? '' : $accept_media_type;
 
         return MediaType::preferredMediaTypes($accept_media_type, $available);

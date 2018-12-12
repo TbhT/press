@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Press\Utils;
 
-use Press\Request;
+use Swoole\Http\Request;
 use Press\Utils\Forwarded;
 use Press\Utils\IPAddr;
 
@@ -151,17 +151,17 @@ class ProxyAddr
         }
 
         $max = $ip->kind() === 'ipv6' ? 128 : 32;
-        $range = $pos !== false ? substr($note, $pos + 1, strlen($note)) : null;
+        $range = $pos !== false ? substr($note, $pos + 1, strlen($note)) : '';
         preg_match('/^[0-9]+$/', $range, $m);
 
-        if ($range === null) {
+        if ($range === '') {
             $range = $max;
         } else if (count($m) > 0) {
             $range = intval($range, 10);
         } else if ($ip->kind() === 'ipv4' && IPAddr\Tool::isValid($range)) {
             $range = static::parseNetmask($range);
         } else {
-            $range = null;
+            $range = '';
         }
 
         if ($range <= 0 || $range > $max) {

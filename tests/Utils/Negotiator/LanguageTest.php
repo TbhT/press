@@ -1,8 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use Press\Request;
-use Press\Utils\Negotiator\Language;
+use Swoole\Http\Request;
 use PHPUnit\Framework\TestCase;
 use Press\Utils\Negotiator\Negotiator;
 
@@ -242,89 +241,89 @@ class LanguageTest extends TestCase
     public function languagesArrayData()
     {
         return [
-//            [
-//                null, ['en'], ['en']
-//            ],
-//            [
-//                null, ['es', 'en'], ['es', 'en']
-//            ],
-//            [
-//                '*', ['en'], ['en']
-//            ],
-//            [
-//                '*', ['es', 'en'], ['es', 'en']
-//            ],
-//            [
-//                '*, en', ['en'], ['en']
-//            ],
-//            [
-//                '*, en', ['es', 'en'], ['en', 'es']
-//            ],
-//            [
-//                '*, en;q=0', ['en'], []
-//            ],
-//            [
-//                '*, en;q=0', ['es', 'en'], ['es']
-//            ],
-//            [
-//                '*;q=0.8, en, es',
-//                ['fr', 'de', 'en', 'it', 'es', 'pt', 'no', 'se', 'fi', 'ro', 'nl'],
-//                ['en', 'es', 'fr', 'de', 'it', 'pt', 'no', 'se', 'fi', 'ro', 'nl']
-//            ],
-//            [
-//                'en', ['en'], ['en']
-//            ],
-//            [
-//                'en', ['en', 'es'], ['en']
-//            ],
-//            [
-//                'en', ['es', 'en'], ['en']
-//            ],
-//            [
-//                'en', ['en-US'], ['en-US']
-//            ],
-//            [
-//                'en', ['en-US', 'en'], ['en', 'en-US']
-//            ],
-//            [
-//                'en', ['en', 'en-US'], ['en', 'en-US']
-//            ],
-//            [
-//                'en;q=0', ['en'], []
-//            ],
-//            [
-//                'en;q=0', ['en', 'es'], []
-//            ],
-//            [
-//                'en;q=0.8, es', ['en'], ['en']
-//            ],
-//            [
-//                'en;q=0.8, es', ['en', 'es'], ['es', 'en']
-//            ],
-//            [
-//                'en;q=0.8, es', ['es', 'en'], ['es', 'en']
-//            ],
-//            [
-//                'en;q=0.9, es;q=0.8, en;q=0.7', ['en'], ['en']
-//            ],
-//            [
-//                'en;q=0.9, es;q=0.8, en;q=0.7', ['en', 'es'], ['en', 'es']
-//            ],
-//            [
-//                'en;q=0.9, es;q=0.8, en;q=0.7', ['es', 'en'], ['en', 'es']
-//            ],
-//            [
-//                'en-US, en;q=0.8', ['en-us', 'EN'], ['en-us', 'EN']
-//            ],
-//            [
-//                'en-US, en;q=0.8', ['en-US', 'en'], ['en-US', 'en']
-//            ],
+            [
+                null, ['en'], ['en']
+            ],
+            [
+                null, ['es', 'en'], ['es', 'en']
+            ],
+            [
+                '*', ['en'], ['en']
+            ],
+            [
+                '*', ['es', 'en'], ['es', 'en']
+            ],
+            [
+                '*, en', ['en'], ['en']
+            ],
+            [
+                '*, en', ['es', 'en'], ['en', 'es']
+            ],
+            [
+                '*, en;q=0', ['en'], []
+            ],
+            [
+                '*, en;q=0', ['es', 'en'], ['es']
+            ],
+            [
+                '*;q=0.8, en, es',
+                ['fr', 'de', 'en', 'it', 'es', 'pt', 'no', 'se', 'fi', 'ro', 'nl'],
+                ['en', 'es', 'fr', 'de', 'it', 'pt', 'no', 'se', 'fi', 'ro', 'nl']
+            ],
+            [
+                'en', ['en'], ['en']
+            ],
+            [
+                'en', ['en', 'es'], ['en']
+            ],
+            [
+                'en', ['es', 'en'], ['en']
+            ],
+            [
+                'en', ['en-US'], ['en-US']
+            ],
+            [
+                'en', ['en-US', 'en'], ['en', 'en-US']
+            ],
+            [
+                'en', ['en', 'en-US'], ['en', 'en-US']
+            ],
+            [
+                'en;q=0', ['en'], []
+            ],
+            [
+                'en;q=0', ['en', 'es'], []
+            ],
+            [
+                'en;q=0.8, es', ['en'], ['en']
+            ],
+            [
+                'en;q=0.8, es', ['en', 'es'], ['es', 'en']
+            ],
+            [
+                'en;q=0.8, es', ['es', 'en'], ['es', 'en']
+            ],
+            [
+                'en;q=0.9, es;q=0.8, en;q=0.7', ['en'], ['en']
+            ],
+            [
+                'en;q=0.9, es;q=0.8, en;q=0.7', ['en', 'es'], ['en', 'es']
+            ],
+            [
+                'en;q=0.9, es;q=0.8, en;q=0.7', ['es', 'en'], ['en', 'es']
+            ],
+            [
+                'en-US, en;q=0.8', ['en-us', 'EN'], ['en-us', 'EN']
+            ],
+            [
+                'en-US, en;q=0.8', ['en-US', 'en'], ['en-US', 'en']
+            ],
             [
                 'en-US, en;q=0.8', ['en-GB', 'en-US', 'en'], ['en-US', 'en', 'en-GB']
             ],
-//            [
-//                'en-US, en-GB', ['en-US', 'en-GB'], ['en-US', 'en-GB']
-//            ],
+            [
+                'en-US, en-GB', ['en-US', 'en-GB'], ['en-US', 'en-GB']
+            ],
             [
                 'en-US, en-GB', ['en-GB', 'en-US'], ['en-GB', 'en-US']
             ],
@@ -334,22 +333,22 @@ class LanguageTest extends TestCase
             [
                 'en-US;q=0.8, es', ['en', 'es', 'en-US'], ['en', 'es', 'en-US']
             ],
-//            [
-//                'nl;q=0.5, fr, de, en, it, es, pt, no, se, fi, ro',
-//                ['fr', 'de', 'en', 'it', 'es', 'pt', 'no', 'se', 'fi', 'ro', 'nl'],
-//                ['fr', 'de', 'en', 'it', 'es', 'pt', 'no', 'se', 'fi', 'ro', 'nl']
-//            ]
+            [
+                'nl;q=0.5, fr, de, en, it, es, pt, no, se, fi, ro',
+                ['fr', 'de', 'en', 'it', 'es', 'pt', 'no', 'se', 'fi', 'ro', 'nl'],
+                ['fr', 'de', 'en', 'it', 'es', 'pt', 'no', 'se', 'fi', 'ro', 'nl']
+            ]
         ];
     }
 
     private function createRequest($headers)
     {
         $request = new Request();
-        $request->headers = [];
+        $request->header = [];
 
         if ($headers) {
             foreach ($headers as $key => $header) {
-                $request->headers[strtolower($key)] = $header;
+                $request->header[strtolower($key)] = $header;
             }
         }
 
@@ -405,7 +404,7 @@ class LanguageTest extends TestCase
      * @param $language
      * @param $expected
      */
-//    todo 这个地方需要修改
+//    FIXME: it need to be improved
     public function testLanguagesArray($accept_language, $language, $expected)
     {
         $request = self::createRequest(['Accept-Language' => $accept_language]);

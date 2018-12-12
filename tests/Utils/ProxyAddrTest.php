@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 use Press\Utils\ProxyAddr;
-use Press\Request;
+use Swoole\Http\Request;
 use PHPUnit\Framework\TestCase;
 
 
@@ -33,7 +33,7 @@ class ProxyAddrTest extends TestCase
     private function createReq($socketAddr, $headers = null)
     {
         $req = new Request();
-        $req->headers = empty($headers) ? [] : $headers;
+        $req->header = empty($headers) ? [] : $headers;
         $req->server['remote_addr'] = $socketAddr;
         return $req;
     }

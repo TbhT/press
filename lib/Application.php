@@ -3,10 +3,11 @@ declare(strict_types=1);
 
 namespace Press;
 
+use Press\Helper\ArrayHelper;
 use Press\Helper\HttpHelper;
-use Press\Response;
-use Press\Request;
 use Press\Router;
+use Swoole\Http\Request;
+use Swoole\Http\Response;
 use Press\View;
 use Press\Middleware;
 use Press\Utils\Events;
@@ -29,7 +30,7 @@ trait Application
     public $request;
     public $response;
 
-    public function __construct($views_path = '')
+    public function  app_init($views_path = '')
     {
         $this->views_path = $views_path;
         $this->default_configuration();
@@ -82,23 +83,26 @@ trait Application
                 'strict' => $this->enabled('strict routing')
             ]);
 
-            //todo: query fn
             $this->router->use(Middleware::query($this->get('query parser fn')));
             $this->router->use(Middleware::init($this));
         }
     }
 
     /**
-     * @param \Press\Request $req
-     * @param \Press\Response $res
+     * @param Request $req
+     * @param Response $res
      * @param callable $callback
      */
-    public function handle(Request $req, Response $res, callable $callback)
+    public function handle(Request $req, Response $res, $callback = null)
     {
         //final handler todo: need to change
-        $done = Middleware::final_handler($req, $res, [
-            'env' => $this->get('env')
-        ]);
+        if (!$callback) {
+            $done = Middleware::final_handler($req, $res, [
+                'env' => $this->get('env')
+            ]);
+        } else {
+            $done = $callback;
+        }
 
         if (!$this->router) {
             $done();
@@ -108,8 +112,25 @@ trait Application
         $this->router->handle($req, $res, $done);
     }
 
-    public function use()
+    public function use($fn)
     {
+        $offset = 0;
+        $path = '/';
+
+        $args = func_get_args();
+        if (count($args) > 1) {
+            $offset = 1;
+            $path = $args[0];
+        }
+
+        $args = array_slice($args, $offset);
+        $callbacks = ArrayHelper::flattenArray($args);
+
+        if (count($callbacks) === 0) {
+            throw new \TypeError('Router->use() requires a middleware function');
+        }
+
+
 
     }
 
@@ -194,14 +215,12 @@ trait Application
         return $this->set($setting, false);
     }
 
-    public function VERDSInit()
+    public function verds_init()
     {
         $methods = HttpHelper::methods();
-
         array_map(function ($method) {
             $this->$method = function ($path) use ($method) {
                 $handles = func_get_args();
-
                 if ($method === 'get' && count($handles) === 1) {
                     return $this->set($path);
                 }
@@ -256,6 +275,7 @@ trait Application
         } else {
             $callback = array_key_exists('callback', $args) ? $args['callback'] : $args[2];
         }
+
         $server = new \swoole_http_server($host, $port, SWOOLE_BASE);
         $server->on('request', $callback);
         $server->start();

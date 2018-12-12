@@ -7,8 +7,8 @@ namespace Press\Router;
 
 use Press\Helper\HttpHelper;
 use Press\Helper\ArrayHelper;
-use Press\Request;
-use Press\Response;
+use Swoole\Http\Request;
+use Swoole\Http\Response;
 use Swoole\Timer;
 
 
@@ -156,7 +156,7 @@ class Router
      * @param Response $res
      * @param $out
      */
-    public function handle(Request $req, Response $res,callable $out)
+    public function handle(Request $req, Response $res, callable $out)
     {
         $index = 0;
 //        $protohost = self::getProtohost($req->url);
@@ -168,12 +168,12 @@ class Router
         $options = [];
 
 //        manage inter-route variables
+        /** @var Request $req */
         $parentParams = &$req->params;
 //        $parentUrl = &$req->baseUrl;
 //        $done = self::restore($out, $req, 'baseUrl', 'next', 'params');
         $done = $out;
 //        $req->next = $next;
-
         /**
          * @param $error
          * @return mixed
@@ -184,21 +184,18 @@ class Router
             &$res
         ) {
             $layerError = $error === 'route' ? null : $error;
-
 //            signal to exit router
             if ($layerError === 'router') {
-                Timer::after(1, $done);
-                return;
+                return Timer::after(1, $done);
             }
 
             $stack_length = count($this->stack);
 
 //            no more matching layer
             if ($index >= $stack_length) {
-                Timer::after(1, function () use ($done, $layerError) {
+                return Timer::after(1, function () use ($done, $layerError) {
                     $done($layerError);
                 });
-                return;
             }
 
             // get pathname of request
@@ -214,6 +211,7 @@ class Router
 
             while ($match !== true && $index < $stack_length) {
                 $layer = $this->stack[$index++];
+                echo "1-----------------\n";
                 $match = self::match_layer($layer, $path);
                 $route = $layer->route;
 
@@ -235,7 +233,9 @@ class Router
                     continue;
                 }
 
+                /** @var Request $req */
                 $method = $req->method;
+                /** @var Route $route */
                 $has_method = $route->handles_method($method);
 
 //                build up automatic options response
@@ -257,12 +257,15 @@ class Router
 
 //            store route for dispatch on change
             if ($route) {
+                /** @var Request $req */
                 $req->route = $route;
             }
 
             if ($layerError) {
+                /** @var Layer $layer */
                 $layer->handle_error($layerError, $req, $res, $next);
             } else {
+                /** @var Layer $layer */
                 $layer->handle_request($req, $res, $next);
             }
 
