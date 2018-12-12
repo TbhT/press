@@ -14,9 +14,9 @@ class Press
 {
     use Application;
 
-    public function __construct()
+    public function __construct(string $view_path)
     {
-        $this->app_init();
+        $this->app_init($view_path);
         $this->verds_init();
     }
 

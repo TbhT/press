@@ -30,7 +30,7 @@ trait Application
     public $request;
     public $response;
 
-    public function  app_init($views_path = '')
+    public function  app_init(string $views_path)
     {
         $this->views_path = $views_path;
         $this->default_configuration();

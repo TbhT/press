@@ -38,7 +38,7 @@ class View
      */
     private function lookup(string $name)
     {
-        $roots = array_merge([], $this->root);
+        $roots = [$this->root];
         $path = '';
 
         foreach ($roots as $root) {
@@ -48,7 +48,7 @@ class View
 
             $path = $this->resolve($dir, $file);
         }
-
+        var_dump($path);
         return $path;
     }
 

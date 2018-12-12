@@ -6,7 +6,7 @@ require_once './vendor/autoload.php';
 use Press\Press;
 
 try {
-    $app = new Press();
+    $app = new Press(__DIR__);
 //$app->listen(function ($req, $res) {
 //    echo '-------------------';
 //});
