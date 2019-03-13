@@ -258,6 +258,8 @@ trait Application
             'root' => $this->get('views')
         ]);
 
+        var_dump("path: {$name}");
+
         return $view->render($options);
     }
 
@@ -277,6 +279,9 @@ trait Application
         }
 
         $server = new \swoole_http_server($host, $port, SWOOLE_BASE);
+        echo "---------- test callback -------------\n";
+        // $callback();
+        echo "---------- test end callback ---------\n";
         $server->on('request', $callback);
         $server->start();
 

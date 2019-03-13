@@ -14,8 +14,9 @@ class FunctionHelper
 
     static public function extname(string $str)
     {
-        preg_match('/(^\.\w+$)|([\w\d.:\/\\\\]+)/', $str, $matches);
+        preg_match('/(^\.\w+$)|([\-\w\d.:\/\\\\]+)/', $str, $matches);
         $matches_length = count($matches);
+        var_dump($matches);
 
         if ($matches_length === 2) {
     //    for extension

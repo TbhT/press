@@ -21,6 +21,7 @@ class View
     public function __construct(string $name, array $options = [])
     {
         $this->ext = FunctionHelper::extname($name);
+        var_dump("ext name: {$this->ext}");
         $this->name = $name;
         $this->root = array_key_exists('root', $options) ? $options['root'] : null;
 
@@ -29,6 +30,7 @@ class View
             $file_name = "{$name}.php";
         }
 
+        var_dump("file_name : {$file_name}");
         $this->path = $this->lookup($file_name);
     }
 
@@ -40,15 +42,17 @@ class View
     {
         $roots = [$this->root];
         $path = '';
-
+        var_dump("lookup name: {$name}");
         foreach ($roots as $root) {
-            $location = stream_resolve_include_path("{$root}/{$name}");
+            var_dump("lookup root: {$root}/{$name}");
+            $location = stream_resolve_include_path("{$name}");
             $dir = dirname($location);
             $file = basename($location);
 
             $path = $this->resolve($dir, $file);
+            var_dump("lookup resolve: {$path}");
         }
-        var_dump($path);
+        var_dump("lookup path: {$path}");
         return $path;
     }
 
@@ -90,14 +94,17 @@ class View
      */
     private function resolve(string $dir, string $file)
     {
-        $path = join('.', [$dir, $file]);
+        $path = join('/', [$dir, $file]);
         $ext = $this->ext;
+
+        var_dump("resolve path | ext: {$path} | {$ext}");
 
         if (is_file($path)) {
             return $path;
         }
 
         $path = join([$dir, basename($file, $ext), "index{$ext}"]);
+
         if (is_file($path)) {
             return $path;
         }

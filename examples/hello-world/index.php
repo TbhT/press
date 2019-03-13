@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
 
-require_once '../../vendor/autoload.php';
-require_once '../../lib/Press.php';
+require_once '../../index.php';
 
 use Press\Press;
 
-$app = new Press();
+try {
+    $app = new Press(__DIR__);
+    $app->listen(function ($req, $res) use ($app) {
+        echo "------------------- ??? \n";
+        $output = $app->render('template.php');
+        $res->end($output);
+    });
 
-$app->get('/', function ($req, $res) {
-    echo ">>>>>>>>>>>>>这是index.php";
-    $res->send('Hello World');
-});
-
-$app->listen($app->press());
-
+} catch (Throwable $e) {
+    var_dump($e);
+}
