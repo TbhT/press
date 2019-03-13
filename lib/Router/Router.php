@@ -211,7 +211,7 @@ class Router
 
             while ($match !== true && $index < $stack_length) {
                 $layer = $this->stack[$index++];
-                echo "1-----------------\n";
+                // echo "1-----------------\n";
                 $match = self::match_layer($layer, $path);
                 $route = $layer->route;
 

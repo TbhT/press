@@ -1,5 +1,5 @@
 <?php
-declare(strict_types=1);
+declare (strict_types = 1);
 
 namespace Press;
 
@@ -19,6 +19,9 @@ trait Application
     // implement multi extends
     use Events\EventTrait;
 
+    /**
+     * @var Router $router
+     */
     private $router = null;
     private $cache = [];
     private $engines = [];
@@ -30,7 +33,7 @@ trait Application
     public $request;
     public $response;
 
-    public function  app_init(string $views_path)
+    public function app_init(string $views_path)
     {
         $this->views_path = $views_path;
         $this->default_configuration();
@@ -58,7 +61,7 @@ trait Application
         $this->set('trust proxy', false);
 
         $this->on('mount', function () {
-
+            // TODO: need to be changed
         });
 
         // default locals
@@ -71,8 +74,6 @@ trait Application
         if ($env === 'production') {
             $this->enable('view cache');
         }
-
-
     }
 
     private function lazy_router()
@@ -112,7 +113,7 @@ trait Application
         $this->router->handle($req, $res, $done);
     }
 
-    public function use($fn)
+    public function use()
     {
         $offset = 0;
         $path = '/';
@@ -130,19 +131,27 @@ trait Application
             throw new \TypeError('Router->use() requires a middleware function');
         }
 
+        // setup router
+        $this->lazy_router();
+        $router = $this->router;
 
+        array_map(function ($cb) use ($router, $path) {
+            // non express app
+            $router->use($path, $cb);
 
+            // $router->use($path, function (Request $req, Response $res, $next) {
+
+            //  });
+        }, $callbacks);
+
+        return $this;
     }
 
     public function route()
-    {
-
-    }
+    { }
 
     public function param()
-    {
-
-    }
+    { }
 
     /**
      * @param string $setting
@@ -272,21 +281,12 @@ trait Application
         $host = array_key_exists('host', $args) ? $args[0] : '0.0.0.0';
         $port = array_key_exists('port', $args) ? $args[1] : 8080;
 
-        if (is_callable($args[0])) {
-            $callback = $args[0];
-        } else {
-            $callback = array_key_exists('callback', $args) ? $args['callback'] : $args[2];
-        }
-
         $server = new \swoole_http_server($host, $port, SWOOLE_BASE);
-        // echo "---------- test callback -------------\n";
-        // $callback();
-        // echo "---------- test end callback ---------\n";
-        $server->on('request', $callback);
-        // $server->start();
+        $server->on('request', function (Request $req, Response $res) {
+            $this->handle($req, $res);
+        });
+        $server->start();
 
         return $server;
     }
-
-
 }

@@ -34,18 +34,18 @@ class Press
         }
     }
 
-    /**
-     * @return \Closure
-     */
-    public function press()
-    {
-        return function (Request $req, Response $res, $next = null) {
-            $req->app = $res->app = $this;
-            $this->request = $req;
-            $this->response = $res;
+    // /**
+    //  * @return \Closure
+    //  */
+    // public function press()
+    // {
+    //     return function (Request $req, Response $res, $next = null) {
+    //         $req->app = $res->app = $this;
+    //         $this->request = $req;
+    //         $this->response = $res;
 
-            $this->handle($req, $res, $next);
-        };
-    }
+    //         $this->handle($req, $res, $next);
+    //     };
+    // }
 
 }

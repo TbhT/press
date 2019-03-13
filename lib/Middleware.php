@@ -3,7 +3,7 @@
 namespace Press;
 
 use Press\Helper\Mixin;
-use Press\Utils\FinalHanlder;
+use Press\Utils\FinalHandler;
 use Swoole\Http\Response;
 use Swoole\Http\Request;
 
@@ -49,7 +49,7 @@ class Middleware
      */
     public static function query()
     {
-        return function () {
+        return function (Request $req, Response $res, $next) {
             echo "query-------------------\n";
         };
     }
@@ -62,6 +62,6 @@ class Middleware
      */
     public static function final_handler(Request $req, Response $res, array $option)
     {
-        return FinalHanlder::final_handler($req, $res, $option);
+        return FinalHandler::final_handler($req, $res, $option);
     }
 }

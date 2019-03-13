@@ -9,7 +9,7 @@ use Press\Utils\Status\Status;
 use Swoole\Timer;
 
 
-class FinalHanlder
+class FinalHandler
 {
     /**
      * @param string $message
