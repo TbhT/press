@@ -279,11 +279,11 @@ trait Application
         }
 
         $server = new \swoole_http_server($host, $port, SWOOLE_BASE);
-        echo "---------- test callback -------------\n";
+        // echo "---------- test callback -------------\n";
         // $callback();
-        echo "---------- test end callback ---------\n";
+        // echo "---------- test end callback ---------\n";
         $server->on('request', $callback);
-        $server->start();
+        // $server->start();
 
         return $server;
     }
