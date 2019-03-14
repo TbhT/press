@@ -62,6 +62,7 @@ class Layer
      */
     public function handle_error($error, $req, $res, callable $next)
     {
+        \file_put_contents('Router-Layer-handle-error.log', $error);
         try {
             ($this->handle)($error, $req, $res, $next);
         } catch (Throwable $error) {
@@ -80,6 +81,7 @@ class Layer
         try {
             ($this->handle)($req, $res, $next);
         } catch (Throwable $error) {
+            \file_put_contents('Router-Layer-handle-request.log', $error);
             $next($error);
         }
     }

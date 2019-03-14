@@ -184,22 +184,30 @@ class Router
             &$res
         ) {
             $layerError = $error === 'route' ? null : $error;
+            // var_dump("----------index: {$index}---------");
+            if ($index === 0) {
+                // var_dump($layerError);
+                file_put_contents('error.log', $layerError);
+            }
 //            signal to exit router
             if ($layerError === 'router') {
                 return Timer::after(1, $done);
             }
 
             $stack_length = count($this->stack);
+            // var_dump("--------------{$stack_length}---{$index}---");
 
 //            no more matching layer
             if ($index >= $stack_length) {
                 return Timer::after(1, function () use ($done, $layerError) {
+                    var_dump('----Time::after ------');
                     $done($layerError);
                 });
             }
 
             // get pathname of request
             $path = self::get_path_name($req);
+            // var_dump("path: {$path}");
 
             if (empty($path)) {
                 return $done($layerError);
@@ -215,8 +223,8 @@ class Router
                 $match = self::match_layer($layer, $path);
                 $route = $layer->route;
 
-                if (is_bool($match)) {
-                    $layerError = $layerError || $match;
+                if (is_bool($match) === false) {
+                    $layerError = !!$layerError ? $layerError : $match;
                 }
 
                 if ($match !== true) {
@@ -255,11 +263,15 @@ class Router
                 return $done($layerError);
             }
 
+            var_dump(">>>>> Router out while: {$match}|{$index}|{$stack_length}|{$layerError}");
+
 //            store route for dispatch on change
             if ($route) {
                 /** @var Request $req */
                 $req->route = $route;
             }
+
+            // var_dump($layerError);
 
             if ($layerError) {
                 /** @var Layer $layer */

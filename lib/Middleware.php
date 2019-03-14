@@ -26,10 +26,6 @@ class Middleware
          * @param callable $next
          */
         return function (Request $req, Response $res, callable $next) use ($app) {
-            if ($app->enabled('x-power-by')) {
-                $res->set('X-Power-By', 'Press');
-            }
-            echo "init----------------\n";
 
             $req->res = $res;
             $res->req = $req;
@@ -39,6 +35,11 @@ class Middleware
             Mixin::response($res);
 
             $res->locals = empty($res->locals) ? [] : $res->locals;
+
+            if ($app->enabled('x-power-by')) {
+                $res->set('X-Power-By', 'Press');
+            }
+            echo "init----------------\n";
 
             $next();
         };
