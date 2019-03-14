@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use Swoole\Http\Request;
+use Press\Request;
 use Swoole\Http\Response;
 use Press\Utils\Fresh;
 use PHPUnit\Framework\TestCase;

@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
 use Press\Utils\Negotiator;
-use Swoole\Http\Request;
+use Press\Request;
 
 
 class CharsetTest extends TestCase

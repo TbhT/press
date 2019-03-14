@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use Swoole\Http\Request;
+use Press\Request;
 use PHPUnit\Framework\TestCase;
 use Press\Utils\Negotiator\Negotiator;
 

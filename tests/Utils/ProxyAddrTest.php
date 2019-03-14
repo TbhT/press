@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 use Press\Utils\ProxyAddr;
-use Swoole\Http\Request;
+use Press\Request;
 use PHPUnit\Framework\TestCase;
 
 
