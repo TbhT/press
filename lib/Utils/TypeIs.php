@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Press\Utils;
 
-use Swoole\Http\Request;
+use Press\Request;
 use Press\Utils\Mime\MimeTypes;
 
 

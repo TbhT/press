@@ -1,9 +1,9 @@
 <?php
-declare(strict_types=1);
+declare (strict_types = 1);
 
 namespace Press\Utils;
 
-use Swoole\Http\Request;
+use Press\Request;
 use Press\Utils\Forwarded;
 use Press\Utils\IPAddr;
 
@@ -112,11 +112,8 @@ class ProxyAddr
         // return optimized function based on length
         $length = count($rangeSubnets);
         return $length === 0 ?
-            static::trustNone() :
-            (
-                $length === 1 ?
-                static::trustSingle($rangeSubnets[0]) : static::trustMulti($rangeSubnets)
-            );
+            static::trustNone() : ($length === 1 ?
+                static::trustSingle($rangeSubnets[0]) : static::trustMulti($rangeSubnets));
     }
 
     /**
@@ -275,3 +272,4 @@ class ProxyAddr
         };
     }
 }
+

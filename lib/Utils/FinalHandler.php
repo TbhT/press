@@ -3,8 +3,8 @@
 namespace Press\Utils;
 
 
-use Swoole\Http\Request;
-use Swoole\Http\Response;
+use Press\Request;
+use Press\Response;
 use Press\Utils\Status\Status;
 use Swoole\Timer;
 

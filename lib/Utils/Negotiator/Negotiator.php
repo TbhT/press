@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Press\Utils\Negotiator;
 
-use Swoole\Http\Request;
+use Press\Request;
 
 
 class Negotiator
