@@ -1,5 +1,5 @@
 <?php
-declare(strict_types=1);
+declare (strict_types = 1);
 
 namespace Press;
 
@@ -52,18 +52,16 @@ class Request
      */
     public function init_properties()
     {
-        return function () {
-            $this->get_protocol();
-            $this->get_secure();
-            $this->get_ip();
-            $this->get_ips();
-            $this->get_subdomains();
-            $this->get_path();
-            $this->get_hostname();
-            $this->get_fresh();
-            $this->get_stale();
-            $this->get_xhr();
-        };
+        $this->get_protocol();
+        $this->get_secure();
+        $this->get_ip();
+        $this->get_ips();
+        $this->get_subdomains();
+        $this->get_path();
+        $this->get_hostname();
+        $this->get_fresh();
+        $this->get_stale();
+        $this->get_xhr();
     }
 
     /**
@@ -96,11 +94,9 @@ class Request
      *
      * @return \Closure
      */
-    public function header()
+    public function header(string $name)
     {
-        return function (string $name) {
-            return $this->get_head($name);
-        };
+        return $this->get_head($name);
     }
 
 
@@ -108,11 +104,9 @@ class Request
      * alias for header()
      * @return \Closure
      */
-    public function get()
+    public function get(string $name)
     {
-        return function (string $name) {
-            return $this->get_head($name);
-        };
+        return $this->get_head($name);
     }
 
     /**
@@ -121,11 +115,10 @@ class Request
      */
     public function accepts()
     {
-        return function () {
-            $args = func_get_args();
-            $accepts = new Accepts($this->req);
-            return $accepts->types($args);
-        };
+
+        $args = func_get_args();
+        $accepts = new Accepts($this->req);
+        return $accepts->types($args);
     }
 
     /**
@@ -134,11 +127,9 @@ class Request
      */
     public function accepts_encodings()
     {
-        return function () {
-            $args = func_get_args();
-            $accepts = new Accepts($this->req);
-            return $accepts->encodings($args);
-        };
+        $args = func_get_args();
+        $accepts = new Accepts($this->req);
+        return $accepts->encodings($args);
     }
 
     /**
@@ -147,11 +138,9 @@ class Request
      */
     public function accepts_charsets()
     {
-        return function () {
-            $args = func_get_args();
-            $accepts = new Accepts($this->req);
-            return $accepts->charsets($args);
-        };
+        $args = func_get_args();
+        $accepts = new Accepts($this->req);
+        return $accepts->charsets($args);
     }
 
     /**
@@ -160,25 +149,22 @@ class Request
      */
     public function accepts_languages()
     {
-        return function () {
-            $args = func_get_args();
-            $accepts = new Accepts($this->req);
-            return $accepts->languages($args);
-        };
+        $args = func_get_args();
+        $accepts = new Accepts($this->req);
+        return $accepts->languages($args);
     }
 
     /**
      * Parse Range header field, capping to the given `size`
      * @return \Closure
      */
-    public function range()
+    public function range($size, $options)
     {
-        return function ($size, $options) {
-            $range = ($this->req->get)('Range');
-            if ($range) {
-                return RangeParser::rangeParser($size, $range, $options);
-            }
-        };
+
+        $range = ($this->req->get)('Range');
+        if ($range) {
+            return RangeParser::rangeParser($size, $range, $options);
+        }
     }
 
 
@@ -186,27 +172,25 @@ class Request
      * Return the value of param `name` when present or `defaultValue`
      * @return \Closure
      */
-    public function param()
+    public function param($name, $default_value)
     {
-        return function ($name, $default_value) {
-            $params = $this->params;
-            $body = $this->body;
-            $query = $this->query;
+        $params = $this->params;
+        $body = $this->body;
+        $query = $this->query;
 
-            if (array_key_exists($name, $params)) {
-                return $params[$name];
-            }
+        if (array_key_exists($name, $params)) {
+            return $params[$name];
+        }
 
-            if (array_key_exists($name, $body)) {
-                return $body[$name];
-            }
+        if (array_key_exists($name, $body)) {
+            return $body[$name];
+        }
 
-            if (array_key_exists($name, $query)) {
-                return $query[$name];
-            }
+        if (array_key_exists($name, $query)) {
+            return $query[$name];
+        }
 
-            return $default_value;
-        };
+        return $default_value;
     }
 
     /**
@@ -214,23 +198,20 @@ class Request
      * header field, and it contains the give mime `type`
      * @return \Closure
      */
-    public function is()
+    public function is($types)
     {
-        return function ($types) {
-            // support flatten arguments
-            if (is_array($types) === false) {
-                $types = func_get_args();
-            }
+        // support flatten arguments
+        if (is_array($types) === false) {
+            $types = func_get_args();
+        }
 
-            return TypeIs::typeOfRequest($this->req, $types);
-        };
+        return TypeIs::typeOfRequest($this->req, $types);
     }
 
     private function get_protocol()
     {
-        $server_protocol = empty($this->req->server) ? '' :
-            array_key_exists('server_protocol', $this->req->server) ?
-                $this->req->server['server_protocol'] : '';
+        $server_protocol = empty($this->req->server) ? '' : array_key_exists('server_protocol', $this->req->server) ?
+            $this->req->server['server_protocol'] : '';
 
         $sp_array = explode('/', $server_protocol);
         $this->req->protocol = strtolower($sp_array[0]) === 'https' ? 'https' : 'http';

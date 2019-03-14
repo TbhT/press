@@ -1,10 +1,10 @@
 <?php
-declare(strict_types=1);
+declare (strict_types = 1);
 
 namespace Press\Utils;
 
 
-use Swoole\Http\Response;
+use Press\Response;
 
 /**
  * RegExp to match field-name in RFC 7230 sec 3.2
@@ -74,13 +74,13 @@ class Vary
 
         for ($i = 0; $i < $len; $i++) {
             switch (ord($field[$i])) {
-                // space
+                    // space
                 case 0x20:
                     if ($start === $end) {
                         $start = $end = $i + 1;
                     }
                     break;
-                // comma
+                    // comma
                 case 0x2c:
                     array_push($list, substr($field, $start, $end));
                     $start = $end = $i + 1;
@@ -113,6 +113,5 @@ class Vary
             $res->set('Vary', $val);
         }
     }
-
-
 }
+

@@ -4,8 +4,8 @@ namespace Press;
 
 use Press\Helper\Mixin;
 use Press\Utils\FinalHandler;
-use Swoole\Http\Response;
-use Swoole\Http\Request;
+use Press\Response;
+use Press\Request;
 
 
 /**

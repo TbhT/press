@@ -6,8 +6,8 @@ namespace Press;
 use Press\Helper\ArrayHelper;
 use Press\Helper\HttpHelper;
 use Press\Router;
-use Swoole\Http\Request;
-use Swoole\Http\Response;
+use Press\Request;
+use Press\Response;
 use Press\View;
 use Press\Middleware;
 use Press\Utils\Events;
@@ -94,10 +94,11 @@ trait Application
      * @param Response $res
      * @param callable $callback
      */
-    public function handle(Request $req, Response $res, $callback = null)
+    public function handle(Swoole\Http\Request $req, Swoole\Http\Response $res, $callback = null)
     {
         //final handler todo: need to change
         if (!$callback) {
+            // TODO:  need to be refactored to original request
             $done = Middleware::final_handler($req, $res, [
                 'env' => $this->get('env')
             ]);
@@ -282,7 +283,7 @@ trait Application
         $port = array_key_exists('port', $args) ? $args[1] : 8080;
 
         $server = new \swoole_http_server($host, $port, SWOOLE_BASE);
-        $server->on('request', function (Request $req, Response $res) {
+        $server->on('request', function (Swoole\Http\Request $req, Swoole\Http\Response $res) {
             $this->handle($req, $res);
         });
         $server->start();
