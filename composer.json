@@ -1,6 +1,6 @@
 {
     "name": "tbht/press",
-    "description": "a frame like nodejs/express",
+    "description": "a frame like nodejs/koa",
     "authors": [
         {
             "name": "TbhT",
@@ -13,12 +13,6 @@
         }
     },
     "require": {
-      "ext-json": "^1.6"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "6.5",
-        "eaglewu/swoole-ide-helper": "dev-master",
-        "phpspec/phpspec": "^5.0",
-        "rmccue/requests": "^1.7"
+        "tbht/php-events": "^1.0"
     }
 }
