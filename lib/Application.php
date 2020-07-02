@@ -60,6 +60,16 @@ class Application extends Utils\Events
         };
     }
 
+    public function use(callable $fn)
+    {
+        if (!is_callable($fn)) {
+            throw new \TypeError('middleware must be a function!');
+        }
+
+        array_push($this->middleware, $fn);
+        return $this;
+    }
+
     private function createContext(ServerRequestInterface $req, Http\Response $res): Context
     {
         $context = $this->context;
