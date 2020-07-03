@@ -37,7 +37,7 @@ class Application extends Utils\Events
     public function listen(array $args)
     {
         $host = $args['host'] ?? "0.0.0.0";
-        $port = $args['port'] ?? 8080;
+        $port = $args['port'] ?? 9222;
 
         $server = new Server($this->callback());
         $socket = new \React\Socket\Server("{$host}:{$port}", $this->loop);
@@ -53,7 +53,7 @@ class Application extends Utils\Events
         $this->on('error', $this->onerror());
 
         return function (ServerRequestInterface $req) use ($fn, $that) {
-//            todo: may be async
+            //  todo: may be async
             $res = new Http\Response();
             $ctx = $that->createContext($req, $res);
             return $that->handleRequest($ctx, $fn);
