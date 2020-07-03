@@ -3,24 +3,21 @@
 
 namespace Press\Utils\Co;
 
-
 use Exception;
 use Generator;
-use phpDocumentor\Reflection\Types\Mixed_;
 use React\Promise\Promise;
 use React\Promise\PromiseInterface;
-use Reflection;
 use ReflectionFunction;
 use function React\Promise\reject;
 use function React\Promise\resolve;
 
 
-function onFulfilled($resolve, $reject)
+function onFulfilled($resolve, $reject, Generator $gen)
 {
-    return function ($res, Generator $gen) use ($resolve, $reject) {
+    return function ($res = null) use ($resolve, $reject, $gen) {
         try {
-            $ret = $gen->send($res);
-            return coNext($ret, $resolve, $reject);
+            $gen->send($res);
+            return coNext($gen, $resolve, $reject);
         } catch (Exception $exception) {
             return $reject($exception);
         }
@@ -28,12 +25,12 @@ function onFulfilled($resolve, $reject)
 }
 
 
-function onRejected($resolve, $reject)
+function onRejected($resolve, $reject, Generator $gen)
 {
-    return function ($error, Generator $gen) use ($resolve, $reject) {
+    return function ($error = null) use ($resolve, $reject, $gen) {
         try {
-            $ret = $gen->throw($error);
-            return coNext($ret, $resolve, $reject);
+            $gen->throw($error);
+            return coNext($gen, $resolve, $reject);
         } catch (Exception $exception) {
             return $reject($exception);
         }
@@ -41,7 +38,7 @@ function onRejected($resolve, $reject)
 }
 
 
-function coNext($ret, callable $resolve, callable $reject)
+function coNext(Generator $ret, callable $resolve, callable $reject)
 {
     if ($ret->valid() === false) {
         return $resolve($ret->current());
@@ -50,10 +47,10 @@ function coNext($ret, callable $resolve, callable $reject)
     $value = toPromise($ret->current());
 
     if ($value && $value instanceof Promise) {
-        return $value->then(onFulfilled($resolve, $reject), onRejected($resolve, $reject));
+        return $value->then(onFulfilled($resolve, $reject, $ret), onRejected($resolve, $reject, $ret));
     }
 
-    return onRejected($resolve, $reject)(new \TypeError('You may only yield a function, promise, generator'
+    return onRejected($resolve, $reject, $ret)(new \TypeError('You may only yield a function, promise, generator'
         . 'but the following object was passed: "' . "{$ret}" . '"'));
 }
 
@@ -68,7 +65,7 @@ function co(...$args): PromiseInterface
             $gen = $gen(...$args);
         }
 
-        onFulfilled($resolve, $reject);
+        onFulfilled($resolve, $reject, $gen)($gen->current());
     });
 }
 
