@@ -10,6 +10,7 @@ use React\EventLoop\LoopInterface;
 use React\Http;
 use React\Http\Server;
 use React\Promise\PromiseInterface;
+use TypeError;
 use function Press\Uitls\Respond\respond;
 use function Press\Utils\Compose\compose;
 
@@ -34,7 +35,7 @@ class Application extends Utils\Events
         $this->loop = Factory::create();
     }
 
-    public function listen(array $args)
+    public function listen(array $args = [])
     {
         $host = $args['host'] ?? "0.0.0.0";
         $port = $args['port'] ?? 9222;
@@ -63,7 +64,7 @@ class Application extends Utils\Events
     public function use(callable $fn)
     {
         if (!is_callable($fn)) {
-            throw new \TypeError('middleware must be a function!');
+            throw new TypeError('middleware must be a function!');
         }
 
         array_push($this->middleware, $fn);

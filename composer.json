@@ -9,7 +9,8 @@
     ],
     "autoload": {
         "psr-4": {
-            "Press\\": "lib/"
+            "Press\\": "lib/",
+            "Tests": "tests/"
         },
         "files": ["lib/functions_include.php"]
     },
