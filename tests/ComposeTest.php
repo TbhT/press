@@ -73,4 +73,70 @@ class ComposeTest extends TestCase
             $this->assertSame([1, 2, 3, 4, 5, 6], $arr);
         });
     }
+
+    /** @test */
+    public function shouldBeCalledTwice()
+    {
+        $stack = [];
+
+        array_push($stack, function ($context, $next) {
+            array_push($context->arr, 1);
+            timeout(resolve(), 1, $this->loop)
+                ->otherwise(function () use ($next) {
+                    return $next();
+                })
+                ->then(function () use ($next) {
+                    return timeout(resolve(), 1, $this->loop);
+                })
+                ->otherwise(function () use ($context) {
+                    array_push($context, 6);
+                });
+        });
+
+        array_push($stack, function ($context, $next) {
+            array_push($context->arr, 2);
+            timeout(resolve(), 1, $this->loop)
+                ->otherwise(function () use ($next) {
+                    return $next();
+                })
+                ->then(function () use ($next) {
+                    return timeout(resolve(), 1, $this->loop);
+                })
+                ->otherwise(function () use ($context) {
+                    array_push($context, 5);
+                });
+        });
+
+        array_push($stack, function ($context, $next) {
+            array_push($context->arr, 3);
+            timeout(resolve(), 1, $this->loop)
+                ->otherwise(function () use ($next) {
+                    return $next();
+                })
+                ->then(function () use ($next) {
+                    return timeout(resolve(), 1, $this->loop);
+                })
+                ->otherwise(function () use ($context) {
+                    array_push($context, 4);
+                });
+        });
+
+        $fn = compose($stack);
+
+        $ctx1 = new stdClass();
+        $ctx1->arr = [];
+        $ctx2 = new stdClass();
+        $ctx2->arr = [];
+
+        $out = [1, 2, 3, 4, 5, 6];
+
+        $fn($ctx1)
+            ->then(function () use ($ctx2, $fn, $ctx1, $out) {
+                $this->assertSame($out, $ctx1->arr);
+                return $fn($ctx2);
+            })
+            ->then(function () use ($out, $ctx2) {
+                $this->assertSame($out, $ctx2->arr);
+            });
+    }
 }
