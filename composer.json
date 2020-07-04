@@ -1,28 +1,34 @@
 {
-    "name": "tbht/press",
-    "description": "a frame like nodejs/koa",
-    "authors": [
-        {
-            "name": "TbhT",
-            "email": "hustapple132@gmail.com"
-        }
-    ],
-    "autoload": {
-        "psr-4": {
-            "Press\\": "lib/",
-            "Tests": "tests/"
-        },
-        "files": ["lib/functions_include.php"]
-    },
-    "require": {
-        "tbht/php-events": "^1.0",
-        "php": "^7.4",
-        "react/promise": "^2.8",
-        "react/promise-timer": "^1.5",
-        "react/event-loop": "^1.1",
-        "react/http": "^0.8.6"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^9.2"
+  "name": "tbht/press",
+  "description": "a frame like nodejs/koa",
+  "authors": [
+    {
+      "name": "TbhT",
+      "email": "hustapple132@gmail.com"
     }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Press\\": "lib/"
+    },
+    "files": [
+      "lib/functions_include.php"
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Press\\Tests\\": "tests/"
+    }
+  },
+  "require": {
+    "tbht/php-events": "^1.0",
+    "php": "^7.4",
+    "react/promise": "^2.8",
+    "react/promise-timer": "^1.5",
+    "react/event-loop": "^1.1",
+    "react/http": "^0.8.6"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.2"
+  }
 }

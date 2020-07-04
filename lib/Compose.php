@@ -13,7 +13,7 @@ function noop()
 }
 
 
-function compose(array $middleware): callable
+function compose(array &$middleware): callable
 {
     foreach ($middleware as $fn) {
         if (is_callable($fn) === false) {
@@ -38,7 +38,8 @@ function dispatch($context, $next, &$middleware, &$index, $start): Promise\Promi
 
     $index = $start;
 
-    $fn = $middleware[$start];
+    $fn = isset($middleware[$start]) ? $middleware[$start] : null;
+
     if ($start === count($middleware)) {
         $fn = $next;
     }
@@ -48,10 +49,11 @@ function dispatch($context, $next, &$middleware, &$index, $start): Promise\Promi
     }
 
     try {
-        return Promise\resolve($fn($context, function () use ($start, &$params) {
+        $params = [$context, $next, $middleware, $index];
+        return Promise\resolve($fn($context, function () use ($start, &$params): Promise\PromiseInterface {
             $new_params = $params;
-            array_push($new_params, $start);
-            dispatch(...$new_params);
+            array_push($new_params, $start + 1);
+            return dispatch(...$new_params);
         }));
     } catch (\Exception $error) {
         return Promise\reject($error);

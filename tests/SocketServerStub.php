@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests;
+namespace Press\Tests;
 
 use Evenement\EventEmitter;
 use React\Socket\ServerInterface;

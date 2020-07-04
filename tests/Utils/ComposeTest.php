@@ -1,6 +1,6 @@
 <?php
 
-namespace Utils;
+namespace Press\Utils;
 
 use PHPUnit\Framework\TestCase;
 use React\EventLoop\Factory;

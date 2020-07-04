@@ -42,6 +42,8 @@ class Application extends Utils\Events
 
         $server = new Server($this->callback());
         $socket = new \React\Socket\Server("{$host}:{$port}", $this->loop);
+        $server->on('error', $this->onerror('Server:Error'));
+        $socket->on('error', $this->onerror('Socket:Server:Error'));
         $server->listen($socket);
         $this->loop->run();
     }
@@ -106,10 +108,10 @@ class Application extends Utils\Events
         return $fnMiddleware($ctx)->then($handleResponse)->otherwise($onerror);
     }
 
-    private function onerror()
+    private function onerror($e = '')
     {
-        return function ($error) {
-            var_dump('---error-----', $error);
+        return function ($error) use ($e) {
+            echo "{$e}: ---error-----" . $error;
         };
     }
 

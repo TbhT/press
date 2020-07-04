@@ -1,13 +1,13 @@
 <?php
 
-namespace Tests;
+namespace Press\Tests;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use Press\Application;
 use PHPUnit\Framework\TestCase;
 use Press\Context;
 use React\Http\Server;
-use React\Promise\PromiseInterface;
+
 
 
 class ApplicationTest extends TestCase
@@ -16,12 +16,13 @@ class ApplicationTest extends TestCase
 
     private MockObject $connection;
 
-    public function setUp(): void
+    /** @before */
+    public function setUpConnectionMockAndSocket()
     {
         $this->connection = $this->getMockBuilder('React\Socket\Connection')
             ->disableOriginalConstructor()
             ->setMethods(
-                [
+                array(
                     'write',
                     'end',
                     'close',
@@ -32,7 +33,7 @@ class ApplicationTest extends TestCase
                     'getRemoteAddress',
                     'getLocalAddress',
                     'pipe'
-                ]
+                )
             )
             ->getMock();
 
