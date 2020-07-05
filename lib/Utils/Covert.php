@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Press;
+namespace Press\Utils;
 
 
 class Covert
