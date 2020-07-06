@@ -56,7 +56,6 @@ class Application extends Utils\Events
         $this->on('error', $this->onerror());
 
         return function (ServerRequestInterface $req) use ($fn, $that) {
-            //  todo: may be async
             $res = new Http\Response();
             $ctx = $that->createContext($req, $res);
             return $that->handleRequest($ctx, $fn);
@@ -79,6 +78,8 @@ class Application extends Utils\Events
         $request = $this->request;
         $response = $this->response;
 
+        $context->request = $request;
+        $context->response = $response;
         $context->app = $request->app = $response->app = $this;
         $context->req = $request->req = $response->req = $req;
         $context->res = $response->res = $request->res = $res;
@@ -89,6 +90,9 @@ class Application extends Utils\Events
         $context->originalUrl = $request->originalUrl = $req->getUri();
         $request->ctx = $response->ctx = $context;
 
+        $context->delegateRequest();
+        $context->delegateResponse();
+
         return $context;
     }
 
@@ -98,11 +102,13 @@ class Application extends Utils\Events
         $res->withStatus(404);
 
         $onerror = function ($error) use ($ctx) {
+            var_dump('---- this is handle onerror');
             $ctx->onerror()($error);
         };
 
         $handleResponse = function () use ($ctx) {
-            respond($ctx);
+            var_dump('--- this is handle response');
+            return respond($ctx);
         };
 
         return $fnMiddleware($ctx)->then($handleResponse)->otherwise($onerror);
