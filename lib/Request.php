@@ -95,4 +95,144 @@ class Request
         $uri->withPath($path);
     }
 
+    private function getQuery()
+    {
+        return $this->req->getQueryParams();
+    }
+
+    private function setQuery(array $params)
+    {
+        $this->req->withQueryParams($params);
+    }
+
+    private function getQuerystring()
+    {
+//        todo: query string
+    }
+
+    private function setQuerystring(string $str)
+    {
+//        todo: query string
+    }
+
+    private function getSearch()
+    {
+//        todo:
+    }
+
+    private function setSearch()
+    {
+//        todo:
+    }
+
+    private function getHostname()
+    {
+//        todo:
+    }
+
+    private function getFresh()
+    {
+//        todo:
+    }
+
+    private function getStale()
+    {
+//        todo:
+    }
+
+    private function getIdempotent()
+    {
+//        todo:
+    }
+
+    private function getSocket()
+    {
+//        todo:
+    }
+
+    private function getCharset()
+    {
+//        todo:
+    }
+
+    private function getLength()
+    {
+//        todo:
+    }
+
+    private function getProtocol()
+    {
+//        todo:
+    }
+
+    private function getSecure()
+    {
+//        todo:
+    }
+
+    private function getIps()
+    {
+//        todo:
+    }
+
+    private function getIp()
+    {
+//        todo:
+    }
+
+    private function setIp()
+    {
+//        todo:
+    }
+
+    private function getSubdomains()
+    {
+//        todo:
+    }
+
+    private function getAccept()
+    {
+//        todo:
+    }
+
+    private function setAccept()
+    {
+//        todo:
+    }
+
+    public function accepts()
+    {
+//        todo:
+    }
+
+    public function acceptsEncodings()
+    {
+//        todo:
+    }
+
+    public function acceptsCharsets()
+    {
+//        todo:
+    }
+
+    public function acceptsLanguages()
+    {
+//        todo:
+    }
+
+    public function is()
+    {
+//        todo:
+    }
+
+    private function getType()
+    {
+//        todo:
+    }
+
+    public function get()
+    {
+//        todo:
+    }
+
 }
