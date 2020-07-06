@@ -8,6 +8,9 @@ use Press\Utils\Delegates;
 use Psr\Http\Message\ServerRequestInterface;
 use stdClass;
 
+/**
+ * @property  body object
+ */
 class Context
 {
     public ?Request $request = null;
@@ -27,25 +30,17 @@ class Context
     public function __construct()
     {
         $this->state = new stdClass();
-        $res_delegates = new Delegates($this, 'response');
-        $res_delegates
-            ->method('attachment')
-            ->method('redirect')
-            ->method('remove')
-            ->method('vary')
-            ->method('has')
-            ->method('set')
-            ->method('append')
-            ->method('flushHeaders')
-            ->access('status')
-            ->access('message')
-            ->access('body')
-            ->access('length')
-            ->access('type')
-            ->access('lastModified')
-            ->access('etag')
-            ->getter('headerSent')
-            ->getter('writable');
+    }
+
+    public function onerror()
+    {
+        return function ($error) {
+            var_dump('---error-----', $error);
+        };
+    }
+
+    public function delegateRequest()
+    {
         $req_delegates = new Delegates($this, 'request');
         $req_delegates->method('acceptsLanguages')
             ->method('acceptsEncodings')
@@ -78,10 +73,26 @@ class Context
             ->getter('ip');
     }
 
-    public function onerror()
+    public function delegateResponse()
     {
-        return function ($error) {
-            var_dump('---error-----', $error);
-        };
+        $res_delegates = new Delegates($this, 'response');
+        $res_delegates
+            ->method('attachment')
+            ->method('redirect')
+            ->method('remove')
+            ->method('vary')
+            ->method('has')
+            ->method('set')
+            ->method('append')
+            ->method('flushHeaders')
+            ->access('status')
+            ->access('message')
+            ->access('body')
+            ->access('length')
+            ->access('type')
+            ->access('lastModified')
+            ->access('etag')
+            ->getter('headerSent')
+            ->getter('writable');
     }
 }
