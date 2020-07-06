@@ -24,7 +24,7 @@ class Delegates
         $this->target = $proto->$target;
     }
 
-    public function method(string $name)
+    public function method(string $name): Delegates
     {
         $that = $this;
         array_push($this->methods, $name);
@@ -33,6 +33,8 @@ class Delegates
             $args = func_get_args();
             return ($that->target->$name)(...$args);
         };
+
+        return $this;
     }
 
     public function getter(string $name): Delegates
