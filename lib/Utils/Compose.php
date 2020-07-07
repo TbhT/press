@@ -21,10 +21,10 @@ function compose(array &$middleware): callable
         }
     }
 
-    // last called middleware
-    $index = -1;
+    return function ($context, callable $next = null) use (&$middleware): Promise\PromiseInterface {
+        // last called middleware
+        $index = -1;
 
-    return function ($context, callable $next = null) use (&$middleware, &$index): Promise\PromiseInterface {
         return dispatch($context, $next, $middleware, $index, 0);
     };
 }
@@ -32,6 +32,7 @@ function compose(array &$middleware): callable
 
 function dispatch($context, $next, &$middleware, &$index, $start): Promise\PromiseInterface
 {
+    $l = count($middleware);
     if ($start <= $index) {
         return Promise\reject(new \Error('$next() called multiple times'));
     }

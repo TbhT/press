@@ -7,6 +7,9 @@ namespace Press;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 
+/**
+ * @property string|\string[][]|null host
+ */
 class Request
 {
     public ?Context $ctx = null;
@@ -23,8 +26,20 @@ class Request
 
     public function __get($name)
     {
-        if ($name === 'header') {
+        if ($name === 'header' || $name === 'headers') {
             return $this->getHeader();
+        }
+
+        if ($name === 'url') {
+            return $this->getUrl();
+        }
+
+        if ($name === 'origin') {
+            return $this->getOrigin();
+        }
+
+        if ($name === 'href') {
+            return $this->getHref();
         }
 
         return null;
@@ -32,8 +47,12 @@ class Request
 
     public function __set($name, $value)
     {
-        if ($name === 'header') {
+        if ($name === 'header' || $name === 'headers') {
             $this->setHeader($name, $value);
+        }
+
+        if ($name === 'url') {
+            $this->setUrl($value);
         }
     }
 
@@ -47,19 +66,21 @@ class Request
         $this->req->withHeader($name, $value);
     }
 
-    private function getUrl()
+    private function getUrl(): string
     {
-//        todo: url string whole
+        $uri = $this->req->getUri();
+        return "{$uri->getPath()}?{$uri->getQuery()}";
     }
 
     private function setUrl(UriInterface $url)
     {
-//        todo: url string whole
+        $this->req->withUri($url);
     }
 
     private function getOrigin()
     {
-//        todo: protocol . host
+        $uri = $this->req->getUri();
+        return "{$uri->getScheme()}://{$this->host}";
     }
 
     private function getHref()
