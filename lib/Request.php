@@ -6,9 +6,14 @@ namespace Press;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
+use function RingCentral\Psr7\str;
 
 /**
  * @property string|\string[][]|null host
+ * @property string|\string[][]|null origin
+ * @property array|string|\string[][]|null url
+ * @property array|string|\string[][]|null querystring
+ * @property array|string|\string[][]|null hostname
  */
 class Request
 {
@@ -42,6 +47,22 @@ class Request
             return $this->getHref();
         }
 
+        if ($name === 'method') {
+            return $this->getMethod();
+        }
+
+        if ($name === 'path') {
+            return $this->getPath();
+        }
+
+        if ($name === 'query') {
+            return $this->getQuery();
+        }
+
+        if ($name === 'querystring') {
+            return $this->getQuerystring();
+        }
+
         return null;
     }
 
@@ -54,6 +75,24 @@ class Request
         if ($name === 'url') {
             $this->setUrl($value);
         }
+
+        if ($name === 'method') {
+            $this->setMethod($value);
+        }
+
+        if ($name === 'path') {
+            $this->setPath($value);
+        }
+
+        if ($name === 'query') {
+            $this->setQuery($value);
+        }
+
+        if ($name === 'querystring') {
+            $this->setQuerystring($value);
+        }
+
+
     }
 
     private function getHeader()
@@ -85,7 +124,11 @@ class Request
 
     private function getHref()
     {
-//        todo: protocol . host . url
+        if (preg_match('/^https?:\\/\\//', $this->originalUrl)) {
+            return $this->originalUrl;
+        }
+
+        return "{$this->origin}{$this->originalUrl}";
     }
 
     private function getMethod(): string
@@ -128,27 +171,42 @@ class Request
 
     private function getQuerystring()
     {
-//        todo: query string
+        $queryParams = $this->getQuery();
+        $kvArray = [];
+
+        foreach ($queryParams as $key => $value) {
+            array_push($kvArray, "{$key}=$value");
+        }
+
+        return join("&", $kvArray);
     }
 
     private function setQuerystring(string $str)
     {
-//        todo: query string
+        $this->url = $str;
     }
 
     private function getSearch()
     {
-//        todo:
+        if (!$this->querystring) {
+            return "";
+        }
+
+        return "?{$this->querystring}";
     }
 
-    private function setSearch()
+    private function setSearch(string $str)
     {
-//        todo:
+        $this->querystring = $str;
     }
 
     private function getHostname()
     {
-//        todo:
+        if (!$this->host) {
+            return "";
+        }
+
+        return $this->hostname;
     }
 
     private function getFresh()
