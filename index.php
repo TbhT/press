@@ -7,7 +7,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 $app = new \Press\Application();
 
 $app->use(function (\Press\Context $ctx,callable $next) {
-    var_dump('>>>>>>hello world');
+    var_dump('>>>>>>hello world', $ctx->req->getUri());
     return $next();
 });
 
