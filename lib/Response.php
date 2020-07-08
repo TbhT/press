@@ -8,6 +8,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * @property array|int|mixed|\React\Socket\Server|string|null status
+ * @property array|int|mixed|\React\Socket\Server|string|null type
+ * @property array|int|mixed|\React\Socket\Server|string|null length
  */
 class Response
 {
@@ -22,6 +24,8 @@ class Response
     public ?Context $ctx = null;
 
     private $body;
+
+    public bool $headersSent = false;
 
     public function __get($name)
     {
@@ -41,6 +45,14 @@ class Response
             return $this->getMessage();
         }
 
+        if ($name === 'body') {
+            return $this->getBody();
+        }
+
+        if ($name === 'length') {
+            return $this->getLength();
+        }
+
         return null;
     }
 
@@ -54,7 +66,13 @@ class Response
             $this->setMessage($value);
         }
 
+        if ($name === 'body') {
+            $this->setBody($value);
+        }
 
+        if ($name === 'length') {
+            $this->setLength($value);
+        }
 
     }
 
@@ -90,11 +108,124 @@ class Response
 
     private function getBody()
     {
-
+        return $this->body;
     }
 
-    private function setBody()
+    private function setBody($value)
     {
+        $original = $this->body;
+        $this->body = $value;
 
+        //  no content
+        if ($value === null) {
+            $this->remove('Content-Type');
+            $this->remove('Content-Length');
+            $this->remove('Transfer-Encoding');
+            return;
+        }
+
+        if (!$this->status) {
+            $this->status = 200;
+        }
+
+        $hasType = !$this->has('Content-Type');
+
+        if (is_string($value)) {
+            $this->type = preg_match('/^\s*</', $value) ? 'html' : 'text';
+            $this->length = $this->res->getBody()->getSize() || 0;
+            return;
+        }
+
+        $this->remove('Content-Length');
+        $this->type = 'json';
+    }
+
+    private function getLength()
+    {
+        return $this->res->getHeader('Content-Length');
+    }
+
+    private function setLength(int $n)
+    {
+        $this->res->withHeader('Content-Length', $n);
+    }
+
+    public function remove($filed)
+    {
+        if ($this->headersSent) {
+            return;
+        }
+
+        $this->res->withoutHeader($filed);
+    }
+
+    public function has(string $field)
+    {
+        return $this->res->hasHeader($field);
+    }
+
+    public function vary()
+    {
+//        todo:
+    }
+
+    public function redirect()
+    {
+//        todo:
+    }
+
+    public function attachment()
+    {
+//        todo:
+    }
+
+    private function getType()
+    {
+//        todo:
+    }
+
+    private function setType()
+    {
+//        todo:
+    }
+
+    private function getLastModified()
+    {
+//        todo:
+    }
+
+    private function setLastModified()
+    {
+//        todo:
+    }
+
+    private function getEtag()
+    {
+//        todo:
+    }
+
+    private function setEtag()
+    {
+//        todo:
+    }
+
+    public function is()
+    {
+//        todo:
+    }
+
+    public function get(string $field)
+    {
+        return $this->res->getHeader(strtolower($field)) || "";
+    }
+
+    public function set(string $field, $value)
+    {
+        $this->res->withHeader($field, $value);
+    }
+
+    public function append()
+    {
+//        todo:
     }
 }
