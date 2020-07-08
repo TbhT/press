@@ -10,6 +10,7 @@ use React\EventLoop\LoopInterface;
 use React\Http;
 use React\Http\Server;
 use React\Promise\PromiseInterface;
+use React\Socket\Server as SocketServer;
 use TypeError;
 use function Press\Uitls\Respond\respond;
 use function Press\Utils\Compose\compose;
@@ -27,6 +28,8 @@ class Application extends Utils\Events
 
     private ?LoopInterface $loop = null;
 
+    public ?SocketServer $socket = null;
+
     public function __construct()
     {
         $this->context = new Context();
@@ -41,7 +44,9 @@ class Application extends Utils\Events
         $port = $args['port'] ?? 9222;
 
         $server = new Server($this->callback());
-        $socket = new \React\Socket\Server("{$host}:{$port}", $this->loop);
+        $socket = new SocketServer("{$host}:{$port}", $this->loop);
+        $this->socket = $socket;
+
         $server->on('error', $this->onerror('Server:Error'));
         $socket->on('error', $this->onerror('Socket:Server:Error'));
         $server->listen($socket);
