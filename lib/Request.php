@@ -63,6 +63,14 @@ class Request
             return $this->getQuerystring();
         }
 
+        if ($name === 'search') {
+            return $this->getSearch();
+        }
+
+        if ($name === 'host' || $name === 'hostname') {
+            return $this->getHost();
+        }
+
         return null;
     }
 
@@ -90,6 +98,10 @@ class Request
 
         if ($name === 'querystring') {
             $this->setQuerystring($value);
+        }
+
+        if ($name === 'search') {
+            $this->setSearch($value);
         }
 
 
