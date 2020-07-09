@@ -104,7 +104,9 @@ class Request
             $this->setSearch($value);
         }
 
-
+        if (!isset($this->$name)) {
+            $this->$name = $value;
+        }
     }
 
     private function getHeader()

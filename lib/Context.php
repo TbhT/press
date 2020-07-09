@@ -32,6 +32,15 @@ class Context
         $this->state = new stdClass();
     }
 
+    public function __get($name)
+    {
+        if (isset($this->$name) === false) {
+            return null;
+        }
+
+        return $this->$name;
+    }
+
     public function onerror()
     {
         return function ($error) {

@@ -74,6 +74,9 @@ class Response
             $this->setLength($value);
         }
 
+        if (!isset($this->$name)) {
+            $this->$name = $value;
+        }
     }
 
     private function getSocket()
