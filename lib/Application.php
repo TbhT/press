@@ -18,11 +18,11 @@ use function Press\Utils\Compose\compose;
 
 class Application extends Utils\Events
 {
-    private ?Context $context = null;
+    public ?Context $context = null;
 
-    private ?Request $request = null;
+    public ?Request $request = null;
 
-    private ?Response $response = null;
+    public ?Response $response = null;
 
     private array $middleware = [];
 

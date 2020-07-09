@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use stdClass;
 
 /**
+ * @property status int
  * @property  body object
  */
 class Context
@@ -30,6 +31,15 @@ class Context
     public function __construct()
     {
         $this->state = new stdClass();
+    }
+
+    public function __get($name)
+    {
+        if (isset($this->$name) === false) {
+            return null;
+        }
+
+        return $this->$name;
     }
 
     public function onerror()

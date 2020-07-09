@@ -4,9 +4,11 @@
 namespace Press;
 
 
+use Exception;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
-use function RingCentral\Psr7\str;
+use function Press\Utils\ContentType\parse;
+use function Press\Utils\fresh;
 
 /**
  * @property string|\string[][]|null host
@@ -14,6 +16,9 @@ use function RingCentral\Psr7\str;
  * @property array|string|\string[][]|null url
  * @property array|string|\string[][]|null querystring
  * @property array|string|\string[][]|null hostname
+ * @property array|string|\string[][]|null method
+ * @property array|string|\string[][]|null header
+ * @property array|bool|string|\string[][]|null fresh
  */
 class Request
 {
@@ -71,6 +76,26 @@ class Request
             return $this->getHost();
         }
 
+        if ($name === 'fresh') {
+            return $this->getFresh();
+        }
+
+        if ($name === 'stale') {
+            return !$this->getFresh();
+        }
+
+        if ($name === 'idempotent') {
+            return $this->getIdempotent();
+        }
+
+        if ($name === 'charset') {
+            return $this->getCharset();
+        }
+
+        if ($name === 'length') {
+            return $this->getLength();
+        }
+
         return null;
     }
 
@@ -104,7 +129,9 @@ class Request
             $this->setSearch($value);
         }
 
-
+        if (!isset($this->$name)) {
+            $this->$name = $value;
+        }
     }
 
     private function getHeader()
@@ -223,17 +250,25 @@ class Request
 
     private function getFresh()
     {
-//        todo:
-    }
+        $method = $this->method;
+        $status = $this->ctx->status;
 
-    private function getStale()
-    {
-//        todo:
+        if ($method !== 'GET' && $method !== 'HEAD') {
+            return false;
+        }
+
+        // 2xx or 304 as per rfc2616 14.26
+        if ($status >= 200 && $status < 300) {
+            return fresh($this->header, $this->response->header);
+        }
+
+        return false;
     }
 
     private function getIdempotent()
     {
-//        todo:
+        $methods = ['GET', 'HEAD', 'PUT', 'DELETE', 'OPTIONS', 'TRACE'];
+        return array_search($this->method, $methods);
     }
 
     private function getSocket()
@@ -243,12 +278,18 @@ class Request
 
     private function getCharset()
     {
-//        todo:
+        try {
+            $types = parse($this->req);
+            return $types['parameters']['charset'] ?? "";
+        } catch (Exception $error) {
+            return '';
+        }
     }
 
     private function getLength()
     {
-//        todo:
+        $length = $this->get('Content-Length');
+        return ~~$length;
     }
 
     private function getProtocol()
@@ -303,7 +344,7 @@ class Request
 
     public function acceptsCharsets()
     {
-//        todo:
+//      todo:
     }
 
     public function acceptsLanguages()
@@ -321,9 +362,19 @@ class Request
 //        todo:
     }
 
-    public function get()
+    public function get(string $field)
     {
-//        todo:
+        $lowerField = strtolower($field);
+
+        switch ($lowerField) {
+            case 'referer':
+            case 'referrer':
+            {
+                return $this->req->getHeader('referer') ?? $this->req->getHeader('referrer') ?? "";
+            }
+            default:
+                return $this->req->getHeader($lowerField);
+        }
     }
 
 }

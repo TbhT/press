@@ -9,12 +9,25 @@ use Press\Context;
 use React\Http\Server;
 
 
-
 class ApplicationTest extends TestCase
 {
     private $socket;
 
     private MockObject $connection;
+
+    private function setApp()
+    {
+        $app = new Application();
+        $server = new Server($app->callback());
+        $server->listen($this->socket);
+        return $app;
+    }
+
+    private function setClientReq()
+    {
+        $this->socket->emit('connection', array($this->connection));
+        $this->connection->emit('data', array("GET / HTTP/1.0\r\n\r\n"));
+    }
 
     /** @before */
     public function setUpConnectionMockAndSocket()
@@ -46,9 +59,7 @@ class ApplicationTest extends TestCase
     /**  @test */
     public function shouldComposeMiddleware()
     {
-        $app = new Application();
-        $server = new Server($app->callback());
-        $server->listen($this->socket);
+        $app = $this->setApp();
 
         $calls = [];
 
@@ -73,8 +84,69 @@ class ApplicationTest extends TestCase
             });
         });
 
-        $this->socket->emit('connection', array($this->connection));
-        $this->connection->emit('data', array("GET / HTTP/1.0\r\n\r\n"));
+        $this->setClientReq();
         $this->assertSame([1, 2, 3, 4, 5, 6], $calls);
+    }
+
+    /** @test */
+    public function shouldComposeMixedMiddleware()
+    {
+        $this->markTestSkipped('todo mixed middleware');
+    }
+
+    /** @test */
+    public function contextShouldMergeProperties()
+    {
+        $app = $this->setApp();
+
+        $app->context->msg = 'hello';
+        $app->use(function (Context $ctx, callable $next) {
+            $this->assertSame('hello', $ctx->msg);
+        });
+
+        $this->setClientReq();
+    }
+
+    /** @test */
+    public function contextShouldNoEffectToOriginal()
+    {
+        $app1 = $this->setApp();
+        $app2 = $this->setApp();
+
+        $app2->use(function (Context $ctx, callable $next) {
+            $this->assertSame(null, $ctx->msg);
+        });
+
+        $app1->context->msg = 'hello';
+
+        $this->setClientReq();
+    }
+
+    /** @test */
+    public function requestShouldMergeProperties()
+    {
+        $app1 = $this->setApp();
+
+        $app1->request->msg = 'hello';
+        $app1->use(function (Context $ctx, callable $next) {
+            $this->assertSame('hello', $ctx->request->msg);
+        });
+
+        $this->setClientReq();
+    }
+
+    /** @test */
+    public function requestShouldNoEffectOriginal()
+    {
+        $app1 = $this->setApp();
+        $app2 = $this->setApp();
+
+        $app2->use(function (Context $ctx, callable $next) {
+            $this->assertSame(null, $ctx->request->msg);
+        });
+
+        $app1->request->msg = 'hello';
+
+        $this->setClientReq();
     }
 }
