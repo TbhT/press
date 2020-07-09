@@ -92,7 +92,6 @@ class Context
             ->access('type')
             ->access('lastModified')
             ->access('etag')
-            ->getter('headerSent')
-            ->getter('writable');
+            ->getter('headerSent');
     }
 }

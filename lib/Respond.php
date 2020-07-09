@@ -18,6 +18,7 @@ function respond(Context $ctx): PromiseInterface
             $code = $ctx->status;
 
             if (!$code) {
+                $ctx->response->headerSent = true;
                 return $resolve($res);
             }
 
