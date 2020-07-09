@@ -7,7 +7,7 @@ use function Press\Utils\fresh;
 use PHPUnit\Framework\TestCase;
 
 
-class Test extends TestCase
+class FreshTest extends TestCase
 {
 
     public function testFreshWhenNonConditionalGet()

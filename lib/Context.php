@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use stdClass;
 
 /**
+ * @property status int
  * @property  body object
  */
 class Context
