@@ -19,6 +19,9 @@ use function Press\Utils\fresh;
  * @property array|string|\string[][]|null method
  * @property array|string|\string[][]|null header
  * @property array|bool|string|\string[][]|null fresh
+ * @property array|bool|false|int|mixed|string|\string[][]|null protocol
+ * @property array|bool|false|int|mixed|string|\string[][] ips
+ * @property array|bool|false|int|mixed|string|\string[][] ip
  */
 class Request
 {
@@ -96,6 +99,26 @@ class Request
             return $this->getLength();
         }
 
+        if ($name === 'protocol') {
+            return $this->getProtocol();
+        }
+
+        if ($name === 'secure') {
+            return $this->getSecure();
+        }
+
+        if ($name === 'ips') {
+            return $this->getIps();
+        }
+
+        if ($name === 'ip') {
+            return $this->getIp();
+        }
+
+        if ($name === 'subdomains') {
+            return $this->getSubdomains();
+        }
+
         return null;
     }
 
@@ -127,6 +150,10 @@ class Request
 
         if ($name === 'search') {
             $this->setSearch($value);
+        }
+
+        if ($name === 'ip') {
+            $this->setIp($value);
         }
 
         if (!isset($this->$name)) {
@@ -294,32 +321,67 @@ class Request
 
     private function getProtocol()
     {
-//        todo:
+        $uri = $this->req->getUri();
+        $schema = $uri->getScheme();
+        if (!$this->app->proxy) {
+            return $schema;
+        }
+
+        $proto = $this->get('X-Forwarded-Proto');
+        $ar = [];
+        if ($proto) {
+            preg_match('/\s*,\s*/', $proto, $ar);
+        }
+
+        return $proto ? $ar[0] : 'http';
     }
 
     private function getSecure()
     {
-//        todo:
+        return $this->protocol === 'https';
     }
 
     private function getIps()
     {
-//        todo:
+        $proxy = $this->app->proxy;
+        $value = $this->get($this->app->proxyIpHeader);
+        $ar = [];
+
+        if ($proxy && $value) {
+            preg_match('/\s*,\s*/', $value, $ar);
+        }
+
+        if ($this->app->maxIpCount > 0) {
+            $ar = array_slice($ar, $this->app->maxIpCount);
+        }
+
+        return $ar;
     }
 
     private function getIp()
     {
-//        todo:
+        if (count($this->ips) > 0) {
+            return $this->ips[0];
+        }
+
+        return '';
     }
 
-    private function setIp()
+    private function setIp($value)
     {
-//        todo:
+        $this->ip = $value;
     }
 
     private function getSubdomains()
     {
-//        todo:
+        $offset = $this->app->subdomainOffset;
+        $hostname = $this->hostname;
+        if (!filter_var($hostname, FILTER_VALIDATE_IP)) {
+            $ar = array_slice(explode($hostname, '.'), $offset);
+            return array_reverse($ar);
+        }
+
+        return [];
     }
 
     private function getAccept()
