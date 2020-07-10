@@ -30,8 +30,24 @@ class Application extends Utils\Events
 
     public ?SocketServer $socket = null;
 
-    public function __construct()
+    public bool $proxy = false;
+
+    public string $proxyIpHeader;
+
+    public string $env;
+
+    public int $maxIpCount;
+
+    public int $subdomainOffset;
+
+    public function __construct($options = [])
     {
+        $this->proxy = $options['proxy'] ?? false;
+        $this->proxyIpHeader = $options['proxyIpHeader'] ?? 'X-Forwarded-For';
+        $this->env = $options['env'] ?? 'development';
+        $this->maxIpCount = $options['maxIpCount'] ?? 0;
+        $this->subdomainOffset = $options['subdomainOffset'] ?? 2;
+
         $this->context = new Context();
         $this->request = new Request();
         $this->response = new Response();
