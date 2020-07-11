@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8c6ddef516520702d192660c6fa88d61",
+    "content-hash": "447f9ed6aa667b6d420f7ebba20ec5a3",
     "packages": [
         {
             "name": "evenement/evenement",
@@ -141,28 +141,28 @@
         },
         {
             "name": "react/dns",
-            "version": "v1.2.0",
+            "version": "v1.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/reactphp/dns.git",
-                "reference": "a214d90c2884dac18d0cac6176202f247b66d762"
+                "reference": "89d83794e959ef3e0f1ab792f070b0157de1abf2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/reactphp/dns/zipball/a214d90c2884dac18d0cac6176202f247b66d762",
-                "reference": "a214d90c2884dac18d0cac6176202f247b66d762",
+                "url": "https://api.github.com/repos/reactphp/dns/zipball/89d83794e959ef3e0f1ab792f070b0157de1abf2",
+                "reference": "89d83794e959ef3e0f1ab792f070b0157de1abf2",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.3.0",
                 "react/cache": "^1.0 || ^0.6 || ^0.5",
                 "react/event-loop": "^1.0 || ^0.5",
-                "react/promise": "^2.7 || ^1.2.1",
+                "react/promise": "^3.0 || ^2.7 || ^1.2.1",
                 "react/promise-timer": "^1.2"
             },
             "require-dev": {
                 "clue/block-react": "^1.2",
-                "phpunit/phpunit": "^7.0 || ^6.4 || ^5.7 || ^4.8.35"
+                "phpunit/phpunit": "^9.0 || ^4.8.35"
             },
             "type": "library",
             "autoload": {
@@ -181,7 +181,7 @@
                 "dns-resolver",
                 "reactphp"
             ],
-            "time": "2019-08-15T09:06:31+00:00"
+            "time": "2020-07-10T12:12:50+00:00"
         },
         {
             "name": "react/event-loop",
@@ -377,25 +377,25 @@
         },
         {
             "name": "react/promise-timer",
-            "version": "v1.5.1",
+            "version": "v1.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/reactphp/promise-timer.git",
-                "reference": "35fb910604fd86b00023fc5cda477c8074ad0abc"
+                "reference": "daee9baf6ef30c43ea4c86399f828bb5f558f6e6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/reactphp/promise-timer/zipball/35fb910604fd86b00023fc5cda477c8074ad0abc",
-                "reference": "35fb910604fd86b00023fc5cda477c8074ad0abc",
+                "url": "https://api.github.com/repos/reactphp/promise-timer/zipball/daee9baf6ef30c43ea4c86399f828bb5f558f6e6",
+                "reference": "daee9baf6ef30c43ea4c86399f828bb5f558f6e6",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.3",
                 "react/event-loop": "^1.0 || ^0.5 || ^0.4 || ^0.3.5",
-                "react/promise": "^2.7.0 || ^1.2.1"
+                "react/promise": "^3.0 || ^2.7.0 || ^1.2.1"
             },
             "require-dev": {
-                "phpunit/phpunit": "^6.4 || ^5.7 || ^4.8.35"
+                "phpunit/phpunit": "^9.0 || ^5.7 || ^4.8.35"
             },
             "type": "library",
             "autoload": {
@@ -426,7 +426,7 @@
                 "timeout",
                 "timer"
             ],
-            "time": "2019-03-27T18:10:32+00:00"
+            "time": "2020-07-10T12:18:06+00:00"
         },
         {
             "name": "react/socket",
@@ -581,6 +581,46 @@
             "time": "2018-05-29T20:21:04+00:00"
         },
         {
+            "name": "tbht/php-accepts",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sugar-libraries/php-accepts.git",
+                "reference": "de919c30e0dd191eae9b3b82b9798145f493d2bd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sugar-libraries/php-accepts/zipball/de919c30e0dd191eae9b3b82b9798145f493d2bd",
+                "reference": "de919c30e0dd191eae9b3b82b9798145f493d2bd",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.0",
+                "tbht/php-negotiator": "^1.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Press\\Utils\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "TbhT",
+                    "email": "hustapple132@gmail.com"
+                }
+            ],
+            "description": "accepts",
+            "time": "2020-07-11T05:48:11+00:00"
+        },
+        {
             "name": "tbht/php-events",
             "version": "1.0.0",
             "source": {
@@ -618,6 +658,45 @@
                 "events"
             ],
             "time": "2020-06-23T07:45:29+00:00"
+        },
+        {
+            "name": "tbht/php-negotiator",
+            "version": "1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sugar-libraries/php-negotiator.git",
+                "reference": "4439ad7139638311a1736989deba3a57aa3d682b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sugar-libraries/php-negotiator/zipball/4439ad7139638311a1736989deba3a57aa3d682b",
+                "reference": "4439ad7139638311a1736989deba3a57aa3d682b",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "6.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Press\\Utils\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "TbhT",
+                    "email": "hustapple132@gmail.com"
+                }
+            ],
+            "description": "negotiator",
+            "time": "2020-07-11T04:57:45+00:00"
         }
     ],
     "packages-dev": [

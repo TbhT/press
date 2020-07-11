@@ -5,23 +5,24 @@ namespace Press;
 
 
 use Exception;
+use Press\Utils\Accepts;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use function Press\Utils\ContentType\parse;
 use function Press\Utils\fresh;
 
 /**
- * @property string|\string[][]|null host
- * @property string|\string[][]|null origin
- * @property array|string|\string[][]|null url
- * @property array|string|\string[][]|null querystring
- * @property array|string|\string[][]|null hostname
- * @property array|string|\string[][]|null method
- * @property array|string|\string[][]|null header
- * @property array|bool|string|\string[][]|null fresh
- * @property array|bool|false|int|mixed|string|\string[][]|null protocol
- * @property array|bool|false|int|mixed|string|\string[][] ips
- * @property array|bool|false|int|mixed|string|\string[][] ip
+ * @property string|string[]|null host
+ * @property string|string[]|null origin
+ * @property array|string|string[]|null url
+ * @property array|string|string[]|null querystring
+ * @property array|string|string[]|null hostname
+ * @property array|string|string[]|null method
+ * @property array|string|string[]|null header
+ * @property array|bool|string|string[]|null fresh
+ * @property array|bool|false|int|mixed|string|string[]|null protocol
+ * @property array|bool|false|int|mixed|string|string[] ips
+ * @property array|bool|false|int|mixed|string|string[] ip
  */
 class Request
 {
@@ -36,6 +37,8 @@ class Request
     public ?Application $app = null;
 
     public string $originalUrl = '';
+
+    private ?Accepts $_accept = null;
 
     public function __get($name)
     {
@@ -119,13 +122,17 @@ class Request
             return $this->getSubdomains();
         }
 
+        if ($name === 'accept') {
+            return $this->getAccept();
+        }
+
         return null;
     }
 
     public function __set($name, $value)
     {
         if ($name === 'header' || $name === 'headers') {
-            $this->setHeader($name, $value);
+            $this->setHeader($value);
         }
 
         if ($name === 'url') {
@@ -156,6 +163,10 @@ class Request
             $this->setIp($value);
         }
 
+        if ($name === 'accept') {
+            $this->setAccept($value);
+        }
+
         if (!isset($this->$name)) {
             $this->$name = $value;
         }
@@ -166,9 +177,11 @@ class Request
         return $this->req->getHeaders();
     }
 
-    private function setHeader($name, $value)
+    private function setHeader($value)
     {
-        $this->req->withHeader($name, $value);
+        foreach ($value as $key => $v) {
+            $this->req->withHeader($key, $v);
+        }
     }
 
     private function getUrl(): string
@@ -386,17 +399,22 @@ class Request
 
     private function getAccept()
     {
-//        todo:
+        if (!$this->_accept) {
+            $this->_accept = new Accepts($this);
+        }
+
+        return $this->_accept;
     }
 
-    private function setAccept()
+    private function setAccept($value)
     {
-//        todo:
+        $this->_accept = $value;
     }
 
     public function accepts()
     {
-//        todo:
+        $args = func_get_args();
+        return $this->_accept->types($args);
     }
 
     public function acceptsEncodings()
