@@ -4,7 +4,10 @@
 namespace Press;
 
 
+use Cassandra\Date;
 use Psr\Http\Message\ServerRequestInterface;
+use function Press\Utils\typeIs;
+use function Press\Utils\Vary\vary;
 
 /**
  * @property array|int|mixed|\React\Socket\Server|string|null status
@@ -54,6 +57,18 @@ class Response
             return $this->getLength();
         }
 
+        if ($name === 'type') {
+            return $this->getType();
+        }
+
+        if ($name === 'lastModified') {
+            return $this->getLastModified();
+        }
+
+        if ($name === 'etag') {
+            return $this->getEtag();
+        }
+
         return null;
     }
 
@@ -73,6 +88,18 @@ class Response
 
         if ($name === 'length') {
             $this->setLength($value);
+        }
+
+        if ($name === 'type') {
+            $this->setType($value);
+        }
+
+        if ($name === 'lastModified') {
+            $this->setLastModified($value);
+        }
+
+        if ($name === 'etag') {
+            $this->setEtag($value);
         }
 
         if (!isset($this->$name)) {
@@ -135,7 +162,10 @@ class Response
         $hasType = !$this->has('Content-Type');
 
         if (is_string($value)) {
-            $this->type = preg_match('/^\s*</', $value) ? 'html' : 'text';
+            if ($hasType) {
+                $this->type = preg_match('/^\s*</', $value) ? 'html' : 'text';
+            }
+
             $this->length = $this->res->getBody()->getSize() || 0;
             return;
         }
@@ -168,9 +198,13 @@ class Response
         return $this->res->hasHeader($field);
     }
 
-    public function vary()
+    public function vary($field)
     {
-//        todo:
+        if ($this->headersSent) {
+            return;
+        }
+
+        vary($this, $field);
     }
 
     public function redirect()
@@ -185,37 +219,49 @@ class Response
 
     private function getType()
     {
-//        todo:
+        $type = $this->get('Content-Type');
+        if (!$type) {
+            return '';
+        }
+
+        $ar = explode(';', $type);
+        return $ar[0];
     }
 
-    private function setType()
+    private function setType($value = null)
     {
-//        todo:
+        if ($value) {
+            $this->set('Content-Type', $value);
+        } else {
+            $this->remove('Content-Type');
+        }
     }
 
     private function getLastModified()
     {
-//        todo:
+        return $this->get('last-modified');
     }
 
-    private function setLastModified()
+    private function setLastModified($value)
     {
-//        todo:
+        $this->set('Last-Modified', $value);
     }
 
     private function getEtag()
     {
-//        todo:
+        return $this->get('ETag');
     }
 
-    private function setEtag()
+    private function setEtag($value)
     {
-//        todo:
+        $this->set('ETag', $value);
     }
 
-    public function is()
+    public function is(...$args)
     {
-//        todo:
+        $type = $args[0];
+        $args = array_slice($args, 1);
+        return typeIs($this, $type, ...$args);
     }
 
     public function get(string $field)
