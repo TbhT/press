@@ -10,6 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use function Press\Utils\ContentType\parse;
 use function Press\Utils\fresh;
+use function Press\Utils\typeIs;
 
 /**
  * @property string|string[]|null host
@@ -124,6 +125,10 @@ class Request
 
         if ($name === 'accept') {
             return $this->getAccept();
+        }
+
+        if ($name === 'type') {
+            return $this->getType();
         }
 
         return null;
@@ -417,29 +422,37 @@ class Request
         return $this->_accept->types($args);
     }
 
-    public function acceptsEncodings()
+    public function acceptsEncodings(...$args)
     {
-//        todo:
+        return $this->_accept->encoding(...$args);
     }
 
-    public function acceptsCharsets()
+    public function acceptsCharsets(...$args)
     {
-//      todo:
+        return $this->_accept->charsets(...$args);
     }
 
-    public function acceptsLanguages()
+    public function acceptsLanguages(...$args)
     {
-//        todo:
+        return $this->_accept->languages(...$args);
     }
 
-    public function is()
+    public function is(...$args)
     {
-//        todo:
+        $type = $args[0];
+        $args = array_slice($args, 1);
+        return typeIs($this, $type, ...$args);
     }
 
     private function getType()
     {
-//        todo:
+        $type = $this->get('Content-Type');
+        if (!$type) {
+            return '';
+        }
+
+        $ar = explode(';', $type);
+        return $ar[0];
     }
 
     public function get(string $field)
