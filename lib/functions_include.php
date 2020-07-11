@@ -23,3 +23,7 @@ if (!function_exists('Press\Utils\typeOfRequest')
 ) {
     require __DIR__ . '/Utils/TypeIs.php';
 }
+
+if (!function_exists('Press\Utils\vary')) {
+    require __DIR__ . '/Utils/Vary.php';
+}
