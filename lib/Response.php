@@ -14,6 +14,7 @@ use function Press\Utils\Vary\vary;
  * @property array|int|mixed|\React\Socket\Server|string|null type
  * @property array|int|mixed|\React\Socket\Server|string|null length
  * @property array|int|mixed|\React\Socket\Server|string|null header
+ * @property bool headerSent
  */
 class Response
 {

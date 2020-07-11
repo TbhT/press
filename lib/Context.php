@@ -6,11 +6,15 @@ namespace Press;
 
 use Press\Utils\Delegates;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamInterface;
 use stdClass;
 
 /**
- * @property status int
- * @property  body object
+ * @property int|null $status
+ * @property resource|string|StreamInterface|null $body
+ * @property string|null $method
+ * @property array|int|mixed|\React\Socket\Server|string|null $length
+ * @property string|null type
  */
 class Context
 {

@@ -54,8 +54,13 @@ class Application extends Utils\Events
         $this->loop = Factory::create();
     }
 
-    public function listen(array $args = [])
+    public function listen($args = [])
     {
+        if (!is_array($args)) {
+            $fn = $args;
+            $args = [];
+        }
+
         $host = $args['host'] ?? "0.0.0.0";
         $port = $args['port'] ?? 9222;
 
@@ -66,6 +71,11 @@ class Application extends Utils\Events
         $server->on('error', $this->onerror('Server:Error'));
         $socket->on('error', $this->onerror('Socket:Server:Error'));
         $server->listen($socket);
+
+        if ($fn) {
+            $fn();
+        }
+
         $this->loop->run();
     }
 
