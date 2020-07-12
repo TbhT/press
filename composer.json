@@ -15,6 +15,9 @@
       "lib/functions_include.php"
     ]
   },
+  "scripts": {
+    "test": "./vendor/bin/phpunit --coverage-clover=coverage.xml"
+  },
   "autoload-dev": {
     "psr-4": {
       "Press\\Tests\\": "tests/"
