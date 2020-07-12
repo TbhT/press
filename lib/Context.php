@@ -16,6 +16,7 @@ use stdClass;
  * @property string|null $method
  * @property array|int|mixed|Server|string|null $length
  * @property string|null type
+ * @property string|null url
  */
 class Context
 {
