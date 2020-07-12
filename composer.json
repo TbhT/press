@@ -1,6 +1,7 @@
 {
   "name": "tbht/press",
   "description": "a frame like nodejs/koa",
+  "license": ["Apache-2.0"],
   "authors": [
     {
       "name": "TbhT",
