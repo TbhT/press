@@ -1,5 +1,7 @@
 # Press
 
+![PHP Composer](https://github.com/TbhT/press/workflows/PHP%20Composer/badge.svg)
+
 > This project is a translation of koa framework of nodejs.
 
 ## doc
