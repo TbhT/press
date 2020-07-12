@@ -26,7 +26,7 @@ class Application extends Utils\Events
 
     private array $middleware = [];
 
-    private ?LoopInterface $loop = null;
+    public ?LoopInterface $loop = null;
 
     public ?SocketServer $socket = null;
 
@@ -59,12 +59,14 @@ class Application extends Utils\Events
         if (!is_array($args)) {
             $fn = $args;
             $args = [];
+        } else {
+            $fn = null;
         }
 
         $host = $args['host'] ?? "0.0.0.0";
         $port = $args['port'] ?? 9222;
 
-        $server = new Server($this->callback());
+        $server = new Server($this->loop, $this->callback());
         $socket = new SocketServer("{$host}:{$port}", $this->loop);
         $this->socket = $socket;
 
@@ -87,7 +89,7 @@ class Application extends Utils\Events
         $this->on('error', $this->onerror());
 
         return function (ServerRequestInterface $req) use ($fn, $that) {
-            $res = new Http\Response();
+            $res = new Http\Message\Response();
             $ctx = $that->createContext($req, $res);
             return $that->handleRequest($ctx, $fn);
         };
@@ -103,7 +105,7 @@ class Application extends Utils\Events
         return $this;
     }
 
-    private function createContext(ServerRequestInterface $req, Http\Response $res): Context
+    private function createContext(ServerRequestInterface $req, Http\Message\Response $res): Context
     {
         $context = $this->context;
         $request = $this->request;
@@ -138,7 +140,6 @@ class Application extends Utils\Events
         };
 
         $handleResponse = function () use ($ctx) {
-            var_dump('--- this is handle response');
             return respond($ctx);
         };
 

@@ -4,16 +4,16 @@
 namespace Press;
 
 
-use Cassandra\Date;
 use Psr\Http\Message\ServerRequestInterface;
+use React\Socket\Server;
 use function Press\Utils\typeIs;
 use function Press\Utils\Vary\vary;
 
 /**
- * @property array|int|mixed|\React\Socket\Server|string|null status
- * @property array|int|mixed|\React\Socket\Server|string|null type
- * @property array|int|mixed|\React\Socket\Server|string|null length
- * @property array|int|mixed|\React\Socket\Server|string|null header
+ * @property array|int|mixed|Server|string|null status
+ * @property array|int|mixed|Server|string|null type
+ * @property array|int|mixed|Server|string|null length
+ * @property array|int|mixed|Server|string|null header
  * @property bool headerSent
  */
 class Response
@@ -22,13 +22,13 @@ class Response
 
     public ?ServerRequestInterface $req = null;
 
-    public ?\React\Http\Response $res = null;
+    public ?\React\Http\Message\Response $res = null;
 
     public ?Application $app = null;
 
     public ?Context $ctx = null;
 
-    private $body;
+    private ?object $body = null;
 
     public bool $headersSent = false;
 
@@ -145,7 +145,6 @@ class Response
 
     private function setBody($value)
     {
-        $original = $this->body;
         $this->body = $value;
 
         //  no content

@@ -33,7 +33,7 @@ class Request
 
     public ?ServerRequestInterface $req = null;
 
-    public ?\React\Http\Response $res = null;
+    public ?\React\Http\Message\Response $res = null;
 
     public ?Application $app = null;
 

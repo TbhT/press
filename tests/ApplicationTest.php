@@ -6,6 +6,9 @@ use PHPUnit\Framework\MockObject\MockObject;
 use Press\Application;
 use PHPUnit\Framework\TestCase;
 use Press\Context;
+use Psr\Http\Message\ResponseInterface;
+use React\EventLoop\Factory;
+use React\Http\Browser;
 use React\Http\Server;
 
 
@@ -13,12 +16,14 @@ class ApplicationTest extends TestCase
 {
     private $socket;
 
-    private MockObject $connection;
+    private $connection;
+
+    private ?Browser $browser;
 
     private function setApp()
     {
         $app = new Application();
-        $server = new Server($app->callback());
+        $server = new Server($app->loop, $app->callback());
         $server->listen($this->socket);
         return $app;
     }
@@ -52,6 +57,8 @@ class ApplicationTest extends TestCase
 
         $this->connection->method('isWritable')->willReturn(true);
         $this->connection->method('isReadable')->willReturn(true);
+
+        $this->browser = new Browser(Factory::create());
 
         $this->socket = new SocketServerStub();
     }
@@ -148,5 +155,40 @@ class ApplicationTest extends TestCase
         $app1->request->msg = 'hello';
 
         $this->setClientReq();
+    }
+
+    /** @test */
+    public function responseShouldMergeProperties()
+    {
+        $app1 = $this->setApp();
+        $app1->response->msg = 'hello';
+
+        $app1->use(function (Context $ctx, callable $next) {
+            $this->assertSame('hello', $ctx->response->msg);
+            $ctx->status = 204;
+        });
+
+        $this->setClientReq();
+    }
+
+    /** @test */
+    public function responseShouldNoEffectOriginal()
+    {
+        $app1 = $this->setApp();
+        $app2 = $this->setApp();
+
+        $app2->use(function (Context $ctx, callable $next) {
+            $this->assertSame(null, $ctx->response->msg);
+        });
+
+        $app1->response->msg = 'hello';
+
+        $this->setClientReq();
+    }
+
+    /** @test */
+    public function response()
+    {
+
     }
 }
