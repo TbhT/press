@@ -186,9 +186,4 @@ class ApplicationTest extends TestCase
         $this->setClientReq();
     }
 
-    /** @test */
-    public function response()
-    {
-
-    }
 }
