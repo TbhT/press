@@ -6,11 +6,16 @@ namespace Press;
 
 use Press\Utils\Delegates;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamInterface;
+use React\Socket\Server;
 use stdClass;
 
 /**
- * @property status int
- * @property  body object
+ * @property int|null $status
+ * @property resource|string|StreamInterface|null $body
+ * @property string|null $method
+ * @property array|int|mixed|Server|string|null $length
+ * @property string|null type
  */
 class Context
 {
@@ -20,7 +25,7 @@ class Context
 
     public ?Application $app = null;
 
-    public ?\React\Http\Response $res = null;
+    public ?\React\Http\Message\Response $res = null;
 
     public ?ServerRequestInterface $req = null;
 
@@ -35,6 +40,8 @@ class Context
 
     public function __get($name)
     {
+
+
         if (isset($this->$name) === false) {
             return null;
         }
@@ -48,6 +55,8 @@ class Context
             var_dump('---error-----', $error);
         };
     }
+
+
 
     public function delegateRequest()
     {
