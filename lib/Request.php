@@ -177,6 +177,11 @@ class Request
         }
     }
 
+    public function __call($name, $args)
+    {
+        return call_user_func_array($this->$name, $args);
+    }
+
     private function getHeader()
     {
         return $this->req->getHeaders();
@@ -394,7 +399,7 @@ class Request
     {
         $offset = $this->app->subdomainOffset;
         $hostname = $this->hostname;
-        if (!filter_var($hostname, FILTER_VALIDATE_IP)) {
+        if (filter_var($hostname, FILTER_VALIDATE_IP)) {
             $ar = array_slice(explode($hostname, '.'), $offset);
             return array_reverse($ar);
         }

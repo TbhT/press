@@ -17,6 +17,7 @@ use stdClass;
  * @property array|int|mixed|Server|string|null $length
  * @property string|null type
  * @property string|null url
+ * @property array|null accepts
  */
 class Context
 {
@@ -42,12 +43,16 @@ class Context
     public function __get($name)
     {
 
-
         if (isset($this->$name) === false) {
             return null;
         }
 
         return $this->$name;
+    }
+
+    public function __call($name, $args)
+    {
+        return call_user_func_array($this->$name, $args);
     }
 
     public function onerror()
@@ -56,8 +61,6 @@ class Context
             var_dump('---error-----', $error);
         };
     }
-
-
 
     public function delegateRequest()
     {

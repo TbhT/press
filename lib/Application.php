@@ -105,7 +105,7 @@ class Application extends Utils\Events
         return $this;
     }
 
-    private function createContext(ServerRequestInterface $req, Http\Message\Response $res): Context
+    public function createContext(ServerRequestInterface $req, Http\Message\Response $res): Context
     {
         $context = $this->context;
         $request = $this->request;
