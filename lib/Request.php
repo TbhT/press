@@ -24,6 +24,7 @@ use function Press\Utils\typeIs;
  * @property array|bool|false|int|mixed|string|string[]|null protocol
  * @property array|bool|false|int|mixed|string|string[] ips
  * @property array|bool|false|int|mixed|string|string[] ip
+ * @property int|mixed|Accepts|string|string[] accept
  */
 class Request
 {
@@ -131,7 +132,11 @@ class Request
             return $this->getType();
         }
 
-        return null;
+        if (isset($this->$name) === false) {
+            return null;
+        }
+
+        return $this->$name;
     }
 
     public function __set($name, $value)
@@ -189,8 +194,14 @@ class Request
 
     private function setHeader($value)
     {
+        $h = null;
+
         foreach ($value as $key => $v) {
-            $this->req->withHeader($key, $v);
+            $h = $this->req->withHeader($key, $v);
+        }
+
+        if ($h) {
+            $this->req = $h;
         }
     }
 
@@ -424,22 +435,22 @@ class Request
     public function accepts()
     {
         $args = func_get_args();
-        return $this->_accept->types($args);
+        return $this->accept->types($args);
     }
 
     public function acceptsEncodings(...$args)
     {
-        return $this->_accept->encoding(...$args);
+        return $this->accept->encoding(...$args);
     }
 
     public function acceptsCharsets(...$args)
     {
-        return $this->_accept->charsets(...$args);
+        return $this->accept->charsets(...$args);
     }
 
     public function acceptsLanguages(...$args)
     {
-        return $this->_accept->languages(...$args);
+        return $this->accept->languages(...$args);
     }
 
     public function is(...$args)

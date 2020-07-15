@@ -71,7 +71,11 @@ class Response
             return $this->getEtag();
         }
 
-        return null;
+        if (isset($this->$name) === false) {
+            return null;
+        }
+
+        return $this->$name;
     }
 
     public function __set($name, $value)

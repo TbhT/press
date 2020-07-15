@@ -18,6 +18,7 @@ use stdClass;
  * @property string|null type
  * @property string|null url
  * @property array|null accepts
+ * @method accepts()
  */
 class Context
 {
