@@ -31,6 +31,11 @@ class Delegates
 
         $this->proto->$name = function () use ($name, $that) {
             $args = func_get_args();
+            $a = $that->target->$name;
+            if (method_exists($that->target, $name)) {
+                return $that->target->$name(...$args);
+            }
+
             return call_user_func_array($that->target->$name, $args);
         };
 
