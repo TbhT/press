@@ -31,7 +31,7 @@ class Delegates
 
         $this->proto->$name = function () use ($name, $that) {
             $args = func_get_args();
-            return ($that->target->$name)(...$args);
+            return $that->target->$name(...$args);
         };
 
         return $this;
