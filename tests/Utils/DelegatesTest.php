@@ -21,7 +21,7 @@ class DelegatesTest extends TestCase
         $delegate = new Delegates($obj, 'request');
         $delegate->method('foo');
 
-        $this->assertSame(($obj->foo)('press'), 'press');
+        $this->assertSame(call_user_func_array($obj->foo, ['press']), 'press');
     }
 
     /** @test */
