@@ -129,6 +129,24 @@ class Application extends Utils\Events
         return $context;
     }
 
+    public function updateReq(ServerRequestInterface $req)
+    {
+        $context = $this->context;
+        $request = $this->request;
+        $response = $this->response;
+
+        $context->req = $request->req = $response->req = $req;
+    }
+
+    public function updateRes(Http\Message\Response $res)
+    {
+        $context = $this->context;
+        $request = $this->request;
+        $response = $this->response;
+
+        $context->res = $response->res = $request->res = $res;
+    }
+
     private function handleRequest(Context $ctx, callable $fnMiddleware): PromiseInterface
     {
         $res = $ctx->res;

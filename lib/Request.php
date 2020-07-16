@@ -20,6 +20,7 @@ use function Press\Utils\typeIs;
  * @property array|string|string[]|null hostname
  * @property array|string|string[]|null method
  * @property array|string|string[]|null header
+ * @property array|string|string[]|null headers
  * @property array|bool|string|string[]|null fresh
  * @property array|bool|false|int|mixed|string|string[]|null protocol
  * @property array|bool|false|int|mixed|string|string[] ips
@@ -194,14 +195,15 @@ class Request
 
     private function setHeader($value)
     {
-        $h = null;
+        $newReq = null;
 
         foreach ($value as $key => $v) {
-            $h = $this->req->withHeader($key, $v);
+            $newReq = $this->req->withHeader($key, $v);
         }
 
-        if ($h) {
-            $this->req = $h;
+        if ($newReq) {
+            $this->req = $newReq;
+            $this->app->updateReq($newReq);
         }
     }
 
@@ -213,7 +215,8 @@ class Request
 
     private function setUrl(UriInterface $url)
     {
-        $this->req->withUri($url);
+        $this->req = $this->req->withUri($url);
+        $this->app->updateReq($this->req);
     }
 
     private function getOrigin()
@@ -238,7 +241,8 @@ class Request
 
     private function setMethod($method)
     {
-        $this->req->withMethod($method);
+        $this->req = $this->req->withMethod($method);
+        $this->app->updateReq($this->req);
     }
 
     private function getHost(): string
@@ -255,8 +259,9 @@ class Request
 
     private function setPath(string $path)
     {
-        $uri = $this->req->getUri();
-        $uri->withPath($path);
+        $uri = $this->req->getUri()->withPath($path);
+        $this->req = $this->req->withUri($uri);
+        $this->app->updateReq($this->req);
     }
 
     private function getQuery()
@@ -266,7 +271,8 @@ class Request
 
     private function setQuery(array $params)
     {
-        $this->req->withQueryParams($params);
+        $this->req = $this->req->withQueryParams($params);
+        $this->app->updateReq($this->req);
     }
 
     private function getQuerystring()
