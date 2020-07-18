@@ -441,7 +441,7 @@ class Request
     public function accepts()
     {
         $args = func_get_args();
-        return $this->accept->types($args);
+        return $this->accept->types(...$args);
     }
 
     public function acceptsEncodings(...$args)
