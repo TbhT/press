@@ -686,16 +686,16 @@
         },
         {
             "name": "tbht/php-accepts",
-            "version": "v1.1.0",
+            "version": "v1.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sugar-libraries/php-accepts.git",
-                "reference": "40eb7e276838b4b68ddc50e35c207f24ff71524d"
+                "reference": "ed50a320ddd445c747827daee20c533c1b8cb4c3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sugar-libraries/php-accepts/zipball/40eb7e276838b4b68ddc50e35c207f24ff71524d",
-                "reference": "40eb7e276838b4b68ddc50e35c207f24ff71524d",
+                "url": "https://api.github.com/repos/sugar-libraries/php-accepts/zipball/ed50a320ddd445c747827daee20c533c1b8cb4c3",
+                "reference": "ed50a320ddd445c747827daee20c533c1b8cb4c3",
                 "shasum": "",
                 "mirrors": [
                     {
@@ -728,7 +728,7 @@
                 }
             ],
             "description": "accepts",
-            "time": "2020-07-16T08:58:32+00:00"
+            "time": "2020-07-18T17:25:13+00:00"
         },
         {
             "name": "tbht/php-events",
