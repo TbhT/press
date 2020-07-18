@@ -126,4 +126,101 @@ class RequestTest extends TestCase
         $this->assertSame(false, $ctx->accepts('image/png'));
         $this->assertSame(false, $ctx->accepts('png'));
     }
+
+    /** @test */
+    public function shouldReturnAcceptTypesWhenAcceptCharsetPopulated()
+    {
+        $ctx = create();
+        $ctx->request->headers = [
+            'accept-charset' => 'utf-8, iso-8859-1;q=0.2, utf-7;q=0.5'
+        ];
+
+        $this->assertSame(['utf-8', 'utf-7', 'iso-8859-1'], $ctx->acceptsCharsets());
+    }
+
+    /** @test */
+    public function shouldReturnBestFitIfAnyTypesMatch()
+    {
+        $ctx = create();
+        $ctx->request->headers = [
+            'accept-charset' => 'utf-8, iso-8859-1;q=0.2, utf-7;q=0.5'
+        ];
+
+        $this->assertSame('utf-8', $ctx->acceptsCharsets('utf-7', 'utf-8'));
+    }
+
+    /** @test */
+    public function shouldReturnFalseIfNoTypesMatch()
+    {
+        $ctx = create();
+        $ctx->request->headers = [
+            'accept-charset' => 'utf-8, iso-8859-1;q=0.2, utf-7;q=0.5'
+        ];
+
+        $this->assertSame(false, $ctx->acceptsCharsets('utf-16'));
+    }
+
+    /** @test */
+    public function shouldReturnFirstTypeWhenAcceptsCharsetNotPopulated()
+    {
+        $ctx = create();
+        $this->assertSame('utf-7', $ctx->acceptsCharsets('utf-7', 'utf-8'));
+    }
+
+    /** @test */
+    public function shouldReturnBestFitWithArray()
+    {
+        $ctx = create();
+        $ctx->request->headers = [
+            'accept-charset' => 'utf-8, iso-8859-1;q=0.2, utf-7;q=0.5'
+        ];
+
+        $this->assertSame('utf-8', $ctx->acceptsCharsets('utf-7', 'utf-8'));
+    }
+
+    private function createRequest()
+    {
+        return create()->request;
+    }
+
+    /** @test */
+    public function shouldReturnEmptyStringWithNoContentType()
+    {
+        $req = $this->createRequest();
+        $this->assertSame('', $req->charset);
+    }
+
+
+    /** @test */
+    public function shouldReturnEmptyStringWithCharsetPresent()
+    {
+        $req = $this->createRequest();
+        $req->headers = [
+            'content-type' => 'text/plain'
+        ];
+        $this->assertSame('', $req->charset);
+    }
+
+    /** @test */
+    public function shouldReturnCharsetWithCharsetPresent()
+    {
+        $req = $this->createRequest();
+        $req->headers = [
+            'content-type' => 'text/plain; charset=utf-8'
+        ];
+
+        $this->assertSame('utf-8', $req->charset);
+    }
+
+    /** @test */
+    public function shouldReturnEmptyStringWhenContentTypeInvalid()
+    {
+        $req = $this->createRequest();
+        $req->headers = [
+            'content-type' => 'application/json; application/text; charset=utf-8'
+        ];
+
+        $this->assertSame('', $req->charset);
+    }
+
 }

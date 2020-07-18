@@ -19,6 +19,7 @@ use stdClass;
  * @property string|null url
  * @property array|null accepts
  * @method accepts(...$args)
+ * @method acceptsCharsets(...$args)
  */
 class Context
 {

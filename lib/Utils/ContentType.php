@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace Press\Utils\ContentType;
 
+use Error;
+use Exception;
+use TypeError;
+
 /**
  * RegExp to match *( ";" parameter ) in RFC 7231 sec 3.1.1.1
  *
@@ -46,7 +50,7 @@ function format(array $t)
     preg_match(TYPE_REG_EXP, $type, $m);
 
     if (!$type || count($m) === 0) {
-        throw new \TypeError('invalid type');
+        throw new TypeError('invalid type');
     }
 
     $string = $type;
@@ -58,7 +62,7 @@ function format(array $t)
             preg_match(TOKEN_REG_EXP, $key, $m);
 
             if (count($m) === 0) {
-                throw new \TypeError('invalid parameter name');
+                throw new TypeError('invalid parameter name');
             }
 
             $qs_string = qsString($parameter);
@@ -72,14 +76,15 @@ function format(array $t)
 /**
  * @param $string
  * @return array|void
+ * @throws Exception
  */
 function parse($string)
 {
-    $header = gettype($string) === 'object ' ?
+    $header = gettype($string) === 'object' ?
         getContentType($string) : $string;
 
     if (!is_string($header)) {
-        throw new \TypeError('argument string is required to be a a string');
+        throw new Exception('argument string is required to be a a string');
     }
 
     $index = strpos($header, ';');
@@ -88,7 +93,7 @@ function parse($string)
 
     preg_match(TYPE_REG_EXP, $type, $m);
     if (count($m) === 0) {
-        throw new \TypeError('invalid media type');
+        throw new TypeError('invalid media type');
     }
 
     $ar = arrayContentType($type);
@@ -101,7 +106,7 @@ function parse($string)
 
         foreach ($m[0] as $k => $item) {
             if ($item[1] !== $index) {
-                throw new \TypeError('invalid parameter format');
+                throw new Exception('invalid parameter format');
             }
 
             $index += strlen($item[0]);
@@ -118,7 +123,7 @@ function parse($string)
         }
 
         if ($index !== strlen($header)) {
-            throw new \TypeError('invalid parameter format');
+            throw new TypeError('invalid parameter format');
         }
     }
 
@@ -140,13 +145,14 @@ function arrayContentType($type)
 /**
  * @param {Request|Response} $string
  * @return mixed
+ * @throws Exception
  */
 function getContentType($string)
 {
     $header = $string->get('content-type');
 
-    if ($header === null) {
-        throw new \TypeError('content-type is missing from object');
+    if (!$header) {
+        throw new Exception('content-type is missing from object');
     }
 
     return $header;
@@ -168,7 +174,7 @@ function qsString(string $val)
     if (strlen($val) > 0) {
         preg_match(TEXT_REG_EXP, $val, $m);
         if (count($m) === 0) {
-            throw new \TypeError('invalid parameter value');
+            throw new TypeError('invalid parameter value');
         }
     }
 
