@@ -85,7 +85,45 @@ class RequestTest extends TestCase
             'accept' => 'text/plain, text/html'
         ];
 
-        $this->assertSame('text', $ctx->accepts('text/html'));
+        $this->assertSame('text', $ctx->accepts(['png', 'text', 'html']));
+        $this->assertSame('html', $ctx->accepts(['png', 'html']));
+    }
+
+    /** @test */
+    public function shouldReturnFirstMatchWhenMultiArgumentsGiven()
+    {
+        $ctx = create();
+        $ctx->request->headers = [
+            'accept' => 'text/plain, text/html'
+        ];
+
+        $this->assertSame('text', $ctx->accepts('png', 'text', 'html'));
         $this->assertSame('html', $ctx->accepts('png', 'html'));
+    }
+
+    /** @test */
+    public function shouldReturnTheTypeWhenPresentInExactMatch()
+    {
+        $ctx = create();
+        $ctx->request->headers = [
+            'accept' => 'text/plain, text/html'
+        ];
+
+        $this->assertSame('text/html', $ctx->accepts('text/html'));
+        $this->assertSame('text/plain', $ctx->accepts('text/plain'));
+    }
+
+    /** @test */
+    public function shouldReturnTypeWhenPresentAsASubtypeMatch()
+    {
+        $ctx = create();
+        $ctx->request->headers = [
+            'accept' => 'application/json, text/*'
+        ];
+
+        $this->assertSame('text/html', $ctx->accepts('text/html'));
+        $this->assertSame('text/plain', $ctx->accepts('text/plain'));
+        $this->assertSame(false, $ctx->accepts('image/png'));
+        $this->assertSame(false, $ctx->accepts('png'));
     }
 }
