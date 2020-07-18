@@ -26,6 +26,7 @@ use function Press\Utils\typeIs;
  * @property array|bool|false|int|mixed|string|string[] ips
  * @property array|bool|false|int|mixed|string|string[] ip
  * @property int|mixed|Accepts|string|string[] accept
+ * @property string|null charset
  */
 class Request
 {
@@ -346,7 +347,7 @@ class Request
     private function getCharset()
     {
         try {
-            $types = parse($this->req);
+            $types = parse($this);
             return $types['parameters']['charset'] ?? "";
         } catch (Exception $error) {
             return '';
@@ -485,11 +486,18 @@ class Request
             case 'referer':
             case 'referrer':
             {
-                return $this->req->getHeader('referer') ?? $this->req->getHeader('referrer') ?? "";
+                $result = $this->req->getHeader('referer') ?? $this->req->getHeader('referrer') ?? "";
+                break;
             }
             default:
-                return $this->req->getHeader($lowerField);
+            {
+                $result = $this->req->getHeader($lowerField);
+                break;
+            }
         }
+
+        $result = join('', $result);
+        return $result;
     }
 
 }
