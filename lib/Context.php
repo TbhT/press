@@ -20,6 +20,8 @@ use stdClass;
  * @property array|null accepts
  * @method accepts(...$args)
  * @method acceptsCharsets(...$args)
+ * @method acceptsEncodings(...$args)
+ * @method acceptsLanguages(...$args)
  */
 class Context
 {

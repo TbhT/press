@@ -178,6 +178,100 @@ class RequestTest extends TestCase
         $this->assertSame('utf-8', $ctx->acceptsCharsets('utf-7', 'utf-8'));
     }
 
+    /** @test */
+    public function shouldReturnAcceptTypeWhenAcceptEncodingPopulated()
+    {
+        $ctx = create();
+        $ctx->request->headers = [
+            'accept-encoding' => 'gzip, compress;q=0.2'
+        ];
+
+        $this->assertSame(['gzip', 'compress', 'identity'], $ctx->acceptsEncodings());
+        $this->assertSame('gzip', $ctx->acceptsEncodings('gzip', 'compress'));
+    }
+
+    /** @test */
+    public function shouldReturnIdentityWhenAcceptEncodingNotPopulated()
+    {
+        $ctx = create();
+        $this->assertSame(['identity'], $ctx->acceptsEncodings());
+        $this->assertSame('identity', $ctx->acceptsEncodings('gzip', 'deflate', 'identity'));
+    }
+
+    /** @test */
+    public function shouldReturnBestFitWhenAcceptEncodingsWithMultiArguments()
+    {
+        $ctx = create();
+        $ctx->request->headers = [
+            'accept-encoding' => 'gzip, compress;q=0.2'
+        ];
+
+        $this->assertSame('gzip', $ctx->acceptsEncodings('compress', 'gzip'));
+        $this->assertSame('gzip', $ctx->acceptsEncodings('gzip', 'compress'));
+    }
+
+    /** @test */
+    public function shouldReturnBestFitWhenAcceptEncodingsWithArray()
+    {
+        $ctx = create();
+        $ctx->request->headers = [
+            'accept-encoding' => 'gzip, compress;q=0.2'
+        ];
+
+        $this->assertSame('gzip', $ctx->acceptsEncodings(['compress', 'gzip']));
+    }
+
+    /** @test */
+    public function shouldReturnAcceptedTypesWhenAcceptLanguageIsPopulated()
+    {
+        $ctx = create();
+        $ctx->request->headers = [
+            'accept-language' => 'en;q=0.8, es, pt'
+        ];
+
+        $this->assertSame(['es', 'pt', 'en'], $ctx->acceptsLanguages());
+    }
+
+    /** @test */
+    public function shouldReturnBestFitIfAnyTypesMatchWhenAcceptLanguage()
+    {
+        $ctx = create();
+        $ctx->request->headers = [
+            'accept-language' => 'en;q=0.8, es, pt'
+        ];
+
+        $this->assertSame('es', $ctx->acceptsLanguages('en', 'es'));
+    }
+
+    /** @test */
+    public function shouldReturnFalseIfNoTypesMatchWhenAcceptLanguage()
+    {
+        $ctx = create();
+        $ctx->request->headers = [
+            'accept-language' => 'en;q=0.8, es, pt'
+        ];
+
+        $this->assertSame(false, $ctx->acceptsLanguages('fr', 'au'));
+    }
+
+    /** @test */
+    public function shouldReturnFirstTypeWhenAcceptLanguageNotPopulated()
+    {
+        $ctx = create();
+        $this->assertSame('en', $ctx->acceptsLanguages('en', 'es'));
+    }
+
+    /** @test */
+    public function shouldReturnBestFitWithArrayWhenAcceptLanguagePopulated()
+    {
+        $ctx = create();
+        $ctx->request->headers = [
+            'accept-language' => 'en;q=0.8, es, pt'
+        ];
+
+        $this->assertSame('es', $ctx->acceptsLanguages(['es', 'en']));
+    }
+
     private function createRequest()
     {
         return create()->request;
