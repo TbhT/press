@@ -145,41 +145,23 @@ class Request
     {
         if ($name === 'header' || $name === 'headers') {
             $this->setHeader($value);
-        }
-
-        if ($name === 'url') {
+        } else if ($name === 'url') {
             $this->setUrl($value);
-        }
-
-        if ($name === 'method') {
+        } else if ($name === 'method') {
             $this->setMethod($value);
-        }
-
-        if ($name === 'path') {
+        } else if ($name === 'path') {
             $this->setPath($value);
-        }
-
-        if ($name === 'query') {
+        } else if ($name === 'query') {
             $this->setQuery($value);
-        }
-
-        if ($name === 'querystring') {
+        } else if ($name === 'querystring') {
             $this->setQuerystring($value);
-        }
-
-        if ($name === 'search') {
+        } else if ($name === 'search') {
             $this->setSearch($value);
-        }
-
-        if ($name === 'ip') {
+        } else if ($name === 'ip') {
             $this->setIp($value);
-        }
-
-        if ($name === 'accept') {
+        } else if ($name === 'accept') {
             $this->setAccept($value);
-        }
-
-        if (!isset($this->$name)) {
+        } else if (!isset($this->$name)) {
             $this->$name = $value;
         }
     }

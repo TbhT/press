@@ -4,11 +4,13 @@
 namespace Press;
 
 
-use Cassandra\Date;
+use Press\Utils\Mime\MimeTypes;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamInterface;
 use React\Socket\Server;
 use function Press\Utils\typeIs;
 use function Press\Utils\Vary\vary;
+use function RingCentral\Psr7\stream_for;
 
 /**
  * @property array|int|mixed|Server|string|null status
@@ -16,6 +18,7 @@ use function Press\Utils\Vary\vary;
  * @property array|int|mixed|Server|string|null length
  * @property array|int|mixed|Server|string|null header
  * @property bool headerSent
+ * @property resource|string|StreamInterface body
  */
 class Response
 {
@@ -28,8 +31,6 @@ class Response
     public ?Application $app = null;
 
     public ?Context $ctx = null;
-
-    private ?object $body = null;
 
     public bool $headersSent = false;
 
@@ -82,33 +83,19 @@ class Response
     {
         if ($name === 'status') {
             $this->setStatus($value);
-        }
-
-        if ($name === 'message') {
+        } else if ($name === 'message') {
             $this->setMessage($value);
-        }
-
-        if ($name === 'body') {
+        } else if ($name === 'body') {
             $this->setBody($value);
-        }
-
-        if ($name === 'length') {
+        } else if ($name === 'length') {
             $this->setLength($value);
-        }
-
-        if ($name === 'type') {
+        } else if ($name === 'type') {
             $this->setType($value);
-        }
-
-        if ($name === 'lastModified') {
+        } else if ($name === 'lastModified') {
             $this->setLastModified($value);
-        }
-
-        if ($name === 'etag') {
+        } else if ($name === 'etag') {
             $this->setEtag($value);
-        }
-
-        if (!isset($this->$name)) {
+        } else if (!isset($this->$name)) {
             $this->$name = $value;
         }
     }
@@ -130,7 +117,8 @@ class Response
 
     private function setStatus(int $code)
     {
-        $this->res->withStatus($code);
+        $newRes = $this->res->withStatus($code);
+        $this->app->updateRes($newRes);
     }
 
     private function getMessage()
@@ -145,13 +133,11 @@ class Response
 
     private function getBody()
     {
-        return $this->body;
+        return $this->res->getBody();
     }
 
     private function setBody($value)
     {
-        $this->body = $value;
-
         //  no content
         if ($value === null) {
             $this->remove('Content-Type');
@@ -168,15 +154,27 @@ class Response
 
         if (is_string($value)) {
             if ($hasType) {
-                $this->type = preg_match('/^\s*</', $value) ? 'html' : 'text';
+                $this->type = preg_match('/^\s*</', $value) ? 'text/html' : 'text/plain';
             }
 
-            $this->length = $this->res->getBody()->getSize() || 0;
+            $newRes = $this->res->withBody(stream_for($value));
+            $this->app->updateRes($newRes);
+
+            $this->length = $this->res->getBody()->getSize();
+            return;
+        }
+
+        if ($value instanceof \RingCentral\Psr7\Stream) {
+            $this->type = 'bin';
+            $newRes = $this->res->withBody($value);
+            $this->app->updateRes($newRes);
             return;
         }
 
         $this->remove('Content-Length');
-        $this->type = 'json';
+        $this->type = 'application/json';
+        $newRes = $this->res->withBody(stream_for(json_encode($value)));
+        $this->app->updateRes($newRes);
     }
 
     private function getLength()
@@ -186,7 +184,8 @@ class Response
 
     private function setLength(int $n)
     {
-        $this->res->withHeader('Content-Length', $n);
+        $newRes = $this->res->withHeader('Content-Length', $n);
+        $this->app->updateRes($newRes);
     }
 
     public function remove($filed)
@@ -195,12 +194,13 @@ class Response
             return;
         }
 
-        $this->res->withoutHeader($filed);
+        $newRes = $this->res->withoutHeader($filed);
+        $this->app->updateRes($newRes);
     }
 
     public function has(string $field)
     {
-        return $this->res->hasHeader($field);
+        return $this->res->hasHeader(strtolower($field));
     }
 
     public function vary($field)
@@ -235,6 +235,7 @@ class Response
 
     private function setType($value = null)
     {
+        $value = MimeTypes::contentType($value);
         if ($value) {
             $this->set('Content-Type', $value);
         } else {
@@ -271,12 +272,14 @@ class Response
 
     public function get(string $field)
     {
-        return $this->res->getHeader(strtolower($field)) || "";
+        $value = $this->res->getHeader(strtolower($field));
+        return join('', $value);
     }
 
     public function set(string $field, $value)
     {
-        $this->res->withHeader($field, $value);
+        $newRes = $this->res->withHeader(strtolower($field), $value);
+        $this->app->updateRes($newRes);
     }
 
     public function append()
