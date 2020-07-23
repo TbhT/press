@@ -49,6 +49,72 @@ $app->use(function (Context $ctx, callable $next) {
 
 ```
 
-### Context, Request and Response
+## Document
 
-> WIP
+### Application
+
+#### hello world
+
+```php
+use Press\Application;
+use Press\Context;
+
+$app = new Application();
+
+$app->use(function (Context $ctx, callable $next) { 
+      $ctx->body = 'Hello World';
+});
+
+$app->listen(function () {
+    var_dump('final var dump');
+});
+
+// or 
+
+$app->listen(['port' => 8080]);
+```
+
+#### Cascading
+
+```php
+
+use Press\Application;
+use Press\Context;
+
+$app = new Application();
+
+// logger
+$app->use(function (Context $ctx, callable $next) {
+    return $next()
+        ->then(function () use ($ctx) {
+            $rt = $ctx->response->get('x-response-time');
+            $method = $ctx->method;
+            $url = $ctx->url;
+            echo "{$method} {$url} - {$rt}";
+        });
+});
+
+// x-response-time
+$app->use(function (Context $ctx, callable $next) {
+    $start = time();
+    return $next()
+        ->then(function () use ($ctx,$start) {
+            $ms = time() - $start;
+            $ctx->set('x-response-time', "{$ms}ms");
+        });
+});
+
+// response
+$app->use(function (Context $ctx, callable $next) {
+    $ctx->body = 'Hello World';
+});
+```
+
+#### Settings
+
+- `$app->env` default to the 'development'
+
+- `$app->proxy` when true proxy header fields will be trusted
+
+- `$app->subdomainOffset` offset of `.subdomains` to ignore [2]
+
