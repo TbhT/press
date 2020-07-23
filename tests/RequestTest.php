@@ -4,6 +4,7 @@ namespace Press\Tests;
 
 use Press\Context;
 use PHPUnit\Framework\TestCase;
+use React\Http\Client\RequestData;
 use function Press\Tests\Context\create;
 
 class RequestTest extends TestCase
@@ -317,4 +318,212 @@ class RequestTest extends TestCase
         $this->assertSame('', $req->charset);
     }
 
+    /** @test */
+    public function shouldReturnFalseWhenReqMethodIsNotGetAndHead()
+    {
+        $ctx = create();
+        $ctx->request->method = 'POST';
+        $this->assertSame(false, $ctx->fresh);
+    }
+
+    /** @test */
+    public function shouldReturnFalseWhenResponseIsNon2xx()
+    {
+        $ctx = create();
+        $ctx->status = 404;
+        $ctx->request->method = 'GET';
+        $ctx->request->headers = [
+            'if-none-match' => '123'
+        ];
+
+        $ctx->set('ETag', '123');
+        $this->assertSame(false, $ctx->fresh);
+    }
+
+    /** @test */
+    public function shouldReturnTrueAndEtagMatchWhenReponseIs2xx()
+    {
+        $ctx = create();
+        $ctx->status = 200;
+        $ctx->request->method = 'GET';
+        $ctx->request->headers = [
+            'if-none-match' => '123'
+        ];
+        $ctx->set('ETag', '123');
+        $this->assertSame(true, $ctx->fresh);
+    }
+
+    /** @test */
+    public function shouldReturnFalseAndEtagDONTMatchWhenResponseIs2xx()
+    {
+        $ctx = create();
+        $ctx->status = 200;
+        $ctx->request->method = 'GET';
+        $ctx->request->headers = [
+            'if-none-match' => '123'
+        ];
+        $ctx->set('ETag', 'hey');
+        $this->assertSame(false, $ctx->fresh);
+    }
+
+    /** @test */
+    public function shouldReturnFieldValue()
+    {
+        $ctx = create();
+        $ctx->request->headers = [
+            'host' => 'http://google.com',
+            'referer' => 'http://google.com'
+        ];
+
+        $this->assertSame('http://google.com', $ctx->get('HOST'));
+        $this->assertSame('http://google.com', $ctx->get('Host'));
+        $this->assertSame('http://google.com', $ctx->get('host'));
+        $this->assertSame('http://google.com', $ctx->get('referer'));
+        $this->assertSame('http://google.com', $ctx->get('referrer'));
+    }
+
+    /** @test */
+    public function shouldReturnRequestHeader()
+    {
+        $req = $this->createRequest();
+        $this->assertSame($req->header, $req->req->getHeaders());
+    }
+
+    /** @test */
+    public function shouldReturnSetRequestHeader()
+    {
+        $req = $this->createRequest();
+        $req->headers = [
+            'X-Custom-Headerfield' => 'Its one header, with headerfields'
+        ];
+        $this->assertSame($req->header, $req->req->getHeaders());
+    }
+
+
+    /** @test */
+    public function shouldReturnRequestHeaders()
+    {
+        $req = $this->createRequest();
+        $this->assertSame($req->headers, $req->req->getHeaders());
+    }
+
+    /** @test */
+    public function shouldReturnSetRequestHeaders()
+    {
+        $req = $this->createRequest();
+        $req->headers = [
+            'X-Custom-Headerfield' => 'Its one header, with headerfields'
+        ];
+        $this->assertSame($req->headers, $req->req->getHeaders());
+    }
+
+    /** @test */
+    public function shouldReturnHostWithPort()
+    {
+        $req = $this->createRequest();
+        $req->headers = [
+            'host' => 'foo.com:3000'
+        ];
+
+        $this->assertSame('foo.com:3000', $req->host);
+    }
+
+    /** @test */
+    public function shouldReturnEmptyStringWithNoHostPresent()
+    {
+        $req = $this->createRequest();
+        $this->assertSame('', $req->host);
+    }
+
+    /** @test */
+    public function shouldNotUseAuthorityHeaderWhenLessThenHttp2()
+    {
+        $req = $this->createRequest();
+        $req->headers = [
+            ':authority' => 'foo.com:3000',
+            'host' => 'bar.com:8000'
+        ];
+
+        $this->assertSame('bar.com:8000', $req->host);
+    }
+
+    /** @test */
+    public function shouldUserAuthorityHeaderWhenHttp2()
+    {
+        $req = $this->createRequest();
+        $req->app->updateReq($req->req->withProtocolVersion('2'));
+        $req->headers = [
+            ':authority' => 'foo.com:3000',
+            'host' => 'bar.com:8000'
+        ];
+
+        $this->assertSame('foo.com:3000', $req->host);
+    }
+
+    /** @test */
+    public function shouldUserHostHeaderAsFallback()
+    {
+        $req = $this->createRequest();
+        $req->app->updateReq($req->req->withProtocolVersion('2'));
+        $req->headers = [
+            'host' => 'bar.com:8000'
+        ];
+
+        $this->assertSame('bar.com:8000', $req->host);
+    }
+
+    /** @test */
+    public function shouldBeIgnoredOnHttp1AndProxyNotTrustedWhenXPresent()
+    {
+        $req = $this->createRequest();
+        $req->headers = [
+            'x-forwarded-host' => 'bar.com',
+            'host' => 'foo.com'
+        ];
+        $this->assertSame('foo.com', $req->host);
+    }
+
+    /** @test */
+    public function shouldBeIgnoredOnHttp2AndProxyNotTrustedWhenXPresent()
+    {
+        $req = $this->createRequest();
+        $req->app->updateReq($req->req->withProtocolVersion('2'));
+
+        $req->headers = [
+            'x-forwarded-host' => 'proxy.com:8080',
+            ':authority' => 'foo.com:3000',
+            'host' => 'bar.com:8000'
+        ];
+
+        $this->assertSame('foo.com:3000', $req->host);
+    }
+
+    /** @test */
+    public function shouldBeUsedOnHttp1AndProxyTrusted()
+    {
+        $req = $this->createRequest();
+        $req->app->proxy = true;
+        $req->headers = [
+            'x-forwarded-host' => 'bar.com, baz.com',
+            'host' => 'foo.com'
+        ];
+
+        $this->assertSame('bar.com', $req->host);
+    }
+
+    /** @test */
+    public function shouldBeUsedOnHttp2AndProxyTrusted()
+    {
+        $req = $this->createRequest();
+        $req->app->updateReq($req->req->withProtocolVersion('2'));
+        $req->app->proxy = true;
+
+        $req->headers = [
+            'x-forwarded-host' => 'proxy.com:8080',
+            ':authority' => 'foo.com:3000',
+            'host' => 'bar.com:8000'
+        ];
+
+        $this->assertSame('proxy.com:8080', $req->host);
+    }
 }

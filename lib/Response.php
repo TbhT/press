@@ -215,12 +215,12 @@ class Response
         vary($this, $field);
     }
 
-    public function redirect()
+    public function redirect(...$args)
     {
 //        todo:
     }
 
-    public function attachment()
+    public function attachment(...$args)
     {
 //        todo:
     }
@@ -285,7 +285,7 @@ class Response
         $this->app->updateRes($newRes);
     }
 
-    public function append()
+    public function append(...$args)
     {
 //        todo:
     }
