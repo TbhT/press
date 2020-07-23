@@ -4,6 +4,7 @@
 namespace Press;
 
 
+use Press\Utils\Accepts;
 use Press\Utils\Delegates;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
@@ -19,6 +20,7 @@ use stdClass;
  * @property string|null url
  * @property array|null accepts
  * @property bool|null fresh
+ * @property array|false|int|mixed|Accepts|string|string[] href
  * @method accepts(...$args)
  * @method acceptsCharsets(...$args)
  * @method acceptsEncodings(...$args)

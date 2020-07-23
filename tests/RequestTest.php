@@ -6,6 +6,7 @@ use Press\Context;
 use PHPUnit\Framework\TestCase;
 use React\Http\Client\RequestData;
 use function Press\Tests\Context\create;
+use function Press\Tests\Context\createWithReqOpt;
 
 class RequestTest extends TestCase
 {
@@ -525,5 +526,21 @@ class RequestTest extends TestCase
         ];
 
         $this->assertSame('proxy.com:8080', $req->host);
+    }
+
+    /** @test */
+    public function shouldReturnUllRequestUrl()
+    {
+        $ctx = createWithReqOpt(
+            'get',
+            '/users/1?next=/dashboard',
+            [
+                'host' => 'localhost'
+            ]
+        );
+
+        $this->assertSame('http://localhost/users/1?next=/dashboard', $ctx->href);
+        $ctx->url = '/foo/users/1?next=/dashboard';
+        $this->assertSame('http://localhost/users/1?next=/dashboard', $ctx->href);
     }
 }

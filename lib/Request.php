@@ -27,6 +27,7 @@ use function Press\Utils\typeIs;
  * @property array|bool|false|int|mixed|string|string[] ip
  * @property int|mixed|Accepts|string|string[] accept
  * @property string|null charset
+ * @property array|int|mixed|Accepts|string|string[] secure
  */
 class Request
 {
@@ -203,7 +204,12 @@ class Request
     private function getOrigin()
     {
         $uri = $this->req->getUri();
-        return "{$uri->getScheme()}://{$this->host}";
+        $protocol = $uri->getScheme();
+        if (!$protocol) {
+            $protocol = $this->secure ? 'https' : 'http';
+        }
+
+        return "{$protocol}://{$this->host}";
     }
 
     private function getHref()
