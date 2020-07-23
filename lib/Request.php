@@ -178,15 +178,13 @@ class Request
 
     private function setHeader($value)
     {
-        $newReq = null;
-
         foreach ($value as $key => $v) {
             $newReq = $this->req->withHeader($key, $v);
-        }
 
-        if ($newReq) {
-            $this->req = $newReq;
-            $this->app->updateReq($newReq);
+            if ($newReq) {
+                $this->req = $newReq;
+                $this->app->updateReq($newReq);
+            }
         }
     }
 
@@ -230,8 +228,28 @@ class Request
 
     private function getHost(): string
     {
-        $uri = $this->req->getUri();
-        return $uri->getHost();
+        $proxy = $this->app->proxy;
+        $host = null;
+
+        if ($proxy) {
+            $host = $this->get('X-Forwarded-Host');
+        }
+
+        if (!$host) {
+            if ($this->req->getProtocolVersion() >= 2) {
+                $host = $this->get(':authority');
+            }
+            if (!$host) {
+                $host = $this->get('Host');
+            }
+        }
+
+        if (!$host) {
+            return '';
+        }
+
+        $host = preg_split('/\s*,\s*/', $host);
+        return $host[0];
     }
 
     private function getPath()
@@ -308,7 +326,7 @@ class Request
         }
 
         // 2xx or 304 as per rfc2616 14.26
-        if ($status >= 200 && $status < 300) {
+        if ($status >= 200 && $status < 300 || $status === 304) {
             return fresh($this->header, $this->response->header);
         }
 

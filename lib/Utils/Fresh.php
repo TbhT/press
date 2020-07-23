@@ -10,33 +10,39 @@ const CACHE_CONTROL_NO_CACHE_REG_EXP = '/(?:^|,)\s*?no-cache\s*?(?:,|$)/';
 function fresh(array $req_headers, array $res_headers)
 {
     // fields
-    $modified_since = array_key_exists('if-modified-since', $req_headers);
-    $none_match = array_key_exists('if-none-match', $req_headers);
+    $modified_since = $req_headers['if-modified-since'] ?? '';
+    $none_match_val = $req_headers['if-none-match'] ?? '';
 
     // unconditional request
-    if (!$modified_since && !$none_match) {
+    if (!$modified_since && !$none_match_val) {
         return false;
     }
 
     // always return stale when Cache-Control: no-cache to support end-to-end reload requests
     // @link https://tools.ietf.org/html/rfc2616#section-14.9.4
-    $cache_control = array_key_exists('cache-control', $req_headers);
+    $cache_control = $req_headers['cache-control'] ?? '';
     if ($cache_control) {
-        preg_match(CACHE_CONTROL_NO_CACHE_REG_EXP, $req_headers['cache-control'], $cache_control_m);
+        if (is_array($cache_control)) {
+            $cache_control = join('', $req_headers['cache-control']);
+        }
+        preg_match(CACHE_CONTROL_NO_CACHE_REG_EXP, $cache_control, $cache_control_m);
         if (count($cache_control_m) !== 0) {
             return false;
         }
     }
 
     // if-none-match
-    $none_match_val = array_key_exists('if-none-match', $req_headers) ? $req_headers['if-none-match'] : '';
+    if (is_array($none_match_val)) {
+        $none_match_val = join('', $none_match_val);
+    }
+
     if ($none_match_val && $none_match_val !== '*') {
-        $etag = array_key_exists('etag', $res_headers);
+        $etag = array_key_exists('etag', $res_headers) ? $res_headers['etag'] : '';
 
         if (!$etag) {
             return false;
-        } else {
-            $etag = $res_headers['etag'];
+        } else if (is_array($res_headers['etag'])) {
+            $etag = join('', $res_headers['etag']);
         }
 
         $etag_stale = true;
@@ -55,8 +61,11 @@ function fresh(array $req_headers, array $res_headers)
 
     // if-modified-since
     if ($modified_since) {
-        $last_modified = array_key_exists('last-modified', $res_headers) ? $res_headers['last-modified'] : false;
-        $modified_since = $req_headers['if-modified-since'];
+        $last_modified = array_key_exists('last-modified', $res_headers) ? $res_headers['last-modified'] : '';
+        if (is_array($req_headers['if-modified-since'])) {
+            $modified_since = join('', $req_headers['if-modified-since']);
+        }
+
         $modified_stale = !$last_modified || !parseHttpDate($last_modified, $modified_since);
 
         if ($modified_stale) {

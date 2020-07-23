@@ -18,10 +18,13 @@ use stdClass;
  * @property string|null type
  * @property string|null url
  * @property array|null accepts
+ * @property bool|null fresh
  * @method accepts(...$args)
  * @method acceptsCharsets(...$args)
  * @method acceptsEncodings(...$args)
  * @method acceptsLanguages(...$args)
+ * @method set(...$args)
+ * @method get(...$args)
  */
 class Context
 {
@@ -46,17 +49,78 @@ class Context
 
     public function __get($name)
     {
-
-        if (isset($this->$name) === false) {
-            return null;
+        switch ($name) {
+            case 'querystring':
+            case 'idempotent':
+            case 'socket':
+            case 'search':
+            case 'method':
+            case 'query':
+            case 'path':
+            case 'url':
+            case 'accept':
+            case 'origin':
+            case 'href':
+            case 'subdomains':
+            case 'protocol':
+            case 'host':
+            case 'hostname':
+            case 'URL':
+            case 'header':
+            case 'headers':
+            case 'secure':
+            case 'stale':
+            case 'fresh':
+            case 'ips':
+            case 'ip':
+                return $this->request->$name;
+            case 'status':
+            case 'message':
+            case 'body':
+            case 'length':
+            case 'type':
+            case 'lastModified':
+            case 'etag':
+            case 'headerSent':
+                return $this->response->$name;
+            default:
+                return null;
         }
-
-        return $this->$name;
     }
 
     public function __call($name, $args)
     {
-        return call_user_func_array($this->$name, $args);
+        if ($name === 'acceptsLanguages') {
+            return $this->request->acceptsLanguages(...$args);
+        } else if ($name === 'acceptsEncodings') {
+            return $this->request->acceptsEncodings(...$args);
+        } else if ($name === 'acceptsCharsets') {
+            return $this->request->acceptsCharsets(...$args);
+        } else if ($name === 'accepts') {
+            return $this->request->accepts(...$args);
+        } else if ($name === 'get') {
+            return $this->request->get(...$args);
+        } else if ($name === 'is') {
+            return $this->request->is(...$args);
+        } else if ($name === 'attachment') {
+            $this->response->attachment(...$args);
+        } else if ($name === 'redirect') {
+            $this->response->redirect(...$args);
+        } else if ($name === 'remove') {
+            $this->response->remove(...$args);
+        } else if ($name === 'vary') {
+            $this->response->vary(...$args);
+        } else if ($name === 'has') {
+            return $this->response->has(...$args);
+        } else if ($name === 'set') {
+            $this->response->set(...$args);
+        } else if ($name === 'append') {
+            $this->response->append(...$args);
+        } else {
+            return call_user_func_array($this->$name, $args);
+        }
+
+        return null;
     }
 
     public function onerror()
@@ -64,61 +128,5 @@ class Context
         return function ($error) {
             var_dump('---error-----', $error);
         };
-    }
-
-    public function delegateRequest()
-    {
-        $req_delegates = new Delegates($this, 'request');
-        $req_delegates->method('acceptsLanguages')
-            ->method('acceptsEncodings')
-            ->method('acceptsCharsets')
-            ->method('accepts')
-            ->method('get')
-            ->method('is')
-            ->access('querystring')
-            ->access('idempotent')
-            ->access('socket')
-            ->access('search')
-            ->access('method')
-            ->access('query')
-            ->access('path')
-            ->access('url')
-            ->access('accept')
-            ->getter('origin')
-            ->getter('href')
-            ->getter('subdomains')
-            ->getter('protocol')
-            ->getter('host')
-            ->getter('hostname')
-            ->getter('URL')
-            ->getter('header')
-            ->getter('headers')
-            ->getter('secure')
-            ->getter('stale')
-            ->getter('fresh')
-            ->getter('ips')
-            ->getter('ip');
-    }
-
-    public function delegateResponse()
-    {
-        $res_delegates = new Delegates($this, 'response');
-        $res_delegates
-            ->method('attachment')
-            ->method('redirect')
-            ->method('remove')
-            ->method('vary')
-            ->method('has')
-            ->method('set')
-            ->method('append')
-            ->method('flushHeaders')
-            ->access('status')
-            ->access('message')
-            ->access('body')
-            ->access('length')
-            ->access('type')
-            ->access('lastModified')
-            ->access('etag')
-            ->getter('headerSent');
     }
 }

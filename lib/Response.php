@@ -8,6 +8,8 @@ use Press\Utils\Mime\MimeTypes;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use React\Socket\Server;
+use React\Stream\ReadableResourceStream;
+use RingCentral\Psr7\Stream;
 use function Press\Utils\typeIs;
 use function Press\Utils\Vary\vary;
 use function RingCentral\Psr7\stream_for;
@@ -164,7 +166,7 @@ class Response
             return;
         }
 
-        if ($value instanceof \RingCentral\Psr7\Stream) {
+        if ($value instanceof Stream) {
             $this->type = 'bin';
             $newRes = $this->res->withBody($value);
             $this->app->updateRes($newRes);
@@ -179,7 +181,8 @@ class Response
 
     private function getLength()
     {
-        return $this->res->getHeader('Content-Length');
+        $result = $this->res->getHeader('Content-Length');
+        return (int)join('', $result);
     }
 
     private function setLength(int $n)
@@ -212,12 +215,12 @@ class Response
         vary($this, $field);
     }
 
-    public function redirect()
+    public function redirect(...$args)
     {
 //        todo:
     }
 
-    public function attachment()
+    public function attachment(...$args)
     {
 //        todo:
     }
@@ -282,7 +285,7 @@ class Response
         $this->app->updateRes($newRes);
     }
 
-    public function append()
+    public function append(...$args)
     {
 //        todo:
     }

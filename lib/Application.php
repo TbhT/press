@@ -123,9 +123,6 @@ class Application extends Utils\Events
         $context->originalUrl = $request->originalUrl = $req->getUri();
         $request->ctx = $response->ctx = $context;
 
-        $context->delegateRequest();
-        $context->delegateResponse();
-
         return $context;
     }
 
