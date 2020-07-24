@@ -3,8 +3,6 @@
 
 namespace Press;
 
-
-use Press\Utils\Delegates;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use React\Socket\Server;

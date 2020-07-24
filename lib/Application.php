@@ -150,7 +150,6 @@ class Application extends Utils\Events
         $res->withStatus(404);
 
         $onerror = function ($error) use ($ctx) {
-            var_dump('---- this is handle onerror');
             $ctx->onerror()($error);
         };
 
