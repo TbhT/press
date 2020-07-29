@@ -2,10 +2,14 @@
 
 namespace Press\Tests;
 
+use http\Env\Response;
+use Press\Application;
 use Press\Context;
 use PHPUnit\Framework\TestCase;
 use React\Http\Client\RequestData;
+use RingCentral\Psr7\ServerRequest;
 use function Press\Tests\Context\create;
+use function Press\Tests\Context\createAll;
 use function Press\Tests\Context\createWithReqOpt;
 
 class RequestTest extends TestCase
@@ -542,5 +546,114 @@ class RequestTest extends TestCase
         $this->assertSame('http://localhost/users/1?next=/dashboard', $ctx->href);
         $ctx->url = '/foo/users/1?next=/dashboard';
         $this->assertSame('http://localhost/users/1?next=/dashboard', $ctx->href);
+    }
+
+    /** @test */
+    public function shouldReturnTrueWhenRequestMethodIdempotent()
+    {
+        $arr = ['GET', 'HEAD', 'PUT', 'DELETE', 'OPTIONS', 'TRACE'];
+        array_map(function ($method) {
+            $req = $this->createRequest();
+            $req->method = $method;
+            $this->assertTrue($req->idempotent);
+        }, $arr);
+    }
+
+    /** @test */
+    public function shouldReturnFalseWhenRequestMethodNotIdempotent()
+    {
+        $req = $this->createRequest();
+        $req->method = 'POST';
+        $this->assertFalse($req->idempotent);
+    }
+
+    /** @test */
+    public function shouldReturnReqIpsWhenPresent()
+    {
+        $app = new Application(['proxy' => true]);
+        $req = new ServerRequest('GET', '/', [
+            'x-forwarded-for' => '127.0.0.1'
+        ]);
+        $res = new \React\Http\Message\Response();
+        $ctx = createAll($req, $res, $app);
+        $this->assertSame('127.0.0.1', $ctx->request->ip);
+    }
+
+    /** @test */
+    public function shouldPassedWhenXForwardedForPresent()
+    {
+        {
+
+            $req = $this->createRequest();
+            $req->app->proxy = false;
+            $req->headers = [
+                'x-forwarded-for' => '127.0.0.1,127.0.0.2'
+            ];
+
+            $this->assertSame([], $req->ips);
+        }
+
+        {
+            $req = $this->createRequest();
+            $req->app->proxy = true;
+            $req->headers = [
+                'x-forwarded-for' => '127.0.0.1,127.0.0.2'
+            ];
+
+            $this->assertSame(['127.0.0.1', '127.0.0.2'], $req->ips);
+        }
+
+    }
+
+    /** @test */
+    public function shouldPassWhenProxyIpHeaderPresent()
+    {
+        {
+            $req = $this->createRequest();
+            $req->app->proxy = false;
+            $req->app->proxyIpHeader = 'x-client-ip';
+            $req->headers = [
+                'x-client-ip' => '127.0.0.1,127.0.0.2'
+            ];
+
+            $this->assertSame([], $req->ips);
+        }
+
+        {
+            $req = $this->createRequest();
+            $req->app->proxy = true;
+            $req->app->proxyIpHeader = 'x-client-ip';
+            $req->headers = [
+                'x-client-ip' => '127.0.0.1,127.0.0.2'
+            ];
+
+            $this->assertSame(['127.0.0.1', '127.0.0.2'], $req->ips);
+        }
+    }
+
+    /** @test */
+    public function shouldPassWhenMaxIpsCountPresent()
+    {
+        {
+            $req = $this->createRequest();
+            $req->app->proxy = false;
+            $req->app->maxIpCount = 1;
+            $req->headers = [
+                'x-forwarded-for' => '127.0.0.1,127.0.0.2'
+            ];
+
+            $this->assertSame([], $req->ips);
+        }
+
+        {
+            $req = $this->createRequest();
+            $req->app->proxy = true;
+            $req->app->maxIpCount = 1;
+            $req->headers = [
+                'x-forwarded-for' => '127.0.0.1,127.0.0.2'
+            ];
+
+            $this->assertSame(['127.0.0.2'], $req->ips);
+        }
     }
 }

@@ -31,3 +31,8 @@ function createWithResOpt(...$args)
     $app = new Application();
     return $app->createContext($req, $res);
 }
+
+function createAll($req, $res, Application $app)
+{
+    return $app->createContext($req, $res);
+}
