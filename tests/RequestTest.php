@@ -656,4 +656,136 @@ class RequestTest extends TestCase
             $this->assertSame(['127.0.0.2'], $req->ips);
         }
     }
+
+    /**
+     * ctx.is(type)
+     */
+
+    /** @test */
+    public function shouldIgnoreParams()
+    {
+        $ctx = create();
+        $ctx->headers = [
+            'content-type' => 'text/html; charset=utf-8',
+            'transfer-encoding' => 'chunked'
+        ];
+
+        $this->assertSame('text/html', $ctx->is('text/*'));
+    }
+
+    /** @test */
+    public function shouldReturnNullWhenBodyIsGiven()
+    {
+        $ctx = create();
+        $this->assertSame(null, $ctx->is());
+        $this->assertSame(null, $ctx->is('image/*'));
+        $this->assertSame(null, $ctx->is('image/*', 'text/*'));
+    }
+
+    /** @test */
+    public function shouldReturnMimeTypesWhenGiveNoTypes()
+    {
+        $ctx = create();
+        $ctx->headers = [
+            'content-type' => 'image/png',
+            'transfer-encoding' => 'chunked'
+        ];
+
+        $this->assertSame('image/png', $ctx->is());
+    }
+
+    /** @test */
+    public function shouldReturnTypeOrFalseWhenGiveOneType()
+    {
+        $ctx = create();
+        $ctx->headers = [
+            'content-type' => 'image/png',
+            'transfer-encoding' => 'chunked',
+        ];
+
+        $this->assertSame('png', $ctx->is('png'));
+        $this->assertSame('.png', $ctx->is('.png'));
+        $this->assertSame('image/png', $ctx->is('image/png'));
+        $this->assertSame('image/png', $ctx->is('image/*'));
+        $this->assertSame('image/png', $ctx->is('*/png'));
+
+        array_map(function ($value) use ($ctx) {
+            $this->assertFalse($ctx->is($value));
+        }, [
+            'jpeg',
+            '.jpeg',
+            'image/jpeg',
+            'text/*',
+            '*/jpeg'
+        ]);
+    }
+
+    /** @test */
+    public function shouldReturnFirstMatchOrFalseWhenGivenMultipleTypes()
+    {
+        $ctx = create();
+        $ctx->headers = [
+            'content-type' => 'image/png',
+            'transfer-encoding' => 'chunked',
+        ];
+
+        $this->assertSame('png', $ctx->is('png'));
+        $this->assertSame('.png', $ctx->is('.png'));
+
+        array_map(function ($value) use ($ctx) {
+            $this->assertSame('image/png', $ctx->is(...$value));
+        }, [
+            [
+                'text/*',
+                'image/*'
+            ],
+            [
+                'image/*',
+                'text/*'
+            ],
+            [
+                'image/*',
+                'image/png'
+            ],
+            [
+                'image/png',
+                'image/*'
+            ],
+            [
+                ['text/*', 'image/*'],
+            ],
+            [
+                ['image/*', 'text/*'],
+            ],
+            [
+                ['image/*', 'image/png'],
+            ],
+            [
+                ['image/png', 'image/*']
+            ]
+        ]);
+
+        array_map(function ($value) use ($ctx) {
+            $this->assertFalse($ctx->is(...$value));
+        }, [
+            ['jpeg'],
+            ['.jpeg'],
+            ['text/*', 'application/*'],
+            ['text/html', 'text/plain', 'application/json; charset=utf-8']
+        ]);
+    }
+
+    /** @test */
+    public function shouldMatchUrlencodedWhenForm()
+    {
+        $ctx = create();
+        $ctx->headers = [
+            'content-type' => 'application/x-www-form-urlencoded',
+            'transfer-encoding' => 'chunked'
+        ];
+
+        $this->assertSame('urlencoded', $ctx->is('urlencoded'));
+        $this->assertSame('urlencoded', $ctx->is('json', 'urlencoded'));
+        $this->assertSame('urlencoded', $ctx->is('urlencoded', 'json'));
+    }
 }

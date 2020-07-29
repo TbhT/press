@@ -11,6 +11,7 @@ use Psr\Http\Message\UriInterface;
 use function Press\Utils\ContentType\parse;
 use function Press\Utils\fresh;
 use function Press\Utils\typeIs;
+use function Press\Utils\typeOfRequest;
 
 /**
  * @property string|string[]|null host
@@ -472,9 +473,9 @@ class Request
 
     public function is(...$args)
     {
-        $type = $args[0];
+        $type = $args[0] ?? null;
         $args = array_slice($args, 1);
-        return typeIs($this, $type, ...$args);
+        return typeOfRequest($this, $type, ...$args);
     }
 
     private function getType()
