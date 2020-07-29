@@ -3,7 +3,6 @@
 
 namespace Press;
 
-
 use Press\Utils\Accepts;
 use Press\Utils\Delegates;
 use Psr\Http\Message\ServerRequestInterface;
