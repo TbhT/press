@@ -27,6 +27,8 @@ use function Press\Utils\typeIs;
  * @property array|bool|false|int|mixed|string|string[] ip
  * @property int|mixed|Accepts|string|string[] accept
  * @property string|null charset
+ * @property array|int|mixed|Accepts|string|string[] secure
+ * @property string|null idempotent
  */
 class Request
 {
@@ -203,7 +205,12 @@ class Request
     private function getOrigin()
     {
         $uri = $this->req->getUri();
-        return "{$uri->getScheme()}://{$this->host}";
+        $protocol = $uri->getScheme();
+        if (!$protocol) {
+            $protocol = $this->secure ? 'https' : 'http';
+        }
+
+        return "{$protocol}://{$this->host}";
     }
 
     private function getHref()
@@ -336,7 +343,7 @@ class Request
     private function getIdempotent()
     {
         $methods = ['GET', 'HEAD', 'PUT', 'DELETE', 'OPTIONS', 'TRACE'];
-        return array_search($this->method, $methods);
+        return array_search($this->method, $methods) !== false;
     }
 
     private function getSocket()
@@ -389,7 +396,10 @@ class Request
         $ar = [];
 
         if ($proxy && $value) {
-            preg_match('/\s*,\s*/', $value, $ar);
+            $ar = preg_split('/\s*,\s*/', $value);
+            if (!$ar) {
+                $ar = [];
+            }
         }
 
         if ($this->app->maxIpCount > 0) {
