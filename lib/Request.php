@@ -8,6 +8,7 @@ use Exception;
 use Press\Utils\Accepts;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
+use RingCentral\Psr7\Uri;
 use function Press\Utils\ContentType\parse;
 use function Press\Utils\fresh;
 use function Press\Utils\typeIs;
@@ -197,8 +198,12 @@ class Request
         return "{$uri->getPath()}?{$uri->getQuery()}";
     }
 
-    private function setUrl(UriInterface $url)
+    private function setUrl($url)
     {
+        if (is_string($url)) {
+            $url = new Uri($url);
+        }
+
         $this->req = $this->req->withUri($url);
         $this->app->updateReq($this->req);
     }

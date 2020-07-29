@@ -533,7 +533,7 @@ class RequestTest extends TestCase
     }
 
     /** @test */
-    public function shouldReturnUllRequestUrl()
+    public function shouldReturnRequestUrl()
     {
         $ctx = createWithReqOpt(
             'get',
