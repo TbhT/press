@@ -6,6 +6,7 @@ namespace Press\Utils;
 
 use Error;
 use Press\Utils\Mime\MimeTypes;
+use Throwable;
 use function Press\Utils\ContentType\format;
 use function Press\Utils\ContentType\parse;
 
@@ -93,6 +94,10 @@ function typeOfRequest($req, $types_ = null)
     // request content type
     $value = $req->header['content-type'];
 
+    if (is_array($value)) {
+        $value = join('', $value);
+    }
+
     return typeIs($value, $types_);
 }
 
@@ -117,7 +122,7 @@ function tryNormalizeType($value)
 {
     try {
         return normalizeType($value);
-    } catch (Error $exception) {
+    } catch (Throwable $exception) {
         return null;
     }
 }
@@ -127,6 +132,7 @@ function tryNormalizeType($value)
  * Normalize a type and remove parameters.
  * @param $value
  * @return string
+ * @throws \Exception
  */
 function normalizeType($value)
 {
