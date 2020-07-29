@@ -8,9 +8,11 @@ use Exception;
 use Press\Utils\Accepts;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
+use RingCentral\Psr7\Uri;
 use function Press\Utils\ContentType\parse;
 use function Press\Utils\fresh;
 use function Press\Utils\typeIs;
+use function Press\Utils\typeOfRequest;
 
 /**
  * @property string|string[]|null host
@@ -27,6 +29,8 @@ use function Press\Utils\typeIs;
  * @property array|bool|false|int|mixed|string|string[] ip
  * @property int|mixed|Accepts|string|string[] accept
  * @property string|null charset
+ * @property array|int|mixed|Accepts|string|string[] secure
+ * @property string|null idempotent
  */
 class Request
 {
@@ -194,8 +198,12 @@ class Request
         return "{$uri->getPath()}?{$uri->getQuery()}";
     }
 
-    private function setUrl(UriInterface $url)
+    private function setUrl($url)
     {
+        if (is_string($url)) {
+            $url = new Uri($url);
+        }
+
         $this->req = $this->req->withUri($url);
         $this->app->updateReq($this->req);
     }
@@ -203,7 +211,12 @@ class Request
     private function getOrigin()
     {
         $uri = $this->req->getUri();
-        return "{$uri->getScheme()}://{$this->host}";
+        $protocol = $uri->getScheme();
+        if (!$protocol) {
+            $protocol = $this->secure ? 'https' : 'http';
+        }
+
+        return "{$protocol}://{$this->host}";
     }
 
     private function getHref()
@@ -336,7 +349,7 @@ class Request
     private function getIdempotent()
     {
         $methods = ['GET', 'HEAD', 'PUT', 'DELETE', 'OPTIONS', 'TRACE'];
-        return array_search($this->method, $methods);
+        return array_search($this->method, $methods) !== false;
     }
 
     private function getSocket()
@@ -389,7 +402,10 @@ class Request
         $ar = [];
 
         if ($proxy && $value) {
-            preg_match('/\s*,\s*/', $value, $ar);
+            $ar = preg_split('/\s*,\s*/', $value);
+            if (!$ar) {
+                $ar = [];
+            }
         }
 
         if ($this->app->maxIpCount > 0) {
@@ -462,9 +478,9 @@ class Request
 
     public function is(...$args)
     {
-        $type = $args[0];
+        $type = $args[0] ?? null;
         $args = array_slice($args, 1);
-        return typeIs($this, $type, ...$args);
+        return typeOfRequest($this, $type, ...$args);
     }
 
     private function getType()

@@ -3,9 +3,13 @@
 
 namespace Press;
 
+use Press\Utils\Accepts;
+use Press\Utils\Delegates;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use React\Socket\Server;
+use RingCentral\Psr7\PumpStream;
+use RingCentral\Psr7\Stream;
 use stdClass;
 
 /**
@@ -17,12 +21,15 @@ use stdClass;
  * @property string|null url
  * @property array|null accepts
  * @property bool|null fresh
+ * @property array|false|int|mixed|Accepts|string|string[] href
+ * @property int|mixed|StreamInterface|Server|resource|PumpStream|Stream|string|null headers
  * @method accepts(...$args)
  * @method acceptsCharsets(...$args)
  * @method acceptsEncodings(...$args)
  * @method acceptsLanguages(...$args)
  * @method set(...$args)
  * @method get(...$args)
+ * @method is(...$args)
  */
 class Context
 {
@@ -81,6 +88,49 @@ class Context
             case 'etag':
             case 'headerSent':
                 return $this->response->$name;
+            default:
+                return null;
+        }
+    }
+
+    public function __set($name, $value)
+    {
+        switch ($name) {
+            case 'querystring':
+            case 'idempotent':
+            case 'socket':
+            case 'search':
+            case 'method':
+            case 'query':
+            case 'path':
+            case 'url':
+            case 'accept':
+            case 'origin':
+            case 'href':
+            case 'subdomains':
+            case 'protocol':
+            case 'host':
+            case 'hostname':
+            case 'URL':
+            case 'header':
+            case 'headers':
+            case 'secure':
+            case 'stale':
+            case 'fresh':
+            case 'ips':
+            case 'ip':
+                $this->request->$name = $value;
+                break;
+            case 'status':
+            case 'message':
+            case 'body':
+            case 'length':
+            case 'type':
+            case 'lastModified':
+            case 'etag':
+            case 'headerSent':
+                $this->response->$name = $value;
+                break;
             default:
                 return null;
         }
