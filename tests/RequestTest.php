@@ -580,6 +580,29 @@ class RequestTest extends TestCase
     }
 
     /** @test */
+    public function shouldReturnReqIpsIndex0WithIpsPresent()
+    {
+        $ctx = create();
+        $ctx->app->proxy = true;
+        $ctx->request->headers = [
+            'x-forwarded-for' => '127.0.0.1'
+        ];
+        $this->assertSame('127.0.0.1', $ctx->request->ip);
+    }
+
+    /** @test */
+    public function shouldBeLazyAndCached()
+    {
+        $ctx = createWithReqOpt('get', '/hello', [], null, '1.1', [
+            'REMOTE_ADDR' => '127.0.0.2'
+        ]);
+
+        $this->assertSame('127.0.0.2', $ctx->request->ip);
+        $ctx->request->ip = '127.0.0.1';
+        $this->assertSame('127.0.0.1', $ctx->request->ip);
+    }
+
+    /** @test */
     public function shouldPassedWhenXForwardedForPresent()
     {
         {
@@ -1132,6 +1155,15 @@ class RequestTest extends TestCase
     {
         $req = $this->createRequest();
         $this->assertSame('', $req->type);
+    }
+
+    /**
+     * $req->ip
+     */
+    public function shouldReturnIpsIndex0WithReqIpsPresent()
+    {
+        $req = $this->createRequest();
+
     }
 
 }

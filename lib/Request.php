@@ -52,6 +52,8 @@ class Request
 
     private ?Accepts $_accept = null;
 
+    private string $ip = '';
+
     public function __get($name)
     {
         if ($name === 'header' || $name === 'headers') {
@@ -423,6 +425,11 @@ class Request
             }
         }
 
+        $serverParams = $this->req->getServerParams();
+        if (isset($serverParams['REMOTE_ADDR'])) {
+            return [$serverParams['REMOTE_ADDR']];
+        }
+
         if ($this->app->maxIpCount > 0) {
             $ar = array_slice($ar, $this->app->maxIpCount);
         }
@@ -432,11 +439,11 @@ class Request
 
     private function getIp()
     {
-        if (count($this->ips) > 0) {
-            return $this->ips[0];
+        if (!$this->ip) {
+            $this->ip = $this->ips[0];
         }
 
-        return '';
+        return $this->ip;
     }
 
     private function setIp($value)
