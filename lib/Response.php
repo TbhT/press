@@ -8,6 +8,7 @@ use Press\Utils\Mime\MimeTypes;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use RingCentral\Psr7\Stream;
+use function Press\Utils\Mime\extname;
 use function Press\Utils\typeIs;
 use function Press\Utils\Vary\vary;
 use function RingCentral\Psr7\stream_for;
@@ -25,6 +26,16 @@ use function RingCentral\Psr7\stream_for;
  */
 class Response
 {
+    const REDIRECT_STATUS = [
+        300 => true,
+        301 => true,
+        302 => true,
+        303 => true,
+        305 => true,
+        307 => true,
+        308 => true,
+    ];
+
     public ?Request $request = null;
 
     public ?ServerRequestInterface $req = null;
@@ -217,14 +228,40 @@ class Response
         vary($this, $field);
     }
 
-    public function redirect(...$args)
+    public function redirect(string $url, $alt = null)
     {
-//        todo:
+//        location
+        if ('back' === $url) {
+            $url = $this->ctx->get('Referrer');
+            $url = $url ?? $alt;
+            $url = $url ?? '/';
+        }
+
+        $this->set('Location', urlencode($url));
+
+//        status
+        if (!isset(static::REDIRECT_STATUS[$this->status])) {
+            $this->status = 302;
+        }
+
+//        html
+        if ($this->ctx->accepts('html')) {
+            $url = urlencode($url);
+            $this->type = 'text/html; charset=utf-8';
+            $this->body = "Redirecting to <a href=\"{$url}\">{$url}</a>.";
+            return;
+        }
+
+//        text
+        $this->type = 'text/plain; charset=utf-8';
+        $this->body = "Redirecting to {$url}";
     }
 
-    public function attachment(...$args)
+    public function attachment(string $filename, $options)
     {
-//        todo:
+//        todo
+        $this->type = extname($filename);
+//        $this->set('Content-Disposition', null);
     }
 
     private function getType()
@@ -293,8 +330,10 @@ class Response
         $this->app->updateRes($newRes);
     }
 
-    public function append(...$args)
+    public function append($field, $value)
     {
-//        todo:
+        $prev = $this->get($field);
+        $this->set($field, [$prev, $value]);
+        return $this;
     }
 }
