@@ -2,6 +2,8 @@
 
 namespace Press\Tests;
 
+use DateTime;
+use DateTimeZone;
 use Press\Response;
 use PHPUnit\Framework\TestCase;
 use stdClass;
@@ -130,5 +132,272 @@ class ResponseTest extends TestCase
         $result->foo = 'bar';
         $res->body = $result;
         $this->assertSame('application/json; charset=utf-8', $res->get('content-type'));
+    }
+
+    /**
+     * $res->etag
+     */
+
+    /** @test */
+    public function shouldNotModifyAnEtagWithQuotes()
+    {
+        $res = $this->createRes();
+        $res->etag = '"asdf"';
+        $this->assertSame(['"asdf"'], $res->header['etag']);
+    }
+
+    /** @test */
+    public function shouldNotModifyAWeakEtag()
+    {
+        $res = $this->createRes();
+        $res->etag = 'W/"asdf"';
+        $this->assertSame(['W/"asdf"'], $res->header['etag']);
+    }
+
+    /** @test */
+    public function shouldAddQuotesAroundAnEtagIfNecessary()
+    {
+        $res = $this->createRes();
+        $res->etag = 'asdf';
+        $this->assertSame(['"asdf"'], $res->header['etag']);
+    }
+
+    /** @test */
+    public function shouldReturnEtag()
+    {
+        $res = $this->createRes();
+        $res->etag = '"asdf"';
+        $this->assertSame('"asdf"', $res->etag);
+    }
+
+    /**
+     * ctx->has()
+     */
+
+    /** @test */
+    public function shouldCheckAFieldValueCaseInsensitiveWay()
+    {
+        $ctx = create();
+        $ctx->set('X-Foo', '');
+        $this->assertTrue($ctx->response->has('X-Foo'));
+        $this->assertTrue($ctx->has('x-foo'));
+    }
+
+    /** @test */
+    public function shouldReturnFalseForNonExistentHeader()
+    {
+        $ctx = create();
+        $this->assertFalse($ctx->response->has('boo'));
+        $ctx->set('x-foo', 5);
+        $this->assertFalse($ctx->has('x-boo'));
+    }
+
+    /**
+     * $ctx->header
+     */
+
+    /** @test */
+    public function shouldReturnResponseHeaderObject()
+    {
+        $res = $this->createRes();
+        $res->set('X-Foo', 'bar');
+        $res->set('X-Number', 200);
+        $this->assertSame(['x-foo' => ['bar'], 'x-number' => ['200']], $res->header);
+    }
+
+    /**
+     * $ctx->is()
+     */
+
+    /** @test */
+    public function shouldIgnoreParams()
+    {
+        $res = $this->createRes();
+        $res->type = 'text/html; charset=utf-8';
+
+        $this->assertSame('text/html', $res->is('text/*'));
+    }
+
+    /** @test */
+    public function shouldReturnFalseWhenNoTypeIsSet()
+    {
+        $res = $this->createRes();
+        $this->assertFalse($res->is());
+        $this->assertFalse($res->is('html'));
+    }
+
+    /** @test */
+    public function shouldReturnTypeWhenGivenNoTypes()
+    {
+        $res = $this->createRes();
+        $res->type = 'text/html; charset=utf-8';
+
+        $this->assertSame('text/html', $res->is());
+    }
+
+    /** @test */
+    public function shouldReturnTypeOrFalseGivenOneType()
+    {
+        $res = $this->createRes();
+        $res->type = 'image/png';
+
+        $this->assertSame('png', $res->is('png'));
+        $this->assertSame('.png', $res->is('.png'));
+        $this->assertSame('image/png', $res->is('image/png'));
+        $this->assertSame('image/png', $res->is('image/*'));
+        $this->assertSame('image/png', $res->is('*/png'));
+
+        array_map(function ($value) use ($res) {
+            $this->assertFalse($res->is($value));
+        }, [
+            'jpeg',
+            '.jpeg',
+            'image/jpeg',
+            'text/*',
+            '*/jpeg'
+        ]);
+    }
+
+    /** @test */
+    public function shouldReturnFirstMatchOrFalseGivenMultipleTypes()
+    {
+        $res = $this->createRes();
+        $res->type = 'image/png';
+
+        array_map(function ($value) use ($res) {
+            $this->assertSame('image/png', $res->is(...$value));
+        }, [
+            ['text/*', 'image/*'],
+            ['image/*', 'text/*'],
+            ['image/*', 'image/png'],
+            ['image/png', 'image/*']
+        ]);
+
+        array_map(function ($value) use ($res) {
+            $this->assertSame('image/png', $res->is($value));
+        }, [
+            ['text/*', 'image/*'],
+            ['image/*', 'text/*'],
+            ['image/*', 'image/png'],
+            ['image/png', 'image/*']
+        ]);
+
+        array_map(function ($value) use ($res) {
+            $this->assertFalse($res->is(...$value));
+        }, [
+            ['jpeg'],
+            ['.jpeg'],
+            ['text/*', 'application/*'],
+            ['text/html', 'text/plain', 'application/json; charset=utf-8']
+        ]);
+    }
+
+    /** @test */
+    public function shouldMatchUrlencodedWhenContentTypeIs()
+    {
+        $res = $this->createRes();
+        $res->type = 'application/x-www-form-urlencoded';
+
+        $this->assertSame('urlencoded', $res->is('urlencoded'));
+        $this->assertSame('urlencoded', $res->is('json', 'urlencoded'));
+        $this->assertSame('urlencoded', $res->is('urlencoded', 'json'));
+    }
+
+    /**
+     * $res->lastModified
+     */
+
+    private function createUTCTime()
+    {
+        return gmdate('Y-m-d H:i:s');
+    }
+
+    /** @test */
+    public function shouldSetHeaderAsUTCString()
+    {
+        $res = $this->createRes();
+        $date = $this->createUTCTime();
+        $res->lastModified = $date;
+
+        $this->assertSame([$date], $res->header['last-modified']);
+        $this->assertSame($date, $res->lastModified);
+    }
+
+    /**
+     * $res->message
+     */
+
+    /** @test */
+    public function shouldReturnResponseStatusMessage()
+    {
+        $res = $this->createRes();
+        $res->status = 200;
+        $this->assertSame('OK', $res->message);
+    }
+
+    /** @test */
+    public function shouldSetResponseStatusMessage()
+    {
+        $res = $this->createRes();
+        $res->status = 200;
+        $res->message = 'ok';
+        $this->assertSame('ok', $res->message);
+    }
+
+    /**
+     * $ctx->remove()
+     */
+
+    /** @test */
+    public function shouldRemoveAField()
+    {
+        $ctx = create();
+        $ctx->set('x-foo', 'bar');
+        $ctx->remove('x-foo');
+
+        $this->assertSame([], $ctx->response->header);
+    }
+
+
+    /**
+     * ctx->set()
+     */
+
+    /** @test */
+    public function shouldSetFieldValue()
+    {
+        $ctx = create();
+        $ctx->set('x-foo', 'bar');
+        $this->assertSame(['bar'], $ctx->response->header['x-foo']);
+    }
+
+    /** @test */
+    public function shouldCoerceNumberToString()
+    {
+        $ctx = create();
+        $ctx->set('x-foo', 5);
+        $this->assertSame(['5'], $ctx->response->header['x-foo']);
+    }
+
+    /** @test */
+    public function shouldSetAFieldValueOfArray()
+    {
+        $ctx = create();
+        $ctx->set('x-foo', ['foo', 'bar', 123]);
+        $this->assertSame(['foo', 'bar', '123'], $ctx->response->header['x-foo']);
+    }
+
+    /** @test */
+    public function shouldSetMultipleFields()
+    {
+        $this->markTestIncomplete('todo');
+        $ctx = create();
+        $ctx->set([
+            'foo' => '1',
+            'bar' => '2'
+        ]);
+
+        $this->assertSame('1', $ctx->response->header['foo']);
+        $this->assertSame('2', $ctx->response->header['bar']);
     }
 }

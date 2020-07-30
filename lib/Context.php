@@ -36,6 +36,8 @@ use stdClass;
  * @method set(...$args)
  * @method get(...$args)
  * @method is(...$args)
+ * @method has(string $string)
+ * @method remove(string $field)
  */
 class Context
 {

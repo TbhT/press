@@ -7,20 +7,21 @@ namespace Press;
 use Press\Utils\Mime\MimeTypes;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
-use React\Socket\Server;
-use React\Stream\ReadableResourceStream;
 use RingCentral\Psr7\Stream;
 use function Press\Utils\typeIs;
 use function Press\Utils\Vary\vary;
 use function RingCentral\Psr7\stream_for;
 
 /**
- * @property array|int|mixed|Server|string|null status
- * @property array|int|mixed|Server|string|null type
- * @property array|int|mixed|Server|string|null length
- * @property array|int|mixed|Server|string|null header
- * @property bool headerSent
+ * @property int|null status
+ * @property string|null type
+ * @property int|null length
+ * @property array|null header
+ * @property bool|null headerSent
  * @property resource|string|StreamInterface body
+ * @property string|null etag
+ * @property string|null lastModified
+ * @property string|null message
  */
 class Response
 {
@@ -130,7 +131,8 @@ class Response
 
     private function setMessage(string $value)
     {
-        return $this->res->withStatus($this->status, $value);
+        $newResponse = $this->res->withStatus($this->status, $value);
+        $this->app->updateRes($newResponse);
     }
 
     private function getBody()
@@ -261,16 +263,22 @@ class Response
         return $this->get('ETag');
     }
 
-    private function setEtag($value)
+    private function setEtag(string $value)
     {
+        $flag = preg_match('/^(W\/)?"/', $value, $match);
+
+        if (!$flag) {
+            $value = "\"{$value}\"";
+        }
+
         $this->set('ETag', $value);
     }
 
     public function is(...$args)
     {
-        $type = $args[0];
+        $type = $args[0] ?? null;
         $args = array_slice($args, 1);
-        return typeIs($this, $type, ...$args);
+        return typeIs($this->type, $type, ...$args);
     }
 
     public function get(string $field)
