@@ -16,13 +16,19 @@ use stdClass;
  * @property int|null $status
  * @property resource|string|StreamInterface|null $body
  * @property string|null $method
- * @property array|int|mixed|Server|string|null $length
+ * @property int|null $length
  * @property string|null type
  * @property string|null url
  * @property array|null accepts
  * @property bool|null fresh
- * @property array|false|int|mixed|Accepts|string|string[] href
- * @property int|mixed|StreamInterface|Server|resource|PumpStream|Stream|string|null headers
+ * @property string href
+ * @property array|string[] headers
+ * @property string|null origin
+ * @property string|null path
+ * @property string[] query
+ * @property string|null querystring
+ * @property string|null search
+ * @property bool|null stale
  * @method accepts(...$args)
  * @method acceptsCharsets(...$args)
  * @method acceptsEncodings(...$args)
