@@ -163,7 +163,8 @@ class Application extends Utils\Events
     private function onerror($e = '')
     {
         return function ($error) use ($e) {
-            echo "{$e}: ---error-----" . $error;
+            var_dump($e, $error);
+            throw $error;
         };
     }
 
