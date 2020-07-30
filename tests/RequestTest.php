@@ -788,4 +788,350 @@ class RequestTest extends TestCase
         $this->assertSame('urlencoded', $ctx->is('json', 'urlencoded'));
         $this->assertSame('urlencoded', $ctx->is('urlencoded', 'json'));
     }
+
+
+    /**
+     * $req->length
+     */
+
+    /** @test */
+    public function shouldReturnLengthInContentLength()
+    {
+        $req = $this->createRequest();
+        $req->headers = [
+            'content-length' => '10'
+        ];
+        $this->assertSame(10, $req->length);
+    }
+
+    /** @test */
+    public function shouldZeroWithNoContentLengthPresent()
+    {
+        $req = $this->createRequest();
+
+        $this->assertSame(0, $req->length);
+    }
+
+    /**
+     * $ctx->origin
+     */
+
+    /** @test */
+    public function shouldReturnOriginOfUrl()
+    {
+        $ctx = createWithReqOpt(
+            'get',
+            '/users/1?next=/dashboard',
+            [
+                'host' => 'localhost'
+            ]
+        );
+
+        $this->assertSame('http://localhost', $ctx->origin);
+        $ctx->url = '/foo/users/1?next=/dashboard';
+        $this->assertSame('http://localhost', $ctx->origin);
+    }
+
+    /**
+     * $ctx->path
+     */
+
+    /** @test */
+    public function shouldReturnPathname()
+    {
+        $ctx = create();
+        $ctx->url = '/login?next=/dashboard';
+        $this->assertSame('/login', $ctx->path);
+    }
+
+    /** @test */
+    public function shouldSetPathname()
+    {
+        $ctx = create();
+        $ctx->url = '/login?next=dashboard';
+
+        $ctx->path = '/logout';
+        $this->assertSame('/logout', $ctx->path);
+        $this->assertSame('/logout?next=dashboard', $ctx->url);
+    }
+
+    /** @test */
+    public function shouldChangeUrlButNotOriginalUrl()
+    {
+        $ctx = createWithReqOpt('get', '/login');
+        $ctx->path = '/logout';
+
+        $this->assertSame('/logout', $ctx->url);
+        $this->assertSame('/login', $ctx->originalUrl);
+        $this->assertSame('/login', $ctx->request->originalUrl);
+    }
+
+    /**
+     * $req->protocol
+     */
+
+    /** @test */
+    public function shouldReturnHttpsWhenUnEncrypted()
+    {
+        $ctx = createWithReqOpt(
+            'get',
+            '/'
+        );
+        $this->assertSame('http', $ctx->request->protocol);
+    }
+
+    /** @test */
+    public function shouldBeUsedAndProxyIsTrustedWhenXSet()
+    {
+        {
+            $req = $this->createRequest();
+            $req->app->proxy = true;
+            $req->header = [
+                'x-forwarded-proto' => 'https, http'
+            ];
+
+            $this->assertSame('https', $req->protocol);
+        }
+
+        {
+            $req = $this->createRequest();
+            $req->app->proxy = true;
+            $req->headers = [
+                'x-forwarded-proto' => ''
+            ];
+
+            $this->assertSame('http', $req->protocol);
+        }
+    }
+
+    /** @test */
+    public function shouldBotBeUsedWhenProxyIsNotTrusted()
+    {
+        $req = $this->createRequest();
+        $req->headers = [
+            'x-forwarded-proto' => 'https, http'
+        ];
+
+        $this->assertSame('http', $req->protocol);
+
+    }
+
+    /**
+     * $req->query
+     */
+
+    /** @test */
+    public function shouldReturnEmptyWhenMiss()
+    {
+        $ctx = createWithReqOpt('get', '/');
+        $this->assertSame([], $ctx->query);
+
+        {
+            $ctx = createWithReqOpt('get', '/');
+
+            $ctx->query = [
+                'a' => '2'
+            ];
+            $this->assertSame('2', $ctx->query['a']);
+        }
+    }
+
+    /** @test */
+    public function shouldReturnParsedQueryString()
+    {
+        $ctx = createWithReqOpt('get', '/?page=2');
+        $this->assertSame('2', $ctx->query['page']);
+    }
+
+    /** @test */
+    public function shouldStringifyAndReplaceQuerystringAndSearch()
+    {
+        $ctx = createWithReqOpt('get', '/store/shoes');
+        $ctx->query = [
+            'page' => 2,
+            'color' => 'blue'
+        ];
+
+        $this->assertSame('/store/shoes?page=2&color=blue', $ctx->url);
+        $this->assertSame('page=2&color=blue', $ctx->querystring);
+        $this->assertSame('?page=2&color=blue', $ctx->search);
+    }
+
+    /** @test */
+    public function shouldChangeUrlButNotOriginalUrlWhenQuery()
+    {
+        $ctx = createWithReqOpt('get', '/store/shoes');
+        $ctx->query = [
+            'page' => 2,
+        ];
+
+        $this->assertSame('/store/shoes?page=2', $ctx->url);
+        $this->assertSame('/store/shoes', $ctx->originalUrl);
+        $this->assertSame('/store/shoes', $ctx->request->originalUrl);
+    }
+
+    /**
+     * $ctx->querystring
+     */
+
+    /** @test */
+    public function shouldReturnQuerystring()
+    {
+        $ctx = createWithReqOpt('get', '/store/shoes?page=2&color=blue');
+        $this->assertSame('page=2&color=blue', $ctx->querystring);
+    }
+
+    /** @test */
+    public function shouldReturnEmptyStringWhenReqNotPresent()
+    {
+        $this->markTestSkipped('is it possible?');
+        $ctx = create();
+        $ctx->request->req = null;
+        $this->assertSame('', $ctx->querystring);
+    }
+
+    /** @test */
+    public function shouldReplaceQuerystring()
+    {
+        $ctx = createWithReqOpt('get', '/store/shoes');
+        $ctx->querystring = 'page=2&color=blue';
+        $this->assertSame('/store/shoes?page=2&color=blue', $ctx->url);
+        $this->assertSame('page=2&color=blue', $ctx->querystring);
+    }
+
+    /** @test */
+    public function shouldUpdateSearchAndQuery()
+    {
+        $ctx = createWithReqOpt('get', '/store/shoes');
+        $ctx->querystring = 'page=2&color=blue';
+        $this->assertSame('/store/shoes?page=2&color=blue', $ctx->url);
+        $this->assertSame('?page=2&color=blue', $ctx->search);
+        $this->assertSame('2', $ctx->query['page']);
+        $this->assertSame('blue', $ctx->query['color']);
+    }
+
+    /** @test */
+    public function shouldChangeUrlButNotOriginalUrlWhenQueryString()
+    {
+        $ctx = createWithReqOpt('get', '/store/shoes');
+        $ctx->querystring = 'page=2&color=blue';
+        $this->assertSame('/store/shoes?page=2&color=blue', $ctx->url);
+        $this->assertSame('/store/shoes', $ctx->originalUrl);
+        $this->assertSame('/store/shoes', $ctx->request->originalUrl);
+    }
+
+    /**
+     * $ctx->search
+     */
+
+    /** @test */
+    public function shouldReplaceSearchWhenSearch()
+    {
+        $ctx = createWithReqOpt('get', '/store/shoes');
+        $ctx->search = '?page=2&color=blue';
+        $this->assertSame('/store/shoes?page=2&color=blue', $ctx->url);
+        $this->assertSame('?page=2&color=blue', $ctx->search);
+    }
+
+    /** @test */
+    public function shouldUpdateQuerystringAndQuery()
+    {
+        $ctx = createWithReqOpt('get', '/store/shoes');
+        $ctx->search = '?page=2&color=blue';
+        $this->assertSame('/store/shoes?page=2&color=blue', $ctx->url);
+        $this->assertSame('page=2&color=blue', $ctx->querystring);
+        $this->assertSame('2', $ctx->query['page']);
+        $this->assertSame('blue', $ctx->query['color']);
+    }
+
+    /** @test */
+    public function shouldChangeUrlButNotOriginalUrlWhenSearch()
+    {
+        $ctx = createWithReqOpt('get', '/store/shoes');
+        $ctx->search = '?page=2&color=blue';
+        $this->assertSame('/store/shoes?page=2&color=blue', $ctx->url);
+        $this->assertSame('/store/shoes', $ctx->originalUrl);
+        $this->assertSame('/store/shoes', $ctx->request->originalUrl);
+    }
+
+    /** @test */
+    public function shouldReturnEmptyStringWhenSearch()
+    {
+        $ctx = createWithReqOpt('get', '/store/shoes');
+        $this->assertSame('', $ctx->search);
+    }
+
+    /**
+     * $req->stale
+     */
+
+    /** @test */
+    public function shouldInverseOfReqFresh()
+    {
+        $ctx = create();
+        $ctx->status = 200;
+        $ctx->method = 'GET';
+        $ctx->request->headers = [
+            'if-none-match' => '"123"'
+        ];
+        $ctx->set('ETag', '"123"');
+
+        $this->assertTrue($ctx->fresh);
+        $this->assertFalse($ctx->stale);
+    }
+
+    /**
+     * $req->subdomains
+     */
+
+    /** @test */
+    public function shouldReturnSubdomainArray()
+    {
+        $req = $this->createRequest();
+        $req->headers = [
+            'host' => 'tobi.ferrets.example.com'
+        ];
+        $req->app->subdomainOffset = 2;
+        $this->assertSame(['ferrets', 'tobi'], $req->subdomains);
+
+        $req->app->subdomainOffset = 3;
+        $this->assertSame(['tobi'], $req->subdomains);
+
+        {
+            $req = $this->createRequest();
+            $this->assertSame([], $req->subdomains);
+        }
+
+        {
+            $req = $this->createRequest();
+            $req->headers = [
+                'host' => '127.0.0.1:3000'
+            ];
+
+            $this->assertSame([], $req->subdomains);
+        }
+    }
+
+    /**
+     * $req->type
+     */
+
+    /** @test */
+    public function shouldReturnTypeOfParameters()
+    {
+        $req = $this->createRequest();
+        $req->headers = [
+            'content-type' => 'text/html; charset=utf-8'
+        ];
+
+        $this->assertSame('text/html', $req->type);
+    }
+
+    /** @test */
+    public function shouldBeEmptyStringWhenNoHostPresent()
+    {
+        $req = $this->createRequest();
+        $this->assertSame('', $req->type);
+    }
+
 }

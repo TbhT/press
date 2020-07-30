@@ -7,23 +7,25 @@ namespace Press;
 use Exception;
 use Press\Utils\Accepts;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\UriInterface;
 use RingCentral\Psr7\Uri;
 use function Press\Utils\ContentType\parse;
 use function Press\Utils\fresh;
-use function Press\Utils\typeIs;
 use function Press\Utils\typeOfRequest;
+use function RingCentral\Psr7\build_query;
+use function RingCentral\Psr7\parse_query;
 
 /**
- * @property string|string[]|null host
- * @property string|string[]|null origin
- * @property array|string|string[]|null url
- * @property array|string|string[]|null querystring
- * @property array|string|string[]|null hostname
- * @property array|string|string[]|null method
- * @property array|string|string[]|null header
- * @property array|string|string[]|null headers
- * @property array|bool|string|string[]|null fresh
+ * @property string|null host
+ * @property string|null origin
+ * @property string|null url
+ * @property string|null querystring
+ * @property string|null hostname
+ * @property string|null method
+ * @property array|string[]|null header
+ * @property array|string[]|null headers
+ * @property bool|null fresh
+ * @property string|null type
+ * @property int|null length
  * @property array|bool|false|int|mixed|string|string[]|null protocol
  * @property array|bool|false|int|mixed|string|string[] ips
  * @property array|bool|false|int|mixed|string|string[] ip
@@ -31,6 +33,8 @@ use function Press\Utils\typeOfRequest;
  * @property string|null charset
  * @property array|int|mixed|Accepts|string|string[] secure
  * @property string|null idempotent
+ * @property string[]|null query
+ * @property string[]|null subdomains
  */
 class Request
 {
@@ -194,8 +198,10 @@ class Request
 
     private function getUrl(): string
     {
-        $uri = $this->req->getUri();
-        return "{$uri->getPath()}?{$uri->getQuery()}";
+        $path = $this->req->getUri()->getPath();
+        $queryParams = $this->query;
+        $qs = build_query($queryParams);
+        return "{$path}" . (!$queryParams ? "" : "?{$qs}");
     }
 
     private function setUrl($url)
@@ -280,7 +286,14 @@ class Request
 
     private function getQuery()
     {
-        return $this->req->getQueryParams();
+        $qs = $this->req->getQueryParams();
+        $originalQs = $this->req->getUri()->getQuery();
+
+        if ($originalQs && $originalQs[0] === '?') {
+            $originalQs = trim($originalQs, '?');
+        }
+
+        return array_merge($qs, parse_query($originalQs));
     }
 
     private function setQuery(array $params)
@@ -303,7 +316,8 @@ class Request
 
     private function setQuerystring(string $str)
     {
-        $this->url = $str;
+        $path = $this->req->getUri()->getPath();
+        $this->url = "{$path}?{$str}";
     }
 
     private function getSearch()
@@ -370,21 +384,22 @@ class Request
     private function getLength()
     {
         $length = $this->get('Content-Length');
-        return ~~$length;
+        return (int)$length;
     }
 
     private function getProtocol()
     {
-        $uri = $this->req->getUri();
-        $schema = $uri->getScheme();
         if (!$this->app->proxy) {
-            return $schema;
+            return 'http';
         }
 
         $proto = $this->get('X-Forwarded-Proto');
         $ar = [];
         if ($proto) {
-            preg_match('/\s*,\s*/', $proto, $ar);
+            $ar = preg_split('/\s*,\s*/', $proto);
+            if (!$ar) {
+                $ar = [];
+            }
         }
 
         return $proto ? $ar[0] : 'http';
@@ -432,10 +447,14 @@ class Request
     private function getSubdomains()
     {
         $offset = $this->app->subdomainOffset;
-        $hostname = $this->hostname;
-        if (filter_var($hostname, FILTER_VALIDATE_IP)) {
-            $ar = array_slice(explode($hostname, '.'), $offset);
-            return array_reverse($ar);
+        $hostname = filter_var($this->hostname, FILTER_VALIDATE_IP);
+
+        if (count(explode(':', $this->hostname)) > 1) {
+            return [];
+        }
+
+        if (!$hostname) {
+            return array_slice(array_reverse(explode('.', $this->hostname)), $offset);
         }
 
         return [];
