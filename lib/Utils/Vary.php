@@ -14,7 +14,7 @@ namespace Press\Utils\Vary;
  *               / DIGIT / ALPHA
  *               ; any VCHAR, except delimiters
  */
-const FILED_NAME_REGEXP = '/^[!#$%&\'*+\-.^_`|~0-9A-Za-z]+$]/';
+const FILED_NAME_REGEXP = '/^[!#$%&\'*+\-.^_`|~0-9A-Za-z]+$/';
 
 
 function append(string $header, $field)

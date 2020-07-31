@@ -48,6 +48,8 @@ class Response
 
     public bool $headersSent = false;
 
+    private $_body = null;
+
     public function __get($name)
     {
         if ($name === 'socket') {
@@ -148,11 +150,13 @@ class Response
 
     private function getBody()
     {
-        return $this->res->getBody();
+        return $this->_body;
     }
 
     private function setBody($value)
     {
+        $this->_body = $value;
+
         //  no content
         if ($value === null) {
             $this->remove('Content-Type');
@@ -194,8 +198,23 @@ class Response
 
     private function getLength()
     {
-        $result = $this->res->getHeader('Content-Length');
-        return (int)join('', $result);
+        if ($this->has('Content-Length')) {
+            $result = $this->res->getHeader('Content-Length');
+            return (int)join('', $result);
+        }
+
+        $body = $this->body;
+
+        if ($body instanceof Stream) {
+            return $body->getSize();
+        }
+
+        if (gettype($body) === 'object') {
+            $json = json_encode($body);
+            return strlen($json);
+        }
+
+        return strlen($body);
     }
 
     private function setLength(int $n)
@@ -321,7 +340,7 @@ class Response
     public function get(string $field)
     {
         $value = $this->res->getHeader(strtolower($field));
-        return join('', $value);
+        return join(',', $value);
     }
 
     public function set(string $field, $value)

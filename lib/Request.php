@@ -538,7 +538,7 @@ class Request
             }
         }
 
-        $result = join('', $result);
+        $result = join(',', $result);
         return $result;
     }
 
