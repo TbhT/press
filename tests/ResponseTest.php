@@ -2,9 +2,6 @@
 
 namespace Press\Tests;
 
-use DateTime;
-use DateTimeZone;
-use Press\Response;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use function Press\Tests\Context\create;
@@ -399,5 +396,90 @@ class ResponseTest extends TestCase
 
         $this->assertSame('1', $ctx->response->header['foo']);
         $this->assertSame('2', $ctx->response->header['bar']);
+    }
+
+    /**
+     * $res->length
+     */
+
+    /** @test */
+    public function shouldReturnANumberWhenContentLengthIsDefined()
+    {
+        $res = $this->createRes();
+        $res->set('Content-Length', '1024');
+        $this->assertSame(1024, $res->length);
+    }
+
+    /** @test */
+    public function shouldReturnOWhenLengthIsNotNumber()
+    {
+        $res = $this->createRes();
+        $res->set('Content-Length', 'hey');
+        $this->assertSame(0, $res->length);
+    }
+
+    /** @test */
+    public function shouldReturnANumberWhenContentLengthIsNotDefined()
+    {
+        $res = $this->createRes();
+
+        $res->body = 'foo';
+        $res->remove('Content-Length');
+        $this->assertSame(3, $res->length);
+
+        $res->body = 'foo';
+        $this->assertSame(3, $res->length);
+
+        $res->body = stream_for('foo bar');
+        $res->remove('Content-Length');
+        $this->assertSame(7, $res->length);
+
+        $res->body = stream_for('foo bar');
+        $this->assertSame(7, $res->length);
+
+        $obj = new stdClass();
+        $obj->hello = 'world';
+        $res->body = $obj;
+        $res->remove('Content-Length');
+        $this->assertSame(17, $res->length);
+
+        $res->body = $obj;
+        $this->assertSame(17, $res->length);
+
+        $res->body = null;
+        $this->assertSame(0, $res->length);
+    }
+
+    /**
+     * $ctx->vary()
+     */
+
+    /** @test */
+    public function shouldSetItWhenVaryNotSet()
+    {
+        $ctx = create();
+        $ctx->vary('Accept');
+
+        $this->assertSame(['Accept'], $ctx->response->header['vary']);
+    }
+
+    /** @test */
+    public function shouldAppendWhenVaryIsSet()
+    {
+        $ctx = create();
+        $ctx->vary('Accept');
+        $ctx->vary('Accept-Encoding');
+        $this->assertSame(['Accept, Accept-Encoding'], $ctx->response->header['vary']);
+    }
+
+    /** @test */
+    public function shouldNotAppendWhenVaryAlreadyContainsValue()
+    {
+        $ctx = create();
+        $ctx->vary('Accept');
+        $ctx->vary('Accept-Encoding');
+        $ctx->vary('Accept');
+        $ctx->vary('Accept-Encoding');
+        $this->assertSame(['Accept, Accept-Encoding'], $ctx->response->header['vary']);
     }
 }
