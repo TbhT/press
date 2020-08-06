@@ -34,6 +34,9 @@ Here is an example of logger middleware :
 
 ```php
 use Press\Context;
+use Press\Application;
+
+$app = new Application();
 
 $app->use(function (Context $ctx, callable $next) {
     $start = time();
@@ -117,4 +120,44 @@ $app->use(function (Context $ctx, callable $next) {
 - `$app->proxy` when true proxy header fields will be trusted
 
 - `$app->subdomainOffset` offset of `.subdomains` to ignore [2]
+
+
+#### $app->listen(...)
+
+```php
+use Press\Application;
+
+$app = new Application();
+
+$app->listen([
+    "host" => "127.0.0.1",
+    "port" => 8080
+]);
+
+// or 
+
+$app->listen(function () {
+    echo "call back run";
+});
+
+```
+
+
+#### $app->callback()
+
+return a callback function suitable for the following http server request.
+
+```php
+use React\EventLoop\Factory;
+
+$loop = Factory::create();
+
+$server = new React\Http\Server($loop, function (Psr\Http\Message\ServerRequestInterface $request) {
+    
+    // ...  
+
+});
+```
+
+### $app->use()
 
