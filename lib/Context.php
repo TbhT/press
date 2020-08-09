@@ -3,14 +3,11 @@
 
 namespace Press;
 
-use Press\Utils\Accepts;
-use Press\Utils\Delegates;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
-use React\Socket\Server;
-use RingCentral\Psr7\PumpStream;
-use RingCentral\Psr7\Stream;
+use React\Promise\Promise;
 use stdClass;
+use Throwable;
 
 /**
  * @property int|null $status
@@ -182,8 +179,25 @@ class Context
 
     public function onerror()
     {
-        return function ($error) {
-            var_dump('---error-----', $error);
+        $ctx = $this;
+        return function ($error) use ($ctx) {
+            return new Promise(function ($resolve, $reject) use ($error, $ctx) {
+                try {
+                    if (!$error) {
+                        return $resolve($ctx->res);
+                    }
+
+                    $this->type = 'text';
+
+                    $this->status = 502;
+
+                    $ctx->body = $error;
+
+                    return $resolve($ctx->res);
+                } catch (Throwable $e) {
+                    return $reject($e);
+                }
+            });
         };
     }
 }
