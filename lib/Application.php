@@ -150,7 +150,7 @@ class Application extends Utils\Events
         $res->withStatus(404);
 
         $onerror = function ($error) use ($ctx) {
-            $ctx->onerror()($error);
+            return $ctx->onerror()($error);
         };
 
         $handleResponse = function () use ($ctx) {
@@ -163,7 +163,6 @@ class Application extends Utils\Events
     private function onerror($e = '')
     {
         return function ($error) use ($e) {
-            var_dump($e, $error);
             throw $error;
         };
     }

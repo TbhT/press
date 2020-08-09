@@ -32,7 +32,6 @@ function compose(array &$middleware): callable
 
 function dispatch($context, $next, &$middleware, &$index, $start): Promise\PromiseInterface
 {
-    $l = count($middleware);
     if ($start <= $index) {
         return Promise\reject(new \Error('$next() called multiple times'));
     }
