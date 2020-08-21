@@ -161,3 +161,33 @@ $server = new React\Http\Server($loop, function (Psr\Http\Message\ServerRequestI
 
 ### $app->use()
 
+see `Middlware` part
+
+### $app->context
+
+`$app->context` is the prototype from which `ctx` is created. 
+
+```php
+
+$app->use(function ($ctx) { 
+
+$ctx->db = new DB();
+
+});
+
+```
+
+
+### Error handling
+
+```php
+
+$app->on("error", function () {
+
+    echo "this is an error";
+});
+
+
+```
+
+## Context
