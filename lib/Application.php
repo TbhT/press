@@ -13,6 +13,7 @@ use React\Promise\PromiseInterface;
 use React\Socket\Server as SocketServer;
 use TypeError;
 use function Press\Uitls\Respond\respond;
+use function Press\Utils\Co\isGeneratorFunction;
 use function Press\Utils\Compose\compose;
 
 
@@ -99,6 +100,10 @@ class Application extends Utils\Events
     {
         if (!is_callable($fn)) {
             throw new TypeError('middleware must be a function!');
+        }
+
+        if (isGeneratorFunction($fn)) {
+//            todo:
         }
 
         array_push($this->middleware, $fn);

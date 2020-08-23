@@ -5,6 +5,7 @@ namespace Press\Utils\Co;
 
 use Exception;
 use Generator;
+use Press\Context;
 use React\Promise\Promise;
 use React\Promise\PromiseInterface;
 use ReflectionFunction;
@@ -92,4 +93,11 @@ function toPromise($obj): PromiseInterface
     }
 
     return PromiseResolve($obj);
+}
+
+function convert(callable $mw)
+{
+    return function (Context $ctx, callable $next) use ($mw) {
+        return co($mw);
+    };
 }
