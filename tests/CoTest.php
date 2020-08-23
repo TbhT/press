@@ -65,5 +65,19 @@ class CoTest extends TestCase
             $this->assertSame([1, 2, 3], [$a, $b, $c]);
         }), $this->loop);
     }
+
+    /** @test */
+    public function shouldWorkWhenOutside()
+    {
+        $a = function () {
+            $aa = yield 1;
+            $bb = yield 2;
+            $this->assertSame([1, 2], [$aa, $bb]);
+        };
+
+        $g = $a();
+
+        Block\await(Co\co($g), $this->loop);
+    }
 }
 

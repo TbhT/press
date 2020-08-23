@@ -29,6 +29,7 @@ if (!function_exists('Press\Utils\vary')) {
 }
 
 if (!function_exists('Press\Utils\Co\co')
+    || !function_exists('Press\Utils\Co\convert')
     || !function_exists('Press\Utils\Co\isGeneratorFunction')) {
     require __DIR__ . '/Utils/Co.php';
 }

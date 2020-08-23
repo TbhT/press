@@ -12,16 +12,11 @@ use ReflectionFunction;
 use function React\Promise\resolve as PromiseResolve;
 
 
-function onFulfilled($resolve, $reject, $gen, $args = [])
+function onFulfilled($resolve, $reject, Generator $gen, $args = [])
 {
-    return function ($res = null) use ($args, $resolve, $reject, $gen) {
+    return function ($result = null) use ($args, $resolve, $reject, $gen) {
         try {
-            if (is_callable($gen)) {
-                $gen = $gen(...$args);
-            } else {
-                $gen->send($res);
-            }
-
+            $gen->send($result);
             return coNext($gen, $resolve, $reject);
         } catch (Exception $exception) {
             return $reject($exception);
@@ -66,15 +61,19 @@ function co(...$args): PromiseInterface
     $args = array_slice($args, 1);
 
     return new Promise(function (callable $resolve, callable $reject) use ($gen, $args) {
-        onFulfilled($resolve, $reject, $gen, $args)();
+        if (is_callable($gen) && isGeneratorFunction($gen)) {
+            $gen = $gen(...$args);
+        }
+
+        coNext($gen, $resolve, $reject);
     });
 }
 
 
-function isGeneratorFunction($obj)
+function isGeneratorFunction($fn)
 {
     try {
-        $reflection = new ReflectionFunction($obj);
+        $reflection = new ReflectionFunction($fn);
         return $reflection->isGenerator();
     } catch (\ReflectionException $e) {
         return false;

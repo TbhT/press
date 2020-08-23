@@ -13,6 +13,7 @@ use React\Promise\PromiseInterface;
 use React\Socket\Server as SocketServer;
 use TypeError;
 use function Press\Uitls\Respond\respond;
+use function Press\Utils\Co\convert;
 use function Press\Utils\Co\isGeneratorFunction;
 use function Press\Utils\Compose\compose;
 
@@ -103,7 +104,7 @@ class Application extends Utils\Events
         }
 
         if (isGeneratorFunction($fn)) {
-//            todo:
+            $fn = convert($fn);
         }
 
         array_push($this->middleware, $fn);
