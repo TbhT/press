@@ -10,6 +10,7 @@ use Psr\Http\Message\ResponseInterface;
 use React\EventLoop\Factory;
 use React\Http\Browser;
 use React\Http\Server;
+use React\Promise\Promise;
 
 
 class ApplicationTest extends TestCase
@@ -73,26 +74,32 @@ class ApplicationTest extends TestCase
         $app->use(function (Context $ctx, callable $next) use (&$calls) {
             array_push($calls, 1);
             return $next()->then(function () use (&$calls) {
-                array_push($calls, 6);
+                array_push($calls, 8);
             });
         });
 
         $app->use(function (Context $ctx, callable $next) use (&$calls) {
             array_push($calls, 2);
             return $next()->then(function () use (&$calls) {
-                array_push($calls, 5);
+                array_push($calls, 7);
             });
         });
 
         $app->use(function (Context $ctx, callable $next) use (&$calls) {
             array_push($calls, 3);
             return $next()->then(function () use (&$calls) {
-                array_push($calls, 4);
+                array_push($calls, 6);
             });
         });
 
+        $app->use(function (Context $ctx, callable $next) use (&$calls) {
+            array_push($calls, 4);
+            yield $next;
+            array_push($calls, 5);
+        });
+
         $this->setClientReq();
-        $this->assertSame([1, 2, 3, 4, 5, 6], $calls);
+        $this->assertSame([1, 2, 3, 4, 5, 6, 7, 8], $calls);
     }
 
     /** @test */
@@ -182,6 +189,45 @@ class ApplicationTest extends TestCase
         });
 
         $app1->response->msg = 'hello';
+
+        $this->setClientReq();
+    }
+
+    private function getPromise($val = null, $err = null)
+    {
+        return new Promise(function ($resolve, $reject) use ($val, $err) {
+            if ($err) {
+                $reject($err);
+            } else {
+                $resolve($val);
+            }
+        });
+    }
+
+    /** @test */
+    public function shouldWorkWithGenerator()
+    {
+        $app = $this->setApp();
+        $ar = [];
+
+        $app->use(function ($ctx, $next) use (&$ar) {
+            $a = yield $this->getPromise(123);
+            array_push($ar, $a);
+
+            yield $next;
+
+            $this->assertSame([123, 456, 789], $ar);
+        });
+
+        $app->use(function ($ctx, $next) use (&$ar) {
+            $b = yield $this->getPromise(456);
+            array_push($ar, $b);
+        });
+
+        $app->use(function ($ctx, $next) use (&$ar) {
+            $c = yield $this->getPromise(789);
+            array_push($ar, $c);
+        });
 
         $this->setClientReq();
     }

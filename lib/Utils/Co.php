@@ -97,6 +97,10 @@ function toPromise($obj): PromiseInterface
 function convert(callable $mw)
 {
     return function (Context $ctx, callable $next) use ($mw) {
-        return co($mw);
+        return co($mw($ctx, createGenerator($next)));
     };
+}
+
+function createGenerator(callable $next) {
+    return yield $next();
 }
