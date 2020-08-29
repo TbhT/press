@@ -19,11 +19,17 @@ if (!function_exists('Press\Utils\ContentType\format')
 }
 
 if (!function_exists('Press\Utils\typeOfRequest')
-  || !function_exists('Press\Utils\hasBody')
+    || !function_exists('Press\Utils\hasBody')
 ) {
     require __DIR__ . '/Utils/TypeIs.php';
 }
 
 if (!function_exists('Press\Utils\vary')) {
     require __DIR__ . '/Utils/Vary.php';
+}
+
+if (!function_exists('Press\Utils\Co\co')
+    || !function_exists('Press\Utils\Co\convert')
+    || !function_exists('Press\Utils\Co\isGeneratorFunction')) {
+    require __DIR__ . '/Utils/Co.php';
 }
