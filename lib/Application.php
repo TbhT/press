@@ -4,6 +4,7 @@
 namespace Press;
 
 
+use Closure;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\Factory;
 use React\EventLoop\LoopInterface;
@@ -81,7 +82,7 @@ class Application extends Utils\Events
         $this->loop->run();
     }
 
-    public function callback()
+    public function callback(): Closure
     {
         $fn = compose($this->middleware);
         $that = $this;
@@ -95,7 +96,7 @@ class Application extends Utils\Events
         };
     }
 
-    public function use(callable $fn)
+    public function use(callable $fn): Application
     {
         if (!is_callable($fn)) {
             throw new TypeError('middleware must be a function!');
@@ -160,7 +161,7 @@ class Application extends Utils\Events
         return $fnMiddleware($ctx)->then($handleResponse)->otherwise($onerror);
     }
 
-    private function onerror($e = '')
+    private function onerror($e = ''): Closure
     {
         return function ($error) use ($e) {
             throw $error;
