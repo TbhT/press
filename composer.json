@@ -26,7 +26,7 @@
   },
   "require": {
     "tbht/php-events": "^1.0",
-    "php": ">=7.4",
+    "php": "^7.4",
     "react/promise": "^2.8",
     "react/promise-timer": "^1.5",
     "react/event-loop": "^1.1",
