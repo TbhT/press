@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a2a8cc1f18b3c159afaac308942cac20",
+    "content-hash": "b24581727fa860658cafa380e9d98b17",
     "packages": [
         {
             "name": "evenement/evenement",
@@ -792,16 +792,16 @@
         },
         {
             "name": "tbht/php-accepts",
-            "version": "v1.1.1",
+            "version": "v1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sugar-libraries/php-accepts.git",
-                "reference": "ed50a320ddd445c747827daee20c533c1b8cb4c3"
+                "reference": "4f4d812b9235f56282a55741ce086558d0fa9f4c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sugar-libraries/php-accepts/zipball/ed50a320ddd445c747827daee20c533c1b8cb4c3",
-                "reference": "ed50a320ddd445c747827daee20c533c1b8cb4c3",
+                "url": "https://api.github.com/repos/sugar-libraries/php-accepts/zipball/4f4d812b9235f56282a55741ce086558d0fa9f4c",
+                "reference": "4f4d812b9235f56282a55741ce086558d0fa9f4c",
                 "shasum": "",
                 "mirrors": [
                     {
@@ -811,8 +811,8 @@
                 ]
             },
             "require": {
-                "php": "^7.0",
-                "tbht/php-negotiator": "^1.0"
+                "php": ">=7.0",
+                "tbht/php-negotiator": "^1.2.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.2"
@@ -834,7 +834,7 @@
                 }
             ],
             "description": "accepts",
-            "time": "2020-07-18T17:25:13+00:00"
+            "time": "2021-03-30T06:33:33+00:00"
         },
         {
             "name": "tbht/php-events",
@@ -883,16 +883,16 @@
         },
         {
             "name": "tbht/php-negotiator",
-            "version": "v1.1.3",
+            "version": "v1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sugar-libraries/php-negotiator.git",
-                "reference": "a289e4b95fba3b14100bbe1db46729f11cd6ddc7"
+                "reference": "17bc9dcf116a41ae16340b9bb0b941dadf6b34aa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sugar-libraries/php-negotiator/zipball/a289e4b95fba3b14100bbe1db46729f11cd6ddc7",
-                "reference": "a289e4b95fba3b14100bbe1db46729f11cd6ddc7",
+                "url": "https://api.github.com/repos/sugar-libraries/php-negotiator/zipball/17bc9dcf116a41ae16340b9bb0b941dadf6b34aa",
+                "reference": "17bc9dcf116a41ae16340b9bb0b941dadf6b34aa",
                 "shasum": "",
                 "mirrors": [
                     {
@@ -902,10 +902,10 @@
                 ]
             },
             "require": {
-                "php": "^7.0"
+                "php": ">=7.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "6.5"
+                "phpunit/phpunit": "^9.5.4"
             },
             "type": "library",
             "autoload": {
@@ -924,7 +924,7 @@
                 }
             ],
             "description": "negotiator",
-            "time": "2020-07-18T16:43:11+00:00"
+            "time": "2021-03-30T06:20:22+00:00"
         }
     ],
     "packages-dev": [
@@ -3165,7 +3165,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "^7.4",
+        "php": ">=7.4",
         "ext-json": "*"
     },
     "platform-dev": [],
